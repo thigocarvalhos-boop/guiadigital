@@ -1,0 +1,22 @@
+{
+  "name": "Guia Digital",
+  "short_name": "Guia",
+  "description": "Sistema Operacional de Mobilidade Social: Formação em Marketing Digital para talentos locais e geração de renda real.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#22d3ee",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2583/2583158.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

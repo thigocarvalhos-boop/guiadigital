@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Guia Digital | Instituto Guia Social</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="metadata.json">
+    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Guia Digital">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2583/2583158.png">
+    
+    <!-- SEO e Social -->
+    <meta name="description" content="Sistema Operacional de Impacto Social do Instituto Guia: Transformando talento local em renda real através do Marketing Digital.">
+    <meta property="og:title" content="Guia Digital - S.O. Mobilidade Social">
+    <meta property="og:description" content="Acesse o painel do Instituto Guia Social e comece sua jornada de impacto no bairro.">
+    <meta property="og:type" content="website">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+          --slate-950: #020617;
+          --cyan: #22d3ee;
+        }
+        * { 
+          -webkit-font-smoothing: antialiased; 
+          box-sizing: border-box; 
+          -webkit-tap-highlight-color: transparent; 
+        }
+        body { 
+          font-family: 'Montserrat', sans-serif; 
+          background-color: var(--slate-950);
+          color: #f8fafc;
+          margin: 0;
+          overscroll-behavior-y: contain;
+          font-size: 14px; 
+          overflow-x: hidden;
+        }
+        .glass-panel {
+          background: rgba(15, 23, 42, 0.95);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        @keyframes slideIn {
+          from { transform: translateY(15px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-in { animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        button:active { transform: scale(0.95); transition: 0.1s; }
+        input { font-size: 16px !important; }
+
+        .scan-line {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(34, 211, 238, 0.1) 0%, rgba(34, 211, 238, 0) 100%);
+            position: fixed;
+            top: -100px;
+            left: 0;
+            z-index: 9999;
+            pointer-events: none;
+            animation: scanMove 8s linear infinite;
+        }
+        @keyframes scanMove {
+            0% { top: -100px; }
+            100% { top: 100vh; }
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div class="scan-line"></div>
+    <div id="root"></div>
+</body>
+</html>
