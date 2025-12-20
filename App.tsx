@@ -6,7 +6,6 @@ import { GoogleGenAI } from "@google/genai";
 import { initDB, addToSyncQueue, getSyncQueue, clearSyncItem } from './db.ts';
 
 const getAI = () => {
-  // Verificação segura do process.env
   const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : null;
   if (!apiKey) return null;
   return new GoogleGenAI({ apiKey });
@@ -22,7 +21,7 @@ const LEADERBOARD: LeaderboardEntry[] = [
 const triggerVibration = (type: 'light' | 'success' | 'warning') => {
   if (!window.navigator.vibrate) return;
   const patterns = { light: 10, success: [10, 30, 10], warning: 100 };
-  window.navigator.vibrate(patterns[type]);
+  window.navigator.vibrate(patterns[type] as any);
 };
 
 const playSuccessSound = () => {
@@ -40,6 +39,30 @@ const playSuccessSound = () => {
   } catch (e) {}
 };
 
+// --- Componente Toast ---
+const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error' | 'info', onClose: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const styles = {
+    success: 'bg-emerald-500 text-slate-950',
+    error: 'bg-rose-500 text-white',
+    info: 'bg-cyan-500 text-slate-950'
+  };
+
+  return (
+    <div className={`fixed top-8 left-6 right-6 z-[30000] p-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in ${styles[type]}`}>
+      <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center shrink-0">
+        <i className={`fa-solid ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle'} text-sm`}></i>
+      </div>
+      <p className="text-[11px] font-black uppercase tracking-wider leading-tight">{message}</p>
+      <button onClick={onClose} className="ml-auto opacity-50"><i className="fa-solid fa-xmark"></i></button>
+    </div>
+  );
+};
+
 const StatusSistema = memo(({ isOnline, streetMode, syncing }: { isOnline: boolean, streetMode: boolean, syncing: boolean }) => (
   <div className={`px-4 py-2 flex justify-between items-center text-[9px] font-black tracking-widest uppercase border-b transition-all ${streetMode ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-black border-white/5 text-cyan-500/50'}`}>
     <div className="flex gap-4">
@@ -49,7 +72,7 @@ const StatusSistema = memo(({ isOnline, streetMode, syncing }: { isOnline: boole
       </span>
     </div>
     <div className="flex gap-4">
-      <span className="text-cyan-600">S.O. GUIA V11.6</span>
+      <span className="text-cyan-600">S.O. GUIA V11.7</span>
     </div>
   </div>
 ));
@@ -66,12 +89,16 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [firstVisit, setFirstVisit] = useState(false);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
   
   const [totalXP, setTotalXP] = useState(0);
-  const [activePlanDay] = useState(1);
   const [socialImpact, setSocialImpact] = useState({ digitized: 0, communityRevenue: 0 });
   const [lessonProgress, setLessonProgress] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+  }, []);
 
   useEffect(() => {
     const isFirst = !localStorage.getItem('guia_visited_v11_6');
@@ -123,7 +150,7 @@ const App: React.FC = () => {
     setShowCamera(false);
     if (!isOnline) {
       await addToSyncQueue({ image: base64, coords, timestamp: Date.now() });
-      alert("OFFLINE: Auditoria salva localmente. Será enviada ao detectar sinal.");
+      showToast("Salvo Offline. Sincronização pendente.", "info");
       return;
     }
     setLoading(true);
@@ -133,18 +160,21 @@ const App: React.FC = () => {
       const response = await ai.models.generateContent({ 
         model: 'gemini-3-flash-preview', 
         contents: [
-          { text: "Responda VALIDADO se for fachada comercial real." }, 
+          { text: "Responda VALIDADO se for fachada comercial real ou NEGADO caso contrário." }, 
           { inlineData: { mimeType: 'image/jpeg', data: base64 } }
         ] 
       });
       if (response.text?.includes('VALIDADO')) { 
         setTotalXP(p => p + 500); 
         setSocialImpact(p => ({ ...p, digitized: p.digitized + 1, communityRevenue: p.communityRevenue + 250 })); 
-        playSuccessSound(); triggerVibration('success'); 
+        playSuccessSound(); triggerVibration('success');
+        showToast("Impacto Validado! +500 XP", "success");
+      } else {
+        showToast("Não validado. Foque na fachada comercial.", "error");
       }
-    } catch (e) {
+    } catch (e: any) {
       await addToSyncQueue({ image: base64, coords, timestamp: Date.now() });
-      alert("ERRO: Dados salvos localmente para sincronização futura.");
+      showToast("Erro na IA. Dados salvos para re-análise.", "error");
     } finally { setLoading(false); }
   };
 
@@ -167,6 +197,8 @@ const App: React.FC = () => {
     <div className={`max-w-md mx-auto min-h-screen relative pb-28 transition-all duration-700 ${streetMode ? 'bg-white text-black' : 'bg-slate-950 text-slate-100'}`}>
       <StatusSistema isOnline={isOnline} streetMode={streetMode} syncing={syncing} />
       
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+
       {showInstallPrompt && (
         <div className="px-6 py-4 bg-cyan-600 text-slate-950 flex justify-between items-center animate-in sticky top-[41px] z-[200] shadow-xl">
            <p className="text-[10px] font-black uppercase tracking-widest">Instalar no Celular</p>
@@ -227,7 +259,15 @@ const App: React.FC = () => {
                         {lessonProgress[lesson.id] && <i className="fa-solid fa-circle-check text-green-500"></i>}
                       </div>
                       <p className="text-[13px] font-bold mb-4">{lesson.title}</p>
-                      <button onClick={() => { setLessonProgress(p => ({ ...p, [lesson.id]: true })); setTotalXP(prev => prev + lesson.xpValue); triggerVibration('light'); }} className="w-full py-3 bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-white/10">Marcar Concluída</button>
+                      <button onClick={() => { 
+                        if (lessonProgress[lesson.id]) return;
+                        setLessonProgress(p => ({ ...p, [lesson.id]: true })); 
+                        setTotalXP(prev => prev + lesson.xpValue); 
+                        triggerVibration('light');
+                        showToast(`+${lesson.xpValue} XP Conquistado!`, "success");
+                      }} className={`w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${lessonProgress[lesson.id] ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-white/5 border-white/10'}`}>
+                        {lessonProgress[lesson.id] ? 'Concluída' : 'Marcar Concluída'}
+                      </button>
                    </div>
                  ))}
               </div>
@@ -244,7 +284,7 @@ const App: React.FC = () => {
                   <h4 className="text-xl font-black italic uppercase tracking-tighter leading-tight mt-2">{opp.title}</h4>
                   <div className="flex justify-between items-center pt-4">
                     <span className="text-green-500 font-black text-lg">{opp.reward}</span>
-                    <button className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10">Candidatar</button>
+                    <button onClick={() => showToast("Candidatura Enviada!", "success")} className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10">Candidatar</button>
                   </div>
                </div>
              ))}
@@ -312,22 +352,26 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      {showCamera && <div className="fixed inset-0 z-[12000] bg-black"><CameraVerification onVerify={handleProofVerification} onCancel={() => setShowCamera(false)} streetMode={streetMode} /></div>}
+      {showCamera && <div className="fixed inset-0 z-[12000] bg-black"><CameraVerification onVerify={handleProofVerification} onCancel={() => setShowCamera(false)} streetMode={streetMode} showToast={showToast} /></div>}
       {showCertificate && <ImpactResume socialImpact={socialImpact} totalXP={totalXP} onClose={() => setShowCertificate(false)} />}
       
       {loading && !showCamera && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[10000] flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-cyan-600">Sincronizando Impacto</p>
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-const CameraVerification = ({ onVerify, onCancel }: { onVerify: (base64: string, coords: {lat: number, lng: number}) => void, onCancel: () => void, streetMode: boolean }) => {
+const CameraVerification = ({ onVerify, onCancel, streetMode, showToast }: { onVerify: (base64: string, coords: {lat: number, lng: number}) => void, onCancel: () => void, streetMode: boolean, showToast: (m: string, t: any) => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     async function setup() {
@@ -337,7 +381,7 @@ const CameraVerification = ({ onVerify, onCancel }: { onVerify: (base64: string,
         if (videoRef.current) videoRef.current.srcObject = s;
         navigator.geolocation.getCurrentPosition(
           (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          () => alert("SINAL GPS REQUERIDO."), { enableHighAccuracy: true }
+          () => showToast("Sinal GPS Requerido.", "error"), { enableHighAccuracy: true }
         );
       } catch (err) { onCancel(); }
     }
@@ -345,15 +389,19 @@ const CameraVerification = ({ onVerify, onCancel }: { onVerify: (base64: string,
     return () => stream?.getTracks().forEach(t => t.stop());
   }, []);
 
-  const capture = () => {
-    if (!coords) return;
+  const capture = useCallback(() => {
+    if (!coords || isProcessing) return;
+    setIsProcessing(true);
+    triggerVibration('light');
+
     const canvas = document.createElement('canvas');
     if (videoRef.current) {
       canvas.width = videoRef.current.videoWidth; canvas.height = videoRef.current.videoHeight;
       canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      onVerify(canvas.toDataURL('image/jpeg').split(',')[1], coords);
+      const base64 = canvas.toDataURL('image/jpeg').split(',')[1];
+      onVerify(base64, coords);
     }
-  };
+  }, [coords, isProcessing, onVerify]);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -362,9 +410,34 @@ const CameraVerification = ({ onVerify, onCancel }: { onVerify: (base64: string,
         <button onClick={onCancel} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"><i className="fa-solid fa-xmark"></i></button>
       </div>
       <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-      <button onClick={capture} className="absolute bottom-16 w-20 h-20 rounded-full border-4 border-cyan-600 p-1 flex items-center justify-center active:scale-90 transition-all">
-        <div className="w-full h-full bg-cyan-600 rounded-full flex items-center justify-center"><i className="fa-solid fa-expand text-2xl text-slate-950"></i></div>
+      
+      {/* Moldura de Foco */}
+      <div className="absolute inset-0 border-[2px] border-cyan-500/20 m-12 rounded-3xl pointer-events-none">
+        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-cyan-500 rounded-tl-lg"></div>
+        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-cyan-500 rounded-tr-lg"></div>
+        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-cyan-500 rounded-bl-lg"></div>
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-cyan-500 rounded-br-lg"></div>
+      </div>
+
+      <button 
+        onClick={capture} 
+        disabled={isProcessing || !coords}
+        className={`absolute bottom-16 w-20 h-20 rounded-full border-4 border-cyan-600 p-1 flex items-center justify-center active:scale-90 transition-all ${isProcessing ? 'opacity-50 animate-pulse' : ''}`}
+      >
+        <div className="w-full h-full bg-cyan-600 rounded-full flex items-center justify-center">
+          {isProcessing ? (
+            <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <i className="fa-solid fa-expand text-2xl text-slate-950"></i>
+          )}
+        </div>
       </button>
+
+      {!coords && !isProcessing && (
+        <div className="absolute bottom-40 bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest animate-pulse">
+          Aguardando GPS...
+        </div>
+      )}
     </div>
   );
 };
