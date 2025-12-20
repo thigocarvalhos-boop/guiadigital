@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Guia Digital | Instituto Guia Social</title>
+    <title>Guia Digital | S.O. Mobilidade Social</title>
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="metadata.json">
@@ -13,9 +13,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Guia Digital">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2583/2583158.png">
-    
-    <!-- SEO e Social -->
-    <meta name="description" content="Sistema Operacional de Impacto Social: Transformando talento local em renda real.">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -34,29 +31,27 @@
         }
         .glass-panel {
           background: rgba(15, 23, 42, 0.9);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(25px);
+          -webkit-backdrop-filter: blur(25px);
           border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         .scan-line {
             width: 100%;
-            height: 4px;
-            background: rgba(34, 211, 238, 0.2);
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+            height: 2px;
+            background: rgba(34, 211, 238, 0.3);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
             position: fixed;
             top: -10px;
             left: 0;
             z-index: 9999;
             pointer-events: none;
-            animation: scanMove 10s linear infinite;
+            animation: scanMove 8s linear infinite;
         }
         @keyframes scanMove { 0% { top: -10px; } 100% { top: 100vh; } }
-        .animate-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Toast Transitions */
-        .toast-enter { transform: translateY(-100%); opacity: 0; }
-        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        input::placeholder, textarea::placeholder { opacity: 0.3; color: white; }
     </style>
 
     <script type="importmap">

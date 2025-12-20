@@ -1,4 +1,21 @@
 
+export interface UserProfile {
+  name: string;
+  neighborhood: string;
+  skill: string;
+  level: number;
+  joinedAt: number;
+}
+
+export interface IATool {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  minLevel: number;
+  promptTemplate: string;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -32,23 +49,7 @@ export interface Opportunity {
   type: 'freelance' | 'pj' | 'clt';
   reward: string;
   matchingScore?: number;
-}
-
-export interface Client {
-  id: string;
-  name: string;
-  project: string;
-  status: 'active' | 'completed' | 'waiting';
-  value: string;
-  progress: number;
-  startDate: string;
-}
-
-export interface MarketReadiness {
-  technical: number;
-  persuasion: number;
-  resilience: number;
-  isCertified: boolean;
+  requiredSkill?: string;
 }
 
 export interface ChatMessage {
@@ -65,17 +66,6 @@ export interface LeaderboardEntry {
   isUser?: boolean;
 }
 
-export interface DailyMission {
-  id: string;
-  title: string;
-  xp: number;
-  completed: boolean;
-  icon: string;
-}
-
-/**
- * Added PortfolioItem interface to resolve the import error in utils.ts
- */
 export interface PortfolioItem {
   id: string;
   title: string;
