@@ -1,5 +1,5 @@
 
-import { Opportunity, PortfolioItem } from './types';
+import { Opportunity, PortfolioItem } from './types.ts';
 
 /**
  * Conecta jovens talentos a negócios locais baseando-se no portfólio.
