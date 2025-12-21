@@ -10,6 +10,7 @@ export interface UserProfile {
   rg: string;
   cpf: string;
   email: string;
+  phone: string;
   level: number;
   joinedAt: number;
   status: 'pending' | 'active' | 'rejected';
