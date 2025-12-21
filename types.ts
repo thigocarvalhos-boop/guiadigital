@@ -17,6 +17,16 @@ export interface UserProfile {
   verificationCode?: string;
   isVerified: boolean;
   lgpdAccepted: boolean;
+  // Novos campos de diversidade
+  sexualOrientation: string;
+  sexualOrientationOther?: string;
+  genderIdentity: string;
+  genderIdentityOther?: string;
+  isIntersex: string;
+  transIdentity: string;
+  transIdentityOther?: string;
+  socialName?: string;
+  ethnicity: string;
 }
 
 export interface IATool {

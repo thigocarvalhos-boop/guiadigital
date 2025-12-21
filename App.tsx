@@ -118,7 +118,6 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
     setLoading(true);
     setLocalError(null);
     try {
-      // Inicialização correta seguindo as diretrizes
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const prompt = tool.promptTemplate
@@ -126,7 +125,6 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
         .replace('{neighborhood}', userProfile.neighborhood)
         .replace('{input}', input);
 
-      // Chamada otimizada para Gemini 3 Flash
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
@@ -139,7 +137,6 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
       }
     } catch (err: any) {
       console.error("Arsenal Error:", err);
-      // Log amigável mas técnico para diagnóstico
       setLocalError(err.message || "Falha na conexão com o Núcleo de IA.");
     } finally {
       setLoading(false);
@@ -178,7 +175,13 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
   const [form, setForm] = useState({ 
     username: '', password: '', name: '', neighborhood: '', skill: '', 
-    age: '', class: '', rg: '', cpf: '', email: '', phone: '', lgpd: false 
+    age: '', class: '', rg: '', cpf: '', email: '', phone: '', lgpd: false,
+    sexualOrientation: '', sexualOrientationOther: '',
+    genderIdentity: '', genderIdentityOther: '',
+    isIntersex: '',
+    transIdentity: '', transIdentityOther: '',
+    socialName: '',
+    ethnicity: ''
   });
   const [verificationInput, setVerificationInput] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
@@ -200,8 +203,12 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
     }
   };
 
+  const isTransOrSimilar = useMemo(() => {
+    const v = form.transIdentity;
+    return v && v !== 'Não' && v !== '';
+  }, [form.transIdentity]);
+
   const startVerification = () => {
-    // Validação detalhada para apontar exatamente o que falta
     const missing = [];
     if (!form.name) missing.push('Nome');
     if (!form.cpf) missing.push('CPF');
@@ -212,10 +219,18 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
     if (!form.email) missing.push('E-mail');
     if (!form.neighborhood) missing.push('Bairro');
     if (!form.skill) missing.push('Vocação');
+    
+    // Validações de diversidade
+    if (!form.ethnicity) missing.push('Etnia');
+    if (!form.sexualOrientation) missing.push('Orientação Sexual');
+    if (!form.genderIdentity) missing.push('Identidade de Gênero');
+    if (!form.isIntersex) missing.push('Informação Intersexo');
+    if (!form.transIdentity) missing.push('Informação Trans/Travesti');
 
     if (missing.length > 0) { 
       setError(`Campos faltantes: ${missing.join(', ')}`); 
       triggerVibration('warning');
+      window.scrollTo(0, 0);
       return; 
     }
     
@@ -240,9 +255,9 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
 
   if (phase === 'manifesto') return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-10 justify-center animate-in overflow-y-auto">
-      <div className="space-y-12 max-w-sm mx-auto">
+      <div className="space-y-12 max-w-sm mx-auto text-center">
         <h2 className="text-6xl font-black italic uppercase text-white leading-[0.8] tracking-tighter">GUIA <br/><span className="text-cyan-600">SOCIAL</span></h2>
-        <p className="text-slate-400 font-bold text-sm leading-relaxed border-l-4 border-white/5 pl-8 italic">Seu Sistema Operacional de Mobilidade Econômica.</p>
+        <p className="text-slate-400 font-bold text-sm leading-relaxed border-l-4 border-white/5 pl-8 italic text-left">Seu Sistema Operacional de Mobilidade Econômica.</p>
         <button onClick={() => setPhase('auth')} className="w-full py-6 bg-cyan-600 text-slate-950 font-black uppercase text-[10px] rounded-3xl active:scale-95 shadow-xl transition-all">Acessar Sistema</button>
       </div>
     </div>
@@ -281,9 +296,10 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   );
 
   return (
-    <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-8 justify-center animate-in overflow-y-auto">
-       <div className="max-w-sm mx-auto w-full space-y-6 pt-20 pb-20">
-         <h2 className="text-2xl font-black uppercase text-white italic tracking-tighter">{authMode === 'signup' ? 'Dossiê de Matrícula' : 'Login de Acesso'}</h2>
+    <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-8 justify-start animate-in overflow-y-auto pt-20 pb-40">
+       <div className="max-w-sm mx-auto w-full space-y-12">
+         <h2 className="text-2xl font-black uppercase text-white italic tracking-tighter border-b border-white/10 pb-4">{authMode === 'signup' ? 'Dossiê de Matrícula' : 'Login de Acesso'}</h2>
+         
          {error && <p className="text-rose-500 text-[10px] font-black uppercase bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20 shadow-lg">{error}</p>}
          
          {authMode === 'login' ? (
@@ -294,30 +310,121 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
              <button onClick={() => setAuthMode('signup')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">Ainda não sou matriculado</button>
            </div>
          ) : (
-           <div className="space-y-4">
-             <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">01. Identidade</span>
-             <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="NOME COMPLETO" value={form.name} onChange={e => setForm({...form, name: e.target.value.toUpperCase()})} />
-             
-             <div className="grid grid-cols-2 gap-3">
-               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="CPF" value={form.cpf} onChange={e => setForm({...form, cpf: e.target.value})} />
-               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="RG" value={form.rg} onChange={e => setForm({...form, rg: e.target.value})} />
+           <div className="space-y-10">
+             {/* SEÇÃO 01: IDENTIDADE BÁSICA */}
+             <div className="space-y-4">
+               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">01. Identidade Básica</span>
+               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="NOME COMPLETO" value={form.name} onChange={e => setForm({...form, name: e.target.value.toUpperCase()})} />
+               <div className="grid grid-cols-2 gap-3">
+                 <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="CPF" value={form.cpf} onChange={e => setForm({...form, cpf: e.target.value})} />
+                 <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="RG" value={form.rg} onChange={e => setForm({...form, rg: e.target.value})} />
+               </div>
+               <div className="grid grid-cols-2 gap-3">
+                 <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="TURMA" value={form.class} onChange={e => setForm({...form, class: e.target.value.toUpperCase()})} />
+                 <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="IDADE" value={form.age} onChange={e => setForm({...form, age: e.target.value})} />
+               </div>
              </div>
 
-             <div className="grid grid-cols-2 gap-3">
-               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="TURMA" value={form.class} onChange={e => setForm({...form, class: e.target.value.toUpperCase()})} />
-               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="IDADE" value={form.age} onChange={e => setForm({...form, age: e.target.value})} />
+             {/* SEÇÃO 02: DIVERSIDADE, ETNIA E GÊNERO */}
+             <div className="space-y-8 bg-white/5 p-6 rounded-[40px] border border-white/5">
+                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block text-center">02. Diversidade e Gênero</span>
+                
+                {/* ETNIA (RAÇA/COR) */}
+                <div className="space-y-3">
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Etnia (Raça/Cor)</p>
+                   <div className="flex flex-wrap gap-2">
+                      {['Branca', 'Preta', 'Parda', 'Amarela', 'Indígena'].map(opt => (
+                        <button key={opt} onClick={() => setForm({...form, ethnicity: opt})} className={`px-4 py-3 rounded-2xl text-[9px] font-black border-2 transition-all ${form.ethnicity === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
+                      ))}
+                   </div>
+                </div>
+
+                {/* Orientação Sexual */}
+                <div className="space-y-3">
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Qual é sua orientação sexual? (termo relativo às relações afetivo-sexuais)</p>
+                   <div className="grid gap-2">
+                      {[
+                        'Lésbica', 'Gay', 'Bissexual', 'Heterossexual', 'Outra', 'Prefiro não declarar'
+                      ].map(opt => (
+                        <button key={opt} onClick={() => setForm({...form, sexualOrientation: opt})} className={`p-4 rounded-2xl text-[9px] font-black text-left border-2 transition-all ${form.sexualOrientation === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
+                      ))}
+                      {form.sexualOrientation === 'Outra' && (
+                        <input className="w-full bg-black border-2 border-cyan-600/30 p-4 rounded-2xl text-white text-[10px] outline-none font-bold" placeholder="Especifique..." value={form.sexualOrientationOther} onChange={e => setForm({...form, sexualOrientationOther: e.target.value})} />
+                      )}
+                   </div>
+                </div>
+
+                {/* Identidade de Gênero */}
+                <div className="space-y-3">
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Qual é seu gênero/identidade de gênero? (termo relativo à identidade da pessoa)</p>
+                   <div className="grid grid-cols-2 gap-2">
+                      {['Feminina', 'Masculina', 'Não binárie', 'Outro'].map(opt => (
+                        <button key={opt} onClick={() => setForm({...form, genderIdentity: opt})} className={`p-4 rounded-2xl text-[9px] font-black border-2 transition-all ${form.genderIdentity === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
+                      ))}
+                   </div>
+                   {form.genderIdentity === 'Outro' && (
+                      <input className="w-full bg-black border-2 border-cyan-600/30 p-4 rounded-2xl text-white text-[10px] outline-none font-bold" placeholder="Especifique..." value={form.genderIdentityOther} onChange={e => setForm({...form, genderIdentityOther: e.target.value})} />
+                   )}
+                </div>
+
+                {/* Intersexo */}
+                <div className="space-y-3">
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Você é pessoa intersexo?</p>
+                   <div className="grid grid-cols-2 gap-2">
+                      {['Sim', 'Não'].map(opt => (
+                        <button key={opt} onClick={() => setForm({...form, isIntersex: opt})} className={`p-4 rounded-2xl text-[9px] font-black border-2 transition-all ${form.isIntersex === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
+                      ))}
+                   </div>
+                </div>
+
+                {/* Pessoa Trans/Travesti */}
+                <div className="space-y-3">
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Você é pessoa trans ou travesti?</p>
+                   <div className="grid gap-2">
+                      {[
+                        {v: 'Não', l: 'Não'},
+                        {v: 'Trans', l: 'Sim, sou pessoa trans/transexual'},
+                        {v: 'Travesti', l: 'Sim, sou travesti'},
+                        {v: 'Não binárie', l: 'Sim, sou não binárie'},
+                        {v: 'Outra', l: 'Outra'}
+                      ].map(opt => (
+                        <button key={opt.v} onClick={() => setForm({...form, transIdentity: opt.v})} className={`p-4 rounded-2xl text-[9px] font-black text-left border-2 transition-all ${form.transIdentity === opt.v ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.l.toUpperCase()}</button>
+                      ))}
+                   </div>
+                   {form.transIdentity === 'Outra' && (
+                      <input className="w-full bg-black border-2 border-cyan-600/30 p-4 rounded-2xl text-white text-[10px] outline-none font-bold" placeholder="Especifique..." value={form.transIdentityOther} onChange={e => setForm({...form, transIdentityOther: e.target.value})} />
+                   )}
+                </div>
+
+                {/* Nome Social (Condicional) */}
+                {isTransOrSimilar && (
+                  <div className="space-y-3 animate-in border-t border-white/10 pt-6">
+                     <p className="text-[11px] font-black text-cyan-600 uppercase italic leading-tight">Nome Social</p>
+                     <p className="text-[9px] text-slate-500 leading-tight italic mb-2">Nome utilizado por pessoas trans e travestis no meio social. Preencha caso não use seu nome de registro.</p>
+                     <input className="w-full bg-slate-900 border-2 border-cyan-600/30 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="NOME SOCIAL (OPCIONAL)" value={form.socialName} onChange={e => setForm({...form, socialName: e.target.value.toUpperCase()})} />
+                  </div>
+                )}
              </div>
 
-             <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mt-4 mb-1">02. Contato e Bairro</span>
-             <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="TELEFONE / WHATSAPP" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
-             <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="E-MAIL" value={form.email} onChange={e => setForm({...form, email: e.target.value.toLowerCase()})} />
-             <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="BAIRRO DE ATUAÇÃO" value={form.neighborhood} onChange={e => setForm({...form, neighborhood: e.target.value.toUpperCase()})} />
+             {/* SEÇÃO 03: CONTATO E VOCAÇÃO */}
+             <div className="space-y-4">
+               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">03. Contato e Vocação</span>
+               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="TELEFONE / WHATSAPP" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="E-MAIL" value={form.email} onChange={e => setForm({...form, email: e.target.value.toLowerCase()})} />
+               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="BAIRRO DE ATUAÇÃO" value={form.neighborhood} onChange={e => setForm({...form, neighborhood: e.target.value.toUpperCase()})} />
+               
+               <div className="grid grid-cols-2 gap-2 mt-4">
+                 {['DESIGN', 'VENDAS', 'SOCIAL', 'TECH'].map(s => (
+                   <button key={s} onClick={() => setForm({...form, skill: s})} className={`py-4 rounded-2xl text-[10px] font-black border-2 transition-all ${form.skill === s ? 'bg-cyan-600 border-cyan-400 text-black shadow-lg scale-105' : 'bg-slate-900 border-white/5 text-slate-600'}`}>{s}</button>
+                 ))}
+               </div>
+             </div>
 
-             <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mt-4 mb-1">03. Vocação Digital</span>
-             <div className="grid grid-cols-2 gap-2">
-               {['DESIGN', 'VENDAS', 'SOCIAL', 'TECH'].map(s => (
-                 <button key={s} onClick={() => setForm({...form, skill: s})} className={`py-4 rounded-2xl text-[10px] font-black border-2 transition-all ${form.skill === s ? 'bg-cyan-600 border-cyan-400 text-black shadow-lg scale-105' : 'bg-slate-900 border-white/5 text-slate-600'}`}>{s}</button>
-               ))}
+             {/* LOGIN DATA */}
+             <div className="space-y-4 pt-6">
+                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">04. Dados de Acesso</span>
+                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="CRIE UM USUÁRIO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
+                <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="CRIE UMA SENHA" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
              </div>
 
              <div className="p-4 bg-cyan-600/5 border border-cyan-600/10 rounded-2xl flex items-start gap-4 mt-6">
@@ -325,7 +432,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
                 <label htmlFor="lgpd" className="text-[9px] font-bold text-slate-500 uppercase leading-tight italic">Autorizo o uso dos dados para fins educacionais e de geração de renda (LGPD).</label>
              </div>
 
-             <button onClick={startVerification} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] tracking-widest rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.3)] sticky bottom-0 active:scale-95 transition-all">Finalizar Dossiê</button>
+             <button onClick={startVerification} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] tracking-widest rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.3)] active:scale-95 transition-all">Finalizar Dossiê</button>
              <button onClick={() => setAuthMode('login')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">Já possuo acesso</button>
            </div>
          )}
@@ -522,7 +629,7 @@ const App = () => {
                </div>
              </div>
              <div>
-               <h3 className="text-4xl font-black uppercase italic leading-none tracking-tighter">{profile.name}</h3>
+               <h3 className="text-4xl font-black uppercase italic leading-none tracking-tighter">{profile.socialName || profile.name}</h3>
                <p className="text-[11px] font-black text-cyan-600 uppercase italic mt-4 tracking-[0.4em]">{profile.neighborhood} • {profile.class}</p>
              </div>
              
@@ -532,8 +639,8 @@ const App = () => {
                    <p className="text-xs font-black italic">{profile.phone}</p>
                 </div>
                 <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
-                   <p className="text-[9px] font-black text-slate-700 uppercase mb-2">CPF</p>
-                   <p className="text-xs font-black italic">{profile.cpf}</p>
+                   <p className="text-[9px] font-black text-slate-700 uppercase mb-2">ETNIA / GÊNERO</p>
+                   <p className="text-[10px] font-black italic">{profile.ethnicity} / {profile.genderIdentity}</p>
                 </div>
              </div>
 
