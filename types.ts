@@ -1,12 +1,13 @@
 
 export interface UserProfile {
   username: string;
-  password?: string; // Armazenado localmente para o protótipo
+  password?: string;
   name: string;
   neighborhood: string;
   skill: string;
   level: number;
   joinedAt: number;
+  status: 'pending' | 'active' | 'rejected'; // Novo campo para controle de matrícula
 }
 
 export interface IATool {
@@ -22,10 +23,15 @@ export interface Lesson {
   id: string;
   title: string;
   duration: string;
-  content: string;
-  framework?: string;
+  theory: string;
+  challenge: string;
+  quiz: {
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
+  };
   checklist: string[];
-  tips?: string[];
   xpValue: number;
 }
 
@@ -52,20 +58,6 @@ export interface Opportunity {
   reward: string;
   matchingScore?: number;
   requiredSkill?: string;
-}
-
-export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-}
-
-export interface LeaderboardEntry {
-  id: string;
-  name: string;
-  xp: number;
-  impact: string;
-  avatar: string;
-  isUser?: boolean;
 }
 
 export interface PortfolioItem {
