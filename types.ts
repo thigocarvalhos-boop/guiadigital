@@ -5,9 +5,17 @@ export interface UserProfile {
   name: string;
   neighborhood: string;
   skill: string;
+  age: string;
+  class: string;
+  rg: string;
+  cpf: string;
+  email: string;
   level: number;
   joinedAt: number;
-  status: 'pending' | 'active' | 'rejected'; // Novo campo para controle de matrícula
+  status: 'pending' | 'active' | 'rejected';
+  verificationCode?: string;
+  isVerified: boolean;
+  lgpdAccepted: boolean;
 }
 
 export interface IATool {
