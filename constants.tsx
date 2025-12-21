@@ -8,7 +8,7 @@ export const IA_TOOLS: IATool[] = [
     description: 'Cria textos úteis e empáticos baseados no livro "Everybody Writes".',
     icon: 'fa-pen-nib',
     minLevel: 1,
-    promptTemplate: 'Aja como Ann Handley. Crie um post para o Instagram de um pequeno negócio de {business_type} no bairro {neighborhood}. O texto deve ser útil, focar no cliente e evitar jargões técnicos.'
+    promptTemplate: 'Aja como Ann Handley. Crie um post para o Instagram de um pequeno negócio de {business_type} no bairro {neighborhood} em Recife. O texto deve ser útil, focar no cliente local e evitar jargões técnicos.'
   },
   {
     id: 'smart-planner',
@@ -16,7 +16,7 @@ export const IA_TOOLS: IATool[] = [
     description: 'Transforma seus objetivos em planos de ação com prazos reais.',
     icon: 'fa-bullseye',
     minLevel: 2,
-    promptTemplate: 'Analise este objetivo: {input}. Transforme-o em uma meta SMART (Específica, Mensurável, Alcançável, Relevante e com Prazo) para um jovem micro-consultor digital.'
+    promptTemplate: 'Analise este objetivo: {input}. Transforme-o em uma meta SMART (Específica, Mensurável, Alcançável, Relevante e com Prazo) para um jovem micro-consultor digital em Recife.'
   },
   {
     id: 'seo-optimizer',
@@ -24,206 +24,155 @@ export const IA_TOOLS: IATool[] = [
     description: 'Sugere palavras-chave para negócios do bairro aparecerem no Google Maps.',
     icon: 'fa-location-crosshairs',
     minLevel: 3,
-    promptTemplate: 'Sugira 5 palavras-chave estratégicas para um negócio de {input} ser encontrado no Google Maps por moradores do bairro {neighborhood}.'
+    promptTemplate: 'Sugira 5 palavras-chave estratégicas para um negócio de {input} ser encontrado no Google Maps por moradores do bairro {neighborhood} em Recife.'
   }
 ];
 
 export const MODULES: Module[] = [
   { 
     id: '1', 
-    title: 'Cidadania e Sociedade', 
+    title: 'Cidadania e Sociedade 4.0', 
     progress: 0, 
     status: 'current',
-    technicalSkill: 'Ética Social',
-    description: 'Unidades 01 a 04: Marketing 4.0, Direitos Sociais e Prevenção.', 
+    technicalSkill: 'Ética Digital',
+    description: 'Fundamentação teórica sobre Marketing Humano e Direitos Sociais no Brasil.', 
     icon: 'fa-handshake-angle', 
     xpValue: 2000,
     lessons: [
       {
         id: 'u1',
         title: 'Marketing 4.0: Humano no Centro',
-        duration: '15m',
-        theory: 'O Marketing 4.0, definido por Philip Kotler, é a integração entre o offline e o online, mas com foco total na humanização. As marcas agora precisam ter valores e interagir de forma ética com a sociedade.',
-        challenge: 'Mapeie 2 comércios no seu bairro que você considera "humanos" no atendimento.',
+        duration: '25m',
+        theory: 'O Marketing 4.0 integra o digital ao humano. Em Recife, vemos isso quando uma padaria em Casa Forte usa o Instagram não só para vender, mas para criar comunidade. Philip Kotler ensina que as marcas agora devem ter "personalidade" e valores éticos claros.',
+        challenge: 'Identifique um empreendimento no seu bairro que utiliza uma comunicação humanizada. Como eles interagem com a comunidade?',
         quiz: {
-          question: 'O que define o Marketing 4.0 segundo a apostila?',
-          options: ['Uso de robôs para vender', 'Comunicação humanizada e centrada no cliente', 'Apenas anúncios no Facebook', 'Ignorar o contato presencial'],
+          question: 'No Marketing 4.0, qual o foco principal da relação marca-cliente?',
+          options: ['Vender a qualquer custo', 'Humanização e conexão de valores', 'Automatização total por robôs', 'Apenas preços baixos'],
           correctIndex: 1,
-          explanation: 'O Marketing 4.0 foca na conexão real e humanizada entre marcas e pessoas.'
+          explanation: 'A conexão de valores e a humanização são os pilares da nova era do marketing.'
         },
-        checklist: ['Ler Unit 01', 'Identificar marcas locais'],
+        checklist: ['Estudar conceito de Kotler', 'Mapear 1 negócio local humanizado', 'Analisar valores da marca'],
         xpValue: 500
       },
       {
         id: 'u2',
-        title: 'Cidadania e Estatuto da Juventude',
-        duration: '20m',
-        theory: 'Cidadania é o conjunto de direitos e deveres. O Estatuto da Juventude (Lei 12.852/2013) garante ao jovem acesso à cultura, lazer, trabalho e saúde.',
-        challenge: 'Acesse o link da lei fornecido na apostila e cite um direito que você não conhecia.',
+        title: 'Dignidade e Direitos Digitais',
+        duration: '30m',
+        theory: 'O Estatuto da Juventude (Lei 12.852/2013) garante ao jovem o direito ao trabalho e à cultura. No mundo digital, isso se traduz em soberania de dados e acesso a ferramentas de produção de renda.',
+        challenge: 'Leia os pontos principais do Estatuto da Juventude e relacione um direito com a sua futura atuação como consultor digital.',
         quiz: {
-          question: 'Em que ano foi aprovado o Estatuto da Juventude?',
-          options: ['1990', '2000', '2013', '2024'],
-          correctIndex: 2,
-          explanation: 'A lei de 2013 foi um marco para os direitos dos jovens brasileiros.'
+          question: 'Qual lei brasileira garante direitos específicos aos jovens de 15 a 29 anos?',
+          options: ['Lei do Estágio', 'Estatuto da Juventude', 'Código Civil', 'Lei da Informática'],
+          correctIndex: 1,
+          explanation: 'O Estatuto da Juventude é a base legal para políticas públicas de mobilidade para jovens.'
         },
-        checklist: ['Estudar Unit 02', 'Pesquisar Estatuto'],
+        checklist: ['Leitura da Lei 12.852', 'Reflexão sobre autonomia econômica'],
         xpValue: 500
       }
     ]
   },
   { 
     id: '2', 
-    title: 'Projeto de Vida e Mindset', 
+    title: 'Engenharia de Projeto de Vida', 
     progress: 0, 
     status: 'locked',
-    technicalSkill: 'Planejamento',
-    description: 'Unidade 05: Ikigai, Metas SMART e Mentalidade de Crescimento.', 
+    technicalSkill: 'Gestão Estratégica',
+    description: 'Planejamento de carreira através do Ikigai e Metas SMART aplicadas.', 
     icon: 'fa-seedling', 
     xpValue: 1500,
     lessons: [
       {
         id: 'u5',
-        title: 'Descobrindo seu Ikigai',
-        duration: '25m',
-        theory: 'Ikigai é o encontro entre o que você ama, o que você é bom, o que o mundo precisa e pelo que pode ser pago.',
-        challenge: 'Escreva seus 4 pilares do Ikigai em um papel e suba uma foto da sua anotação mental.',
+        title: 'O Ikigai do Consultor Local',
+        duration: '35m',
+        theory: 'Ikigai é um conceito japonês para "razão de ser". Para um jovem no Recife, pode ser unir sua habilidade em design com a necessidade de digitalizar o pequeno produtor de Bolo de Rolo do bairro.',
+        challenge: 'Desenhe sua mandala Ikigai focada em como suas habilidades podem servir ao seu território.',
         quiz: {
-          question: 'O que o Ikigai ajuda o jovem a definir?',
-          options: ['Apenas quanto vai ganhar', 'Seu propósito de vida e carreira', 'Onde vai morar', 'Apenas seus hobbies'],
-          correctIndex: 1,
-          explanation: 'O Ikigai alinha paixão, vocação e renda.'
+          question: 'O Ikigai é a intersecção de quais pilares?',
+          options: ['Paixão, Missão, Vocação e Profissão', 'Trabalho, Dinheiro, Casa e Carro', 'Fama, Sucesso, Poder e Renda', 'Estudo, Prova, Nota e Diploma'],
+          correctIndex: 0,
+          explanation: 'O Ikigai busca o equilíbrio entre o que você ama e o que o mundo precisa.'
         },
-        checklist: ['Unit 05 Completa', 'Desenho do Ikigai'],
-        xpValue: 750
-      },
-      {
-        id: 'u5-2',
-        title: 'Mindset e Metas SMART',
-        duration: '20m',
-        theory: 'Carol Dweck ensina que o Mindset de Crescimento acredita no esforço. Metas SMART garantem que seus sonhos tenham prazo e métricas.',
-        challenge: 'Crie uma meta SMART para sua primeira consultoria paga.',
-        quiz: {
-          question: 'Qual o significado da letra "S" em SMART?',
-          options: ['Social', 'Sério', 'Específico (Specific)', 'Sustentável'],
-          correctIndex: 2,
-          explanation: 'Uma meta deve ser clara e específica para ser alcançada.'
-        },
-        checklist: ['Exercício SMART', 'Teste de Kolb'],
+        checklist: ['Definir Paixão/Missão', 'Mapear Vocação Territorial', 'Validar pilar de Renda'],
         xpValue: 750
       }
     ]
   },
   { 
     id: '3', 
-    title: 'Fundamentos Técnicos', 
+    title: 'Arquitetura de Marketing Digital', 
     progress: 0, 
     status: 'locked',
-    technicalSkill: 'Marketing Digital',
-    description: 'Unidades 06 e 07: Os 4 Ps, Funil de Vendas e Ferramentas 4.0.', 
+    technicalSkill: 'Technical Marketing',
+    description: 'Domínio dos 4Ps, Funil de Vendas e o Círculo Dourado de Simon Sinek aplicado ao Recife.', 
     icon: 'fa-microchip', 
-    xpValue: 2000,
-    lessons: [
-      {
-        id: 'u6',
-        title: 'Os 4 Ps do Marketing',
-        duration: '30m',
-        theory: 'Produto, Preço, Praça e Promoção. No digital, o foco mudou do produto para o cliente (Simon Sinek: Comece pelo Porquê).',
-        challenge: 'Escolha um comércio e identifique como ele trabalha a "Praça" (entrega/localização).',
-        quiz: {
-          question: 'Segundo Simon Sinek, o Círculo Dourado começa por:',
-          options: ['O quê', 'Como', 'Porquê', 'Quanto'],
-          correctIndex: 2,
-          explanation: 'O "Porquê" é o propósito que gera lealdade dos clientes.'
-        },
-        checklist: ['Unit 06 Lida', 'Círculo Dourado Pessoal'],
-        xpValue: 1000
-      }
-    ]
-  },
-  { 
-    id: '4', 
-    title: 'Produção de Conteúdo e Design', 
-    progress: 0, 
-    status: 'locked',
-    technicalSkill: 'Content Creation',
-    description: 'Unidades 08 a 10: Copywriting, Redes Sociais e Identidade Visual.', 
-    icon: 'fa-palette', 
-    xpValue: 2500,
-    lessons: [
-      {
-        id: 'u8',
-        title: 'A Arte da Escrita Útil',
-        duration: '30m',
-        theory: 'Ann Handley ensina que todos somos escritores. No digital, sua escrita deve ser clara, concisa e focada em ajudar o leitor.',
-        challenge: 'Escreva um post de 3 linhas para um salão de beleza usando a técnica do gancho.',
-        quiz: {
-          question: 'Qual a regra principal de Ann Handley?',
-          options: ['Escrever textos longos', 'Usar palavras difíceis', 'Escrever conteúdos que realmente ajudem', 'Focar só em vender'],
-          correctIndex: 2,
-          explanation: 'Conteúdo de valor gera autoridade e confiança.'
-        },
-        checklist: ['Unit 08 Lida', 'Treino de Copy'],
-        xpValue: 1250
-      }
-    ]
-  },
-  { 
-    id: '5', 
-    title: 'SEO e Campanhas Digitais', 
-    progress: 0, 
-    status: 'locked',
-    technicalSkill: 'Growth',
-    description: 'Unidades 11 e 12: SEO, Link Building e Planejamento de Campanhas.', 
-    icon: 'fa-magnifying-glass-chart', 
-    xpValue: 3000,
-    lessons: [
-      {
-        id: 'u11',
-        title: 'Dominando o SEO Local',
-        duration: '40m',
-        theory: 'O Google Maps prioriza: Relevância, Distância e Proeminência. Fotos e avaliações são essenciais.',
-        challenge: 'Aponte 3 melhorias no perfil de uma oficina mecânica no Google Maps.',
-        quiz: {
-          question: 'O que significa a sigla SEO?',
-          options: ['Social Engine Organization', 'Search Engine Optimization', 'Selo de Empresa Online', 'Sistema de Edição'],
-          correctIndex: 1,
-          explanation: 'SEO é a otimização para mecanismos de busca.'
-        },
-        checklist: ['Unit 11 Estudada', 'Pesquisa de Palavras-Chave'],
-        xpValue: 1500
-      }
-    ]
-  },
-  { 
-    id: '6', 
-    title: 'Audiovisual e Métricas', 
-    progress: 0, 
-    status: 'locked',
-    technicalSkill: 'Analista Digital',
-    description: 'Unidades 13 a 15: Vídeos, Podcasts, ROI e Projeto Final.', 
-    icon: 'fa-chart-line', 
     xpValue: 4000,
     lessons: [
       {
-        id: 'u14',
-        title: 'Métricas: Os Dados Não Mentem',
-        duration: '30m',
-        theory: 'Alcance, Engajamento e ROI (Retorno sobre Investimento). Você precisa medir para melhorar.',
-        challenge: 'Calcule o engajamento médio dos seus últimos 3 posts no Instagram.',
+        id: 'u6',
+        title: 'O Círculo Dourado Territorial',
+        duration: '40m',
+        theory: 'Simon Sinek afirma: "Pessoas não compram o que você faz, elas compram o porquê você faz". Se você atende um negócio no Porto Digital, o porquê deles deve vibrar inovação. Se é em Afogados, deve vibrar resistência e serviço local.',
+        challenge: 'Defina o "Porquê" de um negócio de serviços no seu bairro. Qual a dor real que eles curam na comunidade?',
         quiz: {
-          question: 'O que o ROI mede?',
-          options: ['Número de curtidas', 'Retorno financeiro sobre o investimento', 'Velocidade da internet', 'Quantidade de seguidores'],
-          correctIndex: 1,
-          explanation: 'O ROI prova se o investimento em marketing deu lucro.'
+          question: 'Onde começa o Círculo Dourado de Simon Sinek?',
+          options: ['No "O Quê"', 'No "Como"', 'No "Porquê"', 'No "Preço"'],
+          correctIndex: 2,
+          explanation: 'O propósito (Porquê) é a âncora de toda estratégia de marketing de alto nível.'
         },
-        checklist: ['Unit 14 Lida', 'Análise de Gráfico'],
-        xpValue: 2000
+        checklist: ['Identificar o núcleo do propósito', 'Diferenciar Como de O Quê'],
+        xpValue: 1000
+      },
+      {
+        id: 'u7',
+        title: 'Branding e Estética de Bairro',
+        duration: '45m',
+        theory: 'Branding não é só logo. É a percepção. Em Recife, o movimento Armorial de Ariano Suassuna ensinou a usar elementos locais para criar algo universal. Como usar a cultura de Casa Amarela para valorizar um comércio local?',
+        challenge: 'Crie uma paleta de cores e um conceito visual para uma marca do bairro baseando-se em elementos arquitetônicos ou culturais da vizinhança.',
+        quiz: {
+          question: 'Qual o objetivo principal do Branding Territorial?',
+          options: ['Copiar marcas americanas', 'Valorizar a identidade local para gerar diferencial', 'Diminuir os preços dos produtos', 'Esconder a origem do negócio'],
+          correctIndex: 1,
+          explanation: 'Branding territorial usa a cultura local como ativo de valorização comercial.'
+        },
+        checklist: ['Estudo de cores locais', 'Definição de tom de voz', 'Análise de símbolos do bairro'],
+        xpValue: 1000
+      },
+      {
+        id: 'u8',
+        title: 'SEO de Proximidade e Mapas',
+        duration: '50m',
+        theory: 'Para o pequeno negócio, ser achado no bairro é mais importante do que ser achado no mundo. O SEO Local foca em palavras-chave geográficas (ex: "Bolo de Rolo em Afogados"). O Google Meu Negócio é a ferramenta de poder aqui.',
+        challenge: 'Mapeie as 5 principais palavras-chave que um morador do bairro usaria para achar um serviço de conserto de celulares na sua rua.',
+        quiz: {
+          question: 'Qual ferramenta é essencial para o SEO de proximidade?',
+          options: ['Twitter Ads', 'Google Meu Negócio', 'TikTok', 'Painéis de Outdoor'],
+          correctIndex: 1,
+          explanation: 'O Google Meu Negócio coloca o comércio local no mapa físico e digital dos usuários.'
+        },
+        checklist: ['Mapear palavras-chave geográficas', 'Simular cadastro no GMN'],
+        xpValue: 1000
+      },
+      {
+        id: 'u9',
+        title: 'Copywriting e Persuasão Ética',
+        duration: '40m',
+        theory: 'Copywriting é a arte de escrever para converter. Usando Ann Handley como guia, aprendemos que "todos escrevem". Gatilhos como Autoridade, Escassez e Prova Social devem ser usados com verdade e foco no benefício do vizinho.',
+        challenge: 'Escreva um anúncio de 3 linhas para o WhatsApp de uma feira orgânica no bairro, usando o gatilho da Prova Social.',
+        quiz: {
+          question: 'Segundo Ann Handley, qual o segredo de uma boa escrita?',
+          options: ['Usar palavras difíceis', 'Focar na utilidade e empatia com o leitor', 'Escrever o máximo possível', 'Focar apenas no preço'],
+          correctIndex: 1,
+          explanation: 'A escrita útil e empática cria confiança antes da venda.'
+        },
+        checklist: ['Exercício de gatilho mental', 'Revisão de texto empático'],
+        xpValue: 1000
       }
     ]
   }
 ];
 
 export const OPPORTUNITIES: Opportunity[] = [
-  { id: '1', businessName: 'Padaria Social', title: 'Consultoria Marketing 4.0', location: 'Centro', lat: -8.0, lng: -34.9, type: 'freelance', reward: 'R$ 350', requiredSkill: 'Marketing 4.0' },
-  { id: '2', businessName: 'Mercadinho do Bairro', title: 'Ajuste SEO no Maps', location: 'Vila Norte', lat: -8.1, lng: -34.9, type: 'pj', reward: 'R$ 500', requiredSkill: 'Growth' },
+  { id: '1', businessName: 'Artesanato do Cais', title: 'Consultoria Marketing 4.0', location: 'Recife Antigo', lat: -8.063, lng: -34.871, type: 'freelance', reward: 'R$ 450', requiredSkill: 'Marketing 4.0' },
+  { id: '2', businessName: 'Bolo de Rolo da Maria', title: 'Otimização SEO Local', location: 'Afogados', lat: -8.077, lng: -34.908, type: 'pj', reward: 'R$ 600', requiredSkill: 'Growth' },
 ];

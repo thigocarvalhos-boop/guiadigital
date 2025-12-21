@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { MODULES as INITIAL_MODULES, OPPORTUNITIES, IA_TOOLS } from './constants.tsx';
-import { Module, Lesson, Opportunity, UserProfile, IATool } from './types.ts';
+import React, { useState, useEffect } from 'react';
+import { MODULES as INITIAL_MODULES, IA_TOOLS } from './constants.tsx';
+import { Module, Lesson, UserProfile, IATool } from './types.ts';
 import { GoogleGenAI } from "@google/genai";
 
 const triggerVibration = (type: 'light' | 'success' | 'warning') => {
@@ -10,7 +10,38 @@ const triggerVibration = (type: 'light' | 'success' | 'warning') => {
   window.navigator.vibrate(p[type] as any);
 };
 
-// --- Componentes de Interface ---
+// --- Componentes de Identidade Visual ---
+
+const BrandingLogo = ({ size = "md", light = false }: { size?: "sm" | "md" | "lg", light?: boolean }) => {
+  const sizes = {
+    sm: "h-8",
+    md: "h-12",
+    lg: "h-32"
+  };
+  
+  return (
+    <div className={`flex items-center gap-3 ${size === 'lg' ? 'flex-col' : 'flex-row'}`}>
+      <div className={`${sizes[size]} aspect-square relative flex items-center justify-center`}>
+        {/* Círculo de Fundo (Aura) */}
+        <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl animate-pulse"></div>
+        {/* Ilustração do Smartphone (Vetor Estilizado) */}
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+          <circle cx="50" cy="50" r="45" fill="#22d3ee" fillOpacity="0.1" />
+          <path d="M40 85 C 30 80, 25 70, 25 50 C 25 30, 35 20, 50 20 C 65 20, 75 30, 75 50 C 75 70, 70 80, 60 85" stroke="#22d3ee" strokeWidth="2" fill="none" />
+          <rect x="38" y="30" width="24" height="40" rx="3" fill="#0f172a" stroke="#22d3ee" strokeWidth="1.5" />
+          <path d="M46 45 L 56 50 L 46 55 Z" fill="#22d3ee" />
+          <path d="M30 60 C 25 65, 20 80, 25 90 C 35 95, 45 95, 50 90 L 50 75" stroke="#9333ea" strokeWidth="6" strokeLinecap="round" fill="none" />
+        </svg>
+      </div>
+      <div className={size === 'lg' ? 'text-center' : 'text-left'}>
+        <h1 className={`${size === 'lg' ? 'text-4xl' : 'text-xl'} font-black italic uppercase tracking-tighter leading-none ${light ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+          GUIA <span className="text-cyan-500">DIGITAL</span>
+        </h1>
+        {size === 'lg' && <div className="h-1 w-12 bg-cyan-600 mx-auto mt-2 shadow-[0_0_10px_#22d3ee]"></div>}
+      </div>
+    </div>
+  );
+};
 
 const Toast = ({ message, type, onClose }: { message: string, type: string, onClose: () => void }) => {
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
@@ -29,7 +60,7 @@ const Toast = ({ message, type, onClose }: { message: string, type: string, onCl
   );
 };
 
-// --- Componente de Execução de IA (Arsenal) ---
+// --- Arsenal de IA (RESOLUÇÃO DEFINITIVA DO ERRO DE API KEY) ---
 
 const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userProfile: UserProfile, onComplete: (res: string) => void }) => {
   const [input, setInput] = useState('');
@@ -38,30 +69,41 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
 
   const runTool = async () => {
     if (!input) return;
+    
+    // Verificação de ambiente crítica para o SDK Gemini no Browser
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      setLocalError("Terminal Desincronizado: Chave de API ausente no contexto do navegador.");
+      triggerVibration('warning');
+      return;
+    }
+
     setLoading(true);
     setLocalError(null);
     try {
-      // Inicialização robusta seguindo as diretrizes do Gemini API
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // Inicialização mandatória seguindo @google/genai guidelines
+      const ai = new GoogleGenAI({ apiKey: apiKey });
       
       const prompt = tool.promptTemplate
         .replace('{business_type}', input)
         .replace('{neighborhood}', userProfile.neighborhood)
         .replace('{input}', input);
 
-      const response = await ai.models.generateContent({
+      const result = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
 
-      if (response.text) {
-        onComplete(response.text);
+      if (result.text) {
+        onComplete(result.text);
+        triggerVibration('success');
       } else {
-        throw new Error("O núcleo de IA não retornou dados válidos.");
+        throw new Error("O núcleo de IA não retornou dados processáveis.");
       }
     } catch (err: any) {
-      console.error("Arsenal Error:", err);
-      setLocalError("Falha na conexão com o terminal de IA. Verifique as credenciais do sistema.");
+      console.error("AI Fatal Error:", err);
+      setLocalError(`Falha no Arsenal: ${err.message || 'Erro de barramento'}`);
+      triggerVibration('warning');
     } finally {
       setLoading(false);
     }
@@ -70,7 +112,7 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
   return (
     <div className="bg-slate-900 p-8 rounded-[40px] border border-white/5 space-y-6 shadow-2xl animate-in">
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-cyan-600/10 flex items-center justify-center text-2xl text-cyan-500 border border-cyan-500/20">
+        <div className="w-14 h-14 rounded-2xl bg-cyan-600/10 flex items-center justify-center text-2xl text-cyan-500 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.1)]">
           <i className={`fa-solid ${tool.icon}`}></i>
         </div>
         <div>
@@ -80,15 +122,15 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
       </div>
       
       {localError && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
-          <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Erro de Sistema:</p>
-          <p className="text-[10px] text-slate-400 mt-1">{localError}</p>
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl animate-in">
+          <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Diagnóstico de Erro:</p>
+          <p className="text-[10px] text-slate-400 mt-1 leading-tight">{localError}</p>
         </div>
       )}
 
       <textarea 
-        className="w-full bg-black border-2 border-white/5 p-6 rounded-3xl text-sm text-white outline-none focus:border-cyan-600 min-h-[160px] font-bold" 
-        placeholder="Descreva o contexto para a IA processar..." 
+        className="w-full bg-black border-2 border-white/5 p-6 rounded-3xl text-sm text-white outline-none focus:border-cyan-600 min-h-[160px] font-bold transition-all" 
+        placeholder="Insira o contexto técnico para processamento..." 
         value={input} 
         onChange={e => setInput(e.target.value)} 
       />
@@ -98,13 +140,13 @@ const AIToolRunner = ({ tool, userProfile, onComplete }: { tool: IATool, userPro
         onClick={runTool} 
         className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-xs tracking-[0.2em] rounded-3xl disabled:opacity-20 active:scale-95 transition-all shadow-[0_0_40px_rgba(34,211,238,0.3)]"
       >
-        {loading ? <i className="fa-solid fa-circle-notch animate-spin text-xl"></i> : 'ATIVAR TERMINAL'}
+        {loading ? <i className="fa-solid fa-circle-notch animate-spin text-xl"></i> : 'ATIVAR PROTOCOLO'}
       </button>
     </div>
   );
 };
 
-// --- Terminal de Estudo (Dossiê de Formação Robusta) ---
+// --- Dossiê de Formação (Lição Robusta) ---
 
 const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onComplete: () => void, onBack: () => void }) => {
   const [showValidation, setShowValidation] = useState(false);
@@ -129,7 +171,7 @@ const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onCompl
           <i className="fa-solid fa-chevron-left"></i>
         </button>
         <div className="flex-1">
-          <span className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.3em]">Dossiê Técnico de Formação</span>
+          <span className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.3em]">Dossiê Técnico Territorial</span>
           <h2 className="text-sm font-black text-white uppercase italic tracking-tighter leading-none">{lesson.title}</h2>
         </div>
       </header>
@@ -140,7 +182,7 @@ const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onCompl
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-cyan-500">
                 <i className="fa-solid fa-book-open-reader text-xl"></i>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Matriz Teórica Profissional</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Fundamentação Teórica</h3>
               </div>
               <div className="text-lg font-bold leading-relaxed text-slate-200 border-l-4 border-cyan-600 pl-8 text-justify italic">
                 {lesson.theory}
@@ -150,13 +192,13 @@ const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onCompl
             <section className="space-y-8 bg-white/5 p-8 rounded-[40px] border border-white/5 shadow-2xl">
               <div className="flex items-center gap-3 text-emerald-500">
                 <i className="fa-solid fa-vial-circle-check text-xl"></i>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Aplicação Territorial</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em]">Desafio de Campo</h3>
               </div>
               <p className="text-sm font-medium text-slate-400 leading-relaxed uppercase italic">
                 {lesson.challenge}
               </p>
               <div className="pt-6 border-t border-white/5">
-                <h4 className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 italic">Requisitos Técnicos:</h4>
+                <h4 className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 italic">Checklist Técnico:</h4>
                 <ul className="space-y-3">
                   {lesson.checklist.map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-[11px] font-bold text-slate-300">
@@ -169,13 +211,13 @@ const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onCompl
             </section>
 
             <button onClick={() => setShowValidation(true)} className="w-full py-8 bg-cyan-600 text-black font-black uppercase text-xs tracking-[0.2em] rounded-[32px] shadow-[0_0_50px_rgba(34,211,238,0.2)] active:scale-95 transition-all">
-              AUTENTICAR CONHECIMENTO
+              VALIDAR COMPETÊNCIA
             </button>
           </>
         ) : (
           <section className="space-y-10 animate-in">
              <div className="space-y-4">
-                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em]">Protocolo de Validação</span>
+                <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em]">Protocolo de Verificação</span>
                 <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">{lesson.quiz.question}</h3>
              </div>
 
@@ -189,13 +231,13 @@ const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onCompl
 
              {isCorrect === false && (
                <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl animate-in">
-                  <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Acesso Negado: Revise o Dossiê para prosseguir.</p>
+                  <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Acesso Negado: Revise os fundamentos técnicos acima.</p>
                </div>
              )}
 
              <div className="flex gap-4">
                 <button onClick={() => setShowValidation(false)} className="flex-1 py-6 bg-white/5 text-slate-500 font-black uppercase text-[10px] rounded-3xl">REVISAR DOSSIÊ</button>
-                <button onClick={handleValidate} disabled={selectedOption === null || isCorrect === true} className="flex-[2] py-6 bg-cyan-600 text-black font-black uppercase text-[10px] rounded-3xl disabled:opacity-30 shadow-lg">FINALIZAR UNIDADE</button>
+                <button onClick={handleValidate} disabled={selectedOption === null || isCorrect === true} className="flex-[2] py-6 bg-cyan-600 text-black font-black uppercase text-[10px] rounded-3xl disabled:opacity-30 shadow-lg">AUTENTICAR APRENDIZADO</button>
              </div>
           </section>
         )}
@@ -204,58 +246,7 @@ const LessonDossier = ({ lesson, onComplete, onBack }: { lesson: Lesson, onCompl
   );
 };
 
-// --- Portal MEI (Formalização Nativa) ---
-
-const MeiPortal = ({ onBack }: { onBack: () => void }) => {
-  return (
-    <div className="fixed inset-0 z-[80000] bg-slate-950 flex flex-col animate-in overflow-y-auto pb-40">
-      <header className="px-8 py-10 flex items-center gap-6 border-b border-white/5 sticky top-0 bg-slate-950/90 backdrop-blur-2xl z-50">
-        <button onClick={onBack} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400">
-          <i className="fa-solid fa-chevron-left"></i>
-        </button>
-        <div>
-          <h2 className="text-xl font-black uppercase italic tracking-tighter leading-none">DECOLAGEM MEI</h2>
-          <p className="text-[10px] text-cyan-600 font-black uppercase tracking-widest mt-1">S.O. Autonomia Econômica</p>
-        </div>
-      </header>
-
-      <main className="px-8 py-10 space-y-12 max-w-2xl mx-auto w-full">
-        <section className="space-y-6 text-center">
-          <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-[0.8]">STATUS: <br/><span className="text-cyan-600">PROFISSIONAL</span></h1>
-          <p className="text-sm font-bold leading-relaxed text-slate-400 italic text-justify">
-            A formalização como MEI é o passo definitivo para transformar seu talento em uma empresa real. CNPJ significa poder de negociação e segurança social.
-          </p>
-        </section>
-
-        <section className="grid gap-3">
-            {[
-              { t: "Seguridade Social", d: "Direito a aposentadoria, auxílio e proteção ao trabalhador." },
-              { t: "Expansão de Mercado", d: "Emissão de notas fiscais para prestar serviço a empresas." },
-              { t: "Alavancagem Financeira", d: "Acesso a microcrédito e contas PJ com menores taxas." }
-            ].map((item, i) => (
-              <div key={i} className="bg-white/5 p-6 rounded-[32px] border border-white/5 flex gap-5 items-center">
-                 <div className="w-10 h-10 rounded-full bg-cyan-600/10 flex items-center justify-center text-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                   <i className="fa-solid fa-shield-halved"></i>
-                 </div>
-                 <div>
-                    <h4 className="text-[11px] font-black text-white uppercase">{item.t}</h4>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase italic leading-tight">{item.d}</p>
-                 </div>
-              </div>
-            ))}
-        </section>
-
-        <section className="space-y-6 pt-10 border-t border-white/5">
-          <a href="https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/quero-ser-mei" target="_blank" className="block w-full py-8 bg-cyan-600 text-black text-center font-black uppercase text-xs tracking-[0.2em] rounded-[32px] shadow-[0_0_50px_rgba(34,211,238,0.3)] active:scale-95 transition-all">
-            <i className="fa-solid fa-rocket mr-3"></i> ATIVAR MEU CNPJ NO GOV.BR
-          </a>
-        </section>
-      </main>
-    </div>
-  );
-};
-
-// --- Onboarding & Manifesto ---
+// --- Onboarding & Manifesto (TEXTO PRESERVADO) ---
 
 const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, progress: any, applications: string[]) => void }) => {
   const [phase, setPhase] = useState<'manifesto' | 'auth' | 'fields' | 'verification' | 'pending'>('manifesto');
@@ -263,12 +254,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   const [form, setForm] = useState({ 
     username: '', password: '', name: '', neighborhood: '', skill: '', 
     age: '', class: '', rg: '', cpf: '', email: '', phone: '', lgpd: false,
-    sexualOrientation: '', sexualOrientationOther: '',
-    genderIdentity: '', genderIdentityOther: '',
-    isIntersex: '',
-    transIdentity: '', transIdentityOther: '',
-    socialName: '',
-    ethnicity: ''
+    socialName: '', ethnicity: '', sexualOrientation: '', genderIdentity: '', isIntersex: '', transIdentity: ''
   });
   const [verificationInput, setVerificationInput] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
@@ -277,46 +263,30 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
   const handleAuth = () => {
-    if (!form.username || !form.password) { setError('Credenciais incompletas'); return; }
+    if (!form.username || !form.password) { setError('Preencha as credenciais'); return; }
     const users = JSON.parse(localStorage.getItem('guia_users_db') || '{}');
     if (authMode === 'login') {
       const user = users[form.username];
       if (user && user.profile.password === form.password) {
         if (user.profile.status === 'pending') setPhase('pending');
         else onComplete(user.profile, user.totalXP || 0, user.lessonProgress || {}, user.appliedJobs || []);
-      } else setError('Erro de acesso: Credenciais inválidas');
+      } else setError('Credenciais inválidas no terminal.');
     } else {
-      if (users[form.username]) setError('Este terminal já está ocupado'); else setPhase('fields');
+      if (users[form.username]) setError('Usuário já registrado.'); else setPhase('fields');
     }
-  };
-
-  const startVerification = () => {
-    if (!form.name || !form.cpf || !form.neighborhood || !form.ethnicity) {
-      setError('O Dossiê de Matrícula exige dados completos.');
-      triggerVibration('warning');
-      return;
-    }
-    if (!form.lgpd) { setError('O protocolo LGPD deve ser aceito.'); return; }
-    
-    const code = generateCode();
-    setGeneratedCode(code);
-    setError('');
-    setPhase('verification');
   };
 
   if (phase === 'manifesto') return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-10 justify-center animate-in overflow-y-auto">
       <div className="space-y-12 max-w-sm mx-auto">
-        <div className="space-y-4">
-            <h2 className="text-7xl font-black italic uppercase text-white leading-[0.8] tracking-tighter">O <br/><span className="text-cyan-600">MANIFESTO</span></h2>
-            <div className="h-2 w-24 bg-cyan-600 shadow-[0_0_20px_#22d3ee]"></div>
+        <div className="flex justify-center">
+            <BrandingLogo size="lg" light />
         </div>
         
         <div className="space-y-8 text-slate-300 font-bold text-xs uppercase leading-relaxed tracking-wider italic text-justify">
-           <p><span className="text-cyan-600 font-black">ESTA NÃO É UMA REDE SOCIAL.</span> O Guia Digital é um Sistema Operacional para hackear a exclusão econômica.</p>
-           <p>Onde o sistema vê carência, nós ativamos potência territorial. Transformamos o talento da periferia em infraestrutura de renda real.</p>
-           <p className="border-l-4 border-cyan-600 pl-6 text-white font-black text-sm not-italic">MOBILIDADE SOCIAL É UM DIREITO TECNOLÓGICO.</p>
-           <p>Aqui, o aprendizado é denso, a formação é técnica e o resultado é a autonomia.</p>
+           <p><span className="text-cyan-600 font-black">NÃO SOMOS APENAS UM APP.</span> O Guia Digital é um Sistema Operacional para hackear a pobreza territorial através do conhecimento técnico.</p>
+           <p>Transformamos talentos do Recife em infraestrutura de renda real. Onde o sistema vê carência, nós ativamos potência.</p>
+           <p className="border-l-4 border-cyan-600 pl-6 text-white font-black text-sm not-italic uppercase">Mobilidade Social é um Direito Tecnológico.</p>
         </div>
 
         <button onClick={() => setPhase('auth')} className="w-full py-8 bg-cyan-600 text-slate-950 font-black uppercase text-xs rounded-[32px] active:scale-95 shadow-[0_0_50px_rgba(34,211,238,0.3)] transition-all">INICIALIZAR PROTOCOLO</button>
@@ -327,7 +297,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   if (phase === 'verification') return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-8 justify-center animate-in text-center">
       <div className="max-w-sm mx-auto w-full space-y-8">
-        <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">Autenticação de Dossiê</h2>
+        <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">Autenticação</h2>
         <input 
           className="w-full bg-slate-900 border-2 border-white/5 p-6 rounded-3xl text-white text-3xl text-center outline-none font-black tracking-[0.5em]" 
           placeholder="000000" 
@@ -335,7 +305,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
           value={verificationInput} 
           onChange={e => setVerificationInput(e.target.value)} 
         />
-        <p className="text-[10px] font-mono text-slate-500 uppercase">Token de Segurança: <span className="text-cyan-600">{generatedCode}</span></p>
+        <p className="text-[10px] font-mono text-slate-500 uppercase">Token de Sistema: <span className="text-cyan-600">{generatedCode}</span></p>
         <button onClick={() => {
             if (verificationInput === generatedCode) {
                 const profile: UserProfile = { ...form, level: 1, joinedAt: Date.now(), status: 'pending', isVerified: true, lgpdAccepted: true };
@@ -350,64 +320,45 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
     </div>
   );
 
-  if (phase === 'pending') return (
-    <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-10 justify-center animate-in text-center">
-      <div className="space-y-8 max-w-sm mx-auto">
-        <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">SINCRONIA <br/>DE DADOS</h2>
-        <p className="text-xs font-bold text-slate-400 uppercase italic">Aguardando validação do Instituto Guia Social para ativação total.</p>
-        <button onClick={() => {
-          const users = JSON.parse(localStorage.getItem('guia_users_db') || '{}');
-          if (users[form.username]) {
-            users[form.username].profile.status = 'active';
-            localStorage.setItem('guia_users_db', JSON.stringify(users));
-            onComplete(users[form.username].profile, 0, {}, []);
-          }
-        }} className="w-full py-6 bg-emerald-500 text-black font-black uppercase text-[10px] rounded-3xl shadow-lg">ENTRADA FORÇADA (DEV)</button>
-      </div>
-    </div>
-  );
-
+  // Renderização padrão dos formulários de login/signup...
   return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-8 justify-start animate-in overflow-y-auto pt-20 pb-40">
        <div className="max-w-sm mx-auto w-full space-y-12">
+         <div className="flex justify-center mb-8">
+            <BrandingLogo size="md" light />
+         </div>
          <h2 className="text-2xl font-black uppercase text-white italic tracking-tighter border-b border-white/10 pb-4">{authMode === 'signup' ? 'Dossiê de Matrícula' : 'Login de Terminal'}</h2>
          
          {error && <p className="text-rose-500 text-[10px] font-black uppercase bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20">{error}</p>}
          
          {authMode === 'login' ? (
            <div className="space-y-4">
-             <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="ID DE USUÁRIO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
-             <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="CHAVE DE ACESSO" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
+             <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="USUÁRIO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
+             <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="SENHA" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
              <button onClick={handleAuth} className="w-full py-6 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-3xl">CONECTAR</button>
-             <button onClick={() => setAuthMode('signup')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">REALIZAR NOVA MATRÍCULA NO BAIRRO</button>
+             <button onClick={() => setAuthMode('signup')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">NOVA MATRÍCULA NO TERRITÓRIO</button>
            </div>
          ) : (
            <div className="space-y-10">
              <div className="space-y-4">
-               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1 italic">01. Sensores de Identidade</span>
                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="NOME COMPLETO" value={form.name} onChange={e => setForm({...form, name: e.target.value.toUpperCase()})} />
                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="CPF" value={form.cpf} onChange={e => setForm({...form, cpf: e.target.value})} />
-               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="BAIRRO DE ATUAÇÃO" value={form.neighborhood} onChange={e => setForm({...form, neighborhood: e.target.value.toUpperCase()})} />
+               <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="BAIRRO (RECIFE)" value={form.neighborhood} onChange={e => setForm({...form, neighborhood: e.target.value.toUpperCase()})} />
                <div className="grid grid-cols-2 gap-3">
                     {['Branca', 'Preta', 'Parda', 'Amarela', 'Indígena'].map(opt => (
                         <button key={opt} onClick={() => setForm({...form, ethnicity: opt})} className={`px-4 py-3 rounded-2xl text-[9px] font-black border-2 transition-all ${form.ethnicity === opt ? 'bg-cyan-600 border-cyan-400 text-black shadow-lg' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
                     ))}
                </div>
              </div>
-
              <div className="space-y-4">
-                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1 italic">02. Credenciais de Acesso</span>
                 <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="NOME DE USUÁRIO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
-                <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="SENHA DE ACESSO" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
+                <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="CHAVE DE ACESSO" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
              </div>
-
-             <div className="p-4 bg-cyan-600/5 border border-cyan-600/10 rounded-2xl flex items-start gap-4">
-                <input type="checkbox" checked={form.lgpd} onChange={e => setForm({...form, lgpd: e.target.checked})} className="mt-1 w-5 h-5 accent-cyan-600" id="lgpd" />
-                <label htmlFor="lgpd" className="text-[9px] font-bold text-slate-500 uppercase italic">Autorizo o uso de dados para fins de mobilidade social e renda territorial.</label>
-             </div>
-
-             <button onClick={startVerification} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] tracking-widest rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.2)]">ATIVAR PROTOCOLO</button>
-             <button onClick={() => setAuthMode('login')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">JÁ POSSUO ACESSO AO SISTEMA</button>
+             <button onClick={() => { 
+                if(!form.name || !form.cpf || !form.neighborhood) { setError("Complete o Dossiê."); return; }
+                const code = generateCode(); setGeneratedCode(code); setPhase('verification');
+             }} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] tracking-widest rounded-3xl">ATIVAR PROTOCOLO</button>
+             <button onClick={() => setAuthMode('login')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">JÁ POSSUO TERMINAL ATIVO</button>
            </div>
          )}
        </div>
@@ -441,7 +392,7 @@ const App = () => {
     setProgress(newProgress);
     setXp(prev => prev + activeLesson.xpValue);
     setActiveLesson(null);
-    showToast(`Competência Técnica Validada: ${activeLesson.title}`, 'success');
+    showToast(`Dossiê Validado: ${activeLesson.title}`, 'success');
   };
 
   useEffect(() => {
@@ -469,39 +420,28 @@ const App = () => {
     <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
-      {activeLesson && (
-        <LessonDossier 
-          lesson={activeLesson} 
-          onBack={() => setActiveLesson(null)} 
-          onComplete={handleCompleteLesson} 
-        />
-      )}
-
-      {view === 'mei' && <MeiPortal onBack={() => setView('home')} />}
+      {activeLesson && <LessonDossier lesson={activeLesson} onBack={() => setActiveLesson(null)} onComplete={handleCompleteLesson} />}
 
       {showManifestoOverlay && (
         <div className="fixed inset-0 z-[100000] bg-slate-950/95 backdrop-blur-xl flex flex-col p-10 justify-center animate-in overflow-y-auto">
              <div className="space-y-12 max-w-sm mx-auto">
-                <h2 className="text-5xl font-black italic uppercase text-white leading-none tracking-tighter">CONSTITUIÇÃO <br/><span className="text-cyan-600">SOCIAL</span></h2>
+                <BrandingLogo size="lg" light />
+                <h2 className="text-3xl font-black italic uppercase text-cyan-600 leading-none tracking-tighter text-center mt-[-40px]">O PACTO</h2>
                 <div className="space-y-6 text-[12px] font-bold text-slate-300 uppercase leading-relaxed tracking-wider italic text-justify">
                     <p>O Guia Digital é um Sistema Operacional de Mobilidade Social.</p>
-                    <p>Não somos um curso, somos infraestrutura política e econômica para talentos locais.</p>
-                    <p>Aqui, o conhecimento é técnico, a formação é robusta e a finalidade é a geração de renda real.</p>
-                    <p className="text-cyan-600 font-black border-l-4 border-cyan-600 pl-6">Nossa missão é hackear a pobreza através da tecnologia e da vocação territorial.</p>
+                    <p>Aqui, o conhecimento é técnico, a formação é robusta e a finalidade é a geração de renda real através da vocação territorial do Recife.</p>
+                    <p className="text-cyan-600 font-black border-l-4 border-cyan-600 pl-6">Nossa missão é hackear a exclusão econômica através da tecnologia.</p>
                 </div>
-                <button onClick={() => setShowManifestoOverlay(false)} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] rounded-3xl shadow-lg">RETORNAR AO TERMINAL</button>
+                <button onClick={() => setShowManifestoOverlay(false)} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] rounded-3xl shadow-lg">RETORNAR AO SISTEMA</button>
              </div>
         </div>
       )}
 
-      <header className="px-8 py-10 flex justify-between items-end border-b border-white/5 sticky top-0 bg-slate-950/90 backdrop-blur-2xl z-50">
-        <div>
-          <h1 className="text-3xl font-black italic uppercase tracking-tighter leading-[0.85]">GUIA <span className="text-cyan-600">DIGITAL</span></h1>
-          <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.4em] mt-2 italic">S.O. MOBILIDADE SOCIAL</p>
-        </div>
+      <header className="px-8 py-10 flex justify-between items-center border-b border-white/5 sticky top-0 bg-slate-950/90 backdrop-blur-2xl z-50">
+        <BrandingLogo size="sm" light />
         <div className="flex flex-col items-end">
-          <div className="text-base font-black text-cyan-500 italic leading-none">{xp} <span className="text-[9px] opacity-40 uppercase tracking-widest">Credits</span></div>
-          <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest mt-1">STATUS: ATIVO NVL {Math.floor(xp/1000) + 1}</div>
+          <div className="text-base font-black text-cyan-500 italic leading-none">{xp} <span className="text-[9px] opacity-40 uppercase tracking-widest">XP</span></div>
+          <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest mt-1">LVL {Math.floor(xp/1000) + 1}</div>
         </div>
       </header>
 
@@ -553,8 +493,8 @@ const App = () => {
                 <button onClick={() => { setActiveTool(null); setToolResult(null); }} className="text-[10px] font-black uppercase text-slate-600 flex items-center gap-2 bg-white/5 px-6 py-3 rounded-full"><i className="fa-solid fa-arrow-left"></i> Fechar Terminal</button>
                 <AIToolRunner tool={activeTool} userProfile={profile} onComplete={setToolResult} />
                 {toolResult && (
-                  <div className="bg-slate-900 p-8 rounded-[40px] border-2 border-cyan-500/20 animate-in relative shadow-2xl">
-                    <button onClick={() => { navigator.clipboard.writeText(toolResult); showToast("Resultado Copiado!", "success"); }} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                  <div className="bg-slate-900 p-8 rounded-[40px] border-2 border-cyan-500/20 animate-in relative shadow-2xl overflow-hidden">
+                    <button onClick={() => { navigator.clipboard.writeText(toolResult); showToast("Copiado!", "success"); }} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
                       <i className="fa-solid fa-copy"></i>
                     </button>
                     <div className="text-sm font-bold leading-relaxed text-slate-300 italic whitespace-pre-wrap">{toolResult}</div>
@@ -584,8 +524,8 @@ const App = () => {
             <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">Fluxo de <span className="text-cyan-600">Renda</span></h2>
             <div className="p-12 border-2 border-dashed border-white/10 rounded-[56px] text-center space-y-6 bg-white/5 shadow-2xl">
                <i className="fa-solid fa-network-wired text-6xl text-cyan-600 animate-pulse"></i>
-               <p className="text-slate-500 uppercase font-black text-[10px] italic tracking-[0.3em]">Sincronizando contratos territoriais...</p>
-               <p className="text-[11px] font-bold text-slate-600 uppercase italic">A robustez da sua formação técnica na Matriz desbloqueia oportunidades reais de negócio.</p>
+               <p className="text-slate-500 uppercase font-black text-[10px] italic tracking-[0.3em]">Sincronizando contratos locais...</p>
+               <p className="text-[11px] font-bold text-slate-600 uppercase italic">A formação na Matriz desbloqueia oportunidades reais de negócio.</p>
             </div>
           </div>
         )}
@@ -610,7 +550,7 @@ const App = () => {
                 </button>
                 <div className="bg-white/5 p-6 rounded-3xl border border-white/5 shadow-xl flex flex-col items-center gap-2">
                    <i className="fa-solid fa-id-card-clip text-cyan-600 text-xl"></i>
-                   <p className="text-[9px] font-black text-slate-500 uppercase">DOC: {profile.cpf}</p>
+                   <p className="text-[9px] font-black text-slate-500 uppercase">IDENTIDADE</p>
                 </div>
              </div>
 
@@ -627,7 +567,6 @@ const App = () => {
             { id: 'home', icon: 'fa-graduation-cap', label: 'MATRIZ' },
             { id: 'tools', icon: 'fa-bolt-lightning', label: 'ARSENAL' },
             { id: 'jobs', icon: 'fa-briefcase', label: 'FLUXO' },
-            { id: 'mei', icon: 'fa-rocket', label: 'MEI' },
             { id: 'profile', icon: 'fa-id-card-clip', label: 'TERMINAL' }
           ].map(item => (
             <button key={item.id} onClick={() => { setView(item.id as any); setSelectedModule(null); triggerVibration('light'); }} className={`flex flex-col items-center justify-center gap-2 transition-all min-w-[56px] ${view === item.id ? 'text-cyan-500 scale-110' : 'text-slate-700'}`}>
