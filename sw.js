@@ -1,10 +1,12 @@
 
-const CACHE_NAME = 'guia-digital-v11.7';
+const CACHE_NAME = 'guia-digital-v1.0.5-FINAL';
 const ASSETS = [
   './',
   './index.html',
+  './metadata.json',
   'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
@@ -24,15 +26,21 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Estratégia Network-First para arquivos de código (.tsx, .ts, .js)
-  // Estratégia Cache-First para bibliotecas e fontes
-  if (event.request.url.includes('.tsx') || event.request.url.includes('.ts') || event.request.url.includes('index.html')) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((res) => res || fetch(event.request))
-    );
-  }
+  event.respondWith(
+    caches.match(event.request).then((res) => {
+      return res || fetch(event.request).then((fetchRes) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          // Não cachear requisições de API dinâmicas (Google GenAI)
+          if (!event.request.url.includes('google.generativeai')) {
+            cache.put(event.request, fetchRes.clone());
+          }
+          return fetchRes;
+        });
+      });
+    }).catch(() => {
+      if (event.request.mode === 'navigate') {
+        return caches.match('./index.html');
+      }
+    })
+  );
 });

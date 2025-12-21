@@ -1,178 +1,197 @@
 
-import { Module, Opportunity, IATool } from './types';
+import { Module, Lesson } from './types';
 
-export const IA_TOOLS: IATool[] = [
+const generateQuizzes = (topic: string) => [
   {
-    id: 'copy-writer',
-    name: 'Copywriter Ann Handley',
-    description: 'Cria textos úteis e empáticos baseados no livro "Everybody Writes".',
-    icon: 'fa-pen-nib',
-    minLevel: 1,
-    promptTemplate: 'Aja como Ann Handley. Crie um post para o Instagram de um pequeno negócio de {business_type} no bairro {neighborhood} em Recife. O texto deve ser útil, focar no cliente local e evitar jargões técnicos.'
-  },
-  {
-    id: 'smart-planner',
-    name: 'Mentor de Metas SMART',
-    description: 'Transforma seus objetivos em planos de ação com prazos reais.',
-    icon: 'fa-bullseye',
-    minLevel: 2,
-    promptTemplate: 'Analise este objetivo: {input}. Transforme-o em uma meta SMART (Específica, Mensurável, Alcançável, Relevante e com Prazo) para um jovem micro-consultor digital em Recife.'
-  },
-  {
-    id: 'seo-optimizer',
-    name: 'Analista de SEO Local',
-    description: 'Sugere palavras-chave para negócios do bairro aparecerem no Google Maps.',
-    icon: 'fa-location-crosshairs',
-    minLevel: 3,
-    promptTemplate: 'Sugira 5 palavras-chave estratégicas para um negócio de {input} ser encontrado no Google Maps por moradores do bairro {neighborhood} em Recife.'
+    question: `Qual o pilar fundamental para garantir o sucesso em ${topic}?`,
+    options: ['Intuição e sorte', 'Método técnico e análise de dados', 'Apenas criatividade visual', 'Seguir tendências sem critério'],
+    correctIndex: 1,
+    explanation: 'O marketing profissional baseia-se em processos repetíveis e validação por dados.'
   }
 ];
+
+const createLesson = (
+  id: string, 
+  title: string, 
+  challenge: string, 
+  delTitle: string, 
+  delObjective: string, 
+  checklist: string[],
+  rubric: any
+): Lesson => ({
+  id,
+  title,
+  duration: '45-60m',
+  minReadSeconds: 40,
+  minWordsPractice: 150,
+  theory: `Nesta lição de ${title}, focamos na aplicação prática de conceitos de mercado. O domínio técnico exige que você compreenda não apenas o "como", mas o "porquê". A profundidade estratégica é o que separa o amador do profissional de elite. Estude os fundamentos de ${delObjective} para prosseguir para a auditoria.`,
+  challenge,
+  deliverablePrompt: `${delTitle}: ${delObjective}`,
+  deliverableChecklist: checklist,
+  quizzes: generateQuizzes(title),
+  gradingRubric: JSON.stringify(rubric),
+  xpValue: 500
+});
 
 export const MODULES: Module[] = [
-  { 
-    id: '1', 
-    title: 'Cidadania e Sociedade 4.0', 
-    progress: 0, 
-    status: 'current',
-    technicalSkill: 'Ética Digital',
-    description: 'Fundamentação teórica sobre Marketing Humano e Direitos Sociais no Brasil.', 
-    icon: 'fa-handshake-angle', 
-    xpValue: 2000,
+  {
+    id: 'm1',
+    title: '1. Fundamentos e Mentalidade',
+    technicalSkill: 'Analista de Negócios',
+    description: 'A base real: valor, oferta, demanda e o ecossistema de mercado.',
+    icon: 'fa-brain',
+    xpValue: 3000,
     lessons: [
-      {
-        id: 'u1',
-        title: 'Marketing 4.0: Humano no Centro',
-        duration: '25m',
-        theory: 'O Marketing 4.0 integra o digital ao humano. Em Recife, vemos isso quando uma padaria em Casa Forte usa o Instagram não só para vender, mas para criar comunidade. Philip Kotler ensina que as marcas agora devem ter "personalidade" e valores éticos claros.',
-        challenge: 'Identifique um empreendimento no seu bairro que utiliza uma comunicação humanizada. Como eles interagem com a comunidade?',
-        quiz: {
-          question: 'No Marketing 4.0, qual o foco principal da relação marca-cliente?',
-          options: ['Vender a qualquer custo', 'Humanização e conexão de valores', 'Automatização total por robôs', 'Apenas preços baixos'],
-          correctIndex: 1,
-          explanation: 'A conexão de valores e a humanização são os pilares da nova era do marketing.'
-        },
-        checklist: ['Estudar conceito de Kotler', 'Mapear 1 negócio local humanizado', 'Analisar valores da marca'],
-        xpValue: 500
-      },
-      {
-        id: 'u2',
-        title: 'Dignidade e Direitos Digitais',
-        duration: '30m',
-        theory: 'O Estatuto da Juventude (Lei 12.852/2013) garante ao jovem o direito ao trabalho e à cultura. No mundo digital, isso se traduz em soberania de dados e acesso a ferramentas de produção de renda.',
-        challenge: 'Leia os pontos principais do Estatuto da Juventude e relacione um direito com a sua futura atuação como consultor digital.',
-        quiz: {
-          question: 'Qual lei brasileira garante direitos específicos aos jovens de 15 a 29 anos?',
-          options: ['Lei do Estágio', 'Estatuto da Juventude', 'Código Civil', 'Lei da Informática'],
-          correctIndex: 1,
-          explanation: 'O Estatuto da Juventude é a base legal para políticas públicas de mobilidade para jovens.'
-        },
-        checklist: ['Leitura da Lei 12.852', 'Reflexão sobre autonomia econômica'],
-        xpValue: 500
-      }
+      createLesson('m1l1', 'Marketing de verdade: valor, oferta e demanda', 'Explique a diferença entre divulgar e criar valor. Identifique dor, promessa e prova para um produto real.', 'Mapa Problema–Solução', 'Transformar produto em proposta de valor objetiva.', ['Definiu público', 'Listou dores', 'Promessa clara', 'Incluiu prova', 'Objeções/CTA'], { execution: 3, technical: 3, strategy: 2, professionalism: 2 }),
+      createLesson('m1l2', 'Funil, jornada e intenção', 'Desenhe a jornada TOFU/MOFU/BOFU. O que a pessoa pensa e qual conteúdo resolve?', 'Funil simples com peças', 'Planejar funil mínimo viável.', ['Oferta/Persona', 'TOFU/MOFU/BOFU', '2 peças por etapa', 'KPIs/Justificativa'], {}),
+      createLesson('m1l3', 'Público-alvo vs Persona', 'Crie público macro e duas personas micro para a mesma oferta.', 'Doc: Público + 2 Personas', 'Domínio da segmentação utilizável em copy.', ['Público macro', 'Personas realistas', 'Dores/Desejos', 'Copy por persona'], {}),
+      createLesson('m1l4', 'Concorrência e diferenciação', 'Escolha 3 concorrentes e compare promessa, prova e CTA.', 'Tabela de concorrência', 'Leitura de mercado baseada em evidência.', ['3 players com links', 'Tabela comparativa', '10 insights', 'Hipótese diferencial'], {}),
+      createLesson('m1l5', 'Oferta: promessa, prova e CTA', 'Escreva oferta em 1 parágrafo + 3 bullets + prova + garantia.', 'One-pager de oferta (PDF)', 'Produzir oferta enxuta e vendável.', ['Promessa clara', '3 bullets benefícios', 'Redução de risco', 'CTA concreto'], {}),
+      createLesson('m1l6', 'Ética e responsabilidade', 'Reescreva 5 promessas enganosas de forma ética.', 'Checklist ético', 'Padrão de comunicação responsável.', ['10 promessas arriscadas', 'Versões éticas', 'Checklist pré-pub'], {})
     ]
   },
-  { 
-    id: '2', 
-    title: 'Engenharia de Projeto de Vida', 
-    progress: 0, 
-    status: 'locked',
-    technicalSkill: 'Gestão Estratégica',
-    description: 'Planejamento de carreira através do Ikigai e Metas SMART aplicadas.', 
-    icon: 'fa-seedling', 
-    xpValue: 1500,
+  {
+    id: 'm2',
+    title: '2. Branding e Posicionamento',
+    technicalSkill: 'Estrategista de Marca',
+    description: 'Construção de percepção, tom de voz e manuais práticos.',
+    icon: 'fa-chess-king',
+    xpValue: 3000,
     lessons: [
-      {
-        id: 'u5',
-        title: 'O Ikigai do Consultor Local',
-        duration: '35m',
-        theory: 'Ikigai é um conceito japonês para "razão de ser". Para um jovem no Recife, pode ser unir sua habilidade em design com a necessidade de digitalizar o pequeno produtor de Bolo de Rolo do bairro.',
-        challenge: 'Desenhe sua mandala Ikigai focada em como suas habilidades podem servir ao seu território.',
-        quiz: {
-          question: 'O Ikigai é a intersecção de quais pilares?',
-          options: ['Paixão, Missão, Vocação e Profissão', 'Trabalho, Dinheiro, Casa e Carro', 'Fama, Sucesso, Poder e Renda', 'Estudo, Prova, Nota e Diploma'],
-          correctIndex: 0,
-          explanation: 'O Ikigai busca o equilíbrio entre o que você ama e o que o mundo precisa.'
-        },
-        checklist: ['Definir Paixão/Missão', 'Mapear Vocação Territorial', 'Validar pilar de Renda'],
-        xpValue: 750
-      }
+      createLesson('m2l1', 'Marca como ativo: percepção', 'Explique por que marca não é logo usando exemplo real.', 'Brand audit (perfil real)', 'Diagnóstico de marca por sinais públicos.', ['Análise Bio/Destaques', '5 incoerências', '10 melhorias'], {}),
+      createLesson('m2l2', 'Posicionamento: tom e categoria', 'Escreva declaração de posicionamento + 3 mensagens chave.', 'Doc: Posicionamento + Mensagens', 'Fixar posicionamento como estrutura.', ['Declaração completa', 'Mensagens proibidas', 'Regras Tom de Voz'], {}),
+      createLesson('m2l3', 'Arquitetura de marca', 'Defina arquitetura: marca-mãe e subprodutos.', 'Mapa de arquitetura', 'Organizar oferta para reduzir ruído.', ['Marca-mãe + 3 ofertas', 'Regra de nomenclatura', 'Exemplo jornada'], {}),
+      createLesson('m2l4', 'Storytelling aplicado', 'Roteiro: Contexto → Conflito → Virada → Prova → CTA.', 'Roteiro + execução teste', 'Storytelling funcional para marketing.', ['Roteiro 45s Hook forte', 'Inclui método/prova', 'CTA alinhado'], {}),
+      createLesson('m2l5', 'Identidade visual e linguagem', 'Defina 3 pilares, 3 regras visuais e 3 de linguagem.', 'Manual de marca MV (PDF)', 'Guia prático para consistência.', ['3 Pilares conteúdo', 'Paleta/Tipografia', 'Tom de Voz rules'], {}),
+      createLesson('m2l6', 'Consistência: audit e plano', 'Plano de 7 dias para corrigir inconsistências de perfil.', 'Plano de ajuste (7 dias)', 'Transformar diagnóstico em execução.', ['Bio nova/Link', '3 Destaques reestruturados', 'Calendário 7 dias'], {})
     ]
   },
-  { 
-    id: '3', 
-    title: 'Arquitetura de Marketing Digital', 
-    progress: 0, 
-    status: 'locked',
-    technicalSkill: 'Technical Marketing',
-    description: 'Domínio dos 4Ps, Funil de Vendas e o Círculo Dourado de Simon Sinek aplicado ao Recife.', 
-    icon: 'fa-microchip', 
-    xpValue: 4000,
+  {
+    id: 'm3',
+    title: '3. Conteúdo e Copywriting',
+    technicalSkill: 'Copywriter Sênior',
+    description: 'Sistemas de escrita persuasiva e frameworks de conversão.',
+    icon: 'fa-pen-nib',
+    xpValue: 3000,
     lessons: [
-      {
-        id: 'u6',
-        title: 'O Círculo Dourado Territorial',
-        duration: '40m',
-        theory: 'Simon Sinek afirma: "Pessoas não compram o que você faz, elas compram o porquê você faz". Se você atende um negócio no Porto Digital, o porquê deles deve vibrar inovação. Se é em Afogados, deve vibrar resistência e serviço local.',
-        challenge: 'Defina o "Porquê" de um negócio de serviços no seu bairro. Qual a dor real que eles curam na comunidade?',
-        quiz: {
-          question: 'Onde começa o Círculo Dourado de Simon Sinek?',
-          options: ['No "O Quê"', 'No "Como"', 'No "Porquê"', 'No "Preço"'],
-          correctIndex: 2,
-          explanation: 'O propósito (Porquê) é a âncora de toda estratégia de marketing de alto nível.'
-        },
-        checklist: ['Identificar o núcleo do propósito', 'Diferenciar Como de O Quê'],
-        xpValue: 1000
-      },
-      {
-        id: 'u7',
-        title: 'Branding e Estética de Bairro',
-        duration: '45m',
-        theory: 'Branding não é só logo. É a percepção. Em Recife, o movimento Armorial de Ariano Suassuna ensinou a usar elementos locais para criar algo universal. Como usar a cultura de Casa Amarela para valorizar um comércio local?',
-        challenge: 'Crie uma paleta de cores e um conceito visual para uma marca do bairro baseando-se em elementos arquitetônicos ou culturais da vizinhança.',
-        quiz: {
-          question: 'Qual o objetivo principal do Branding Territorial?',
-          options: ['Copiar marcas americanas', 'Valorizar a identidade local para gerar diferencial', 'Diminuir os preços dos produtos', 'Esconder a origem do negócio'],
-          correctIndex: 1,
-          explanation: 'Branding territorial usa a cultura local como ativo de valorização comercial.'
-        },
-        checklist: ['Estudo de cores locais', 'Definição de tom de voz', 'Análise de símbolos do bairro'],
-        xpValue: 1000
-      },
-      {
-        id: 'u8',
-        title: 'SEO de Proximidade e Mapas',
-        duration: '50m',
-        theory: 'Para o pequeno negócio, ser achado no bairro é mais importante do que ser achado no mundo. O SEO Local foca em palavras-chave geográficas (ex: "Bolo de Rolo em Afogados"). O Google Meu Negócio é a ferramenta de poder aqui.',
-        challenge: 'Mapeie as 5 principais palavras-chave que um morador do bairro usaria para achar um serviço de conserto de celulares na sua rua.',
-        quiz: {
-          question: 'Qual ferramenta é essencial para o SEO de proximidade?',
-          options: ['Twitter Ads', 'Google Meu Negócio', 'TikTok', 'Painéis de Outdoor'],
-          correctIndex: 1,
-          explanation: 'O Google Meu Negócio coloca o comércio local no mapa físico e digital dos usuários.'
-        },
-        checklist: ['Mapear palavras-chave geográficas', 'Simular cadastro no GMN'],
-        xpValue: 1000
-      },
-      {
-        id: 'u9',
-        title: 'Copywriting e Persuasão Ética',
-        duration: '40m',
-        theory: 'Copywriting é a arte de escrever para converter. Usando Ann Handley como guia, aprendemos que "todos escrevem". Gatilhos como Autoridade, Escassez e Prova Social devem ser usados com verdade e foco no benefício do vizinho.',
-        challenge: 'Escreva um anúncio de 3 linhas para o WhatsApp de uma feira orgânica no bairro, usando o gatilho da Prova Social.',
-        quiz: {
-          question: 'Segundo Ann Handley, qual o segredo de uma boa escrita?',
-          options: ['Usar palavras difíceis', 'Focar na utilidade e empatia com o leitor', 'Escrever o máximo possível', 'Focar apenas no preço'],
-          correctIndex: 1,
-          explanation: 'A escrita útil e empática cria confiança antes da venda.'
-        },
-        checklist: ['Exercício de gatilho mental', 'Revisão de texto empático'],
-        xpValue: 1000
-      }
+      createLesson('m3l1', 'Conteúdo como sistema', 'Proponha 3 pilares + 3 formatos + objetivo por formato.', 'Mapa de sistema de conteúdo', 'Criar base operacional para consistência.', ['3 Pilares definidos', 'Ritmo semanal', 'Bloco produção lote'], {}),
+      createLesson('m3l2', 'Copy: dor, desejo, prova', 'Legenda: Hook → Dor → Mecanismo → Prova → CTA.', '3 variações de copy', 'Adaptação de mensagem por contexto.', ['Curta/Média/Longa', 'Gatilhagem ética', 'CTA coerente'], {}),
+      createLesson('m3l3', 'Gatilhos sem manipulação', 'Escreva exemplos éticos e antiéticos de 3 gatilhos.', 'Tabela gatilho: Ético vs Antiético', 'Persuasão sem perda de credibilidade.', ['3 Gatilhos escolhidos', 'Justificativa técnica', 'Prova necessária'], {}),
+      createLesson('m3l4', 'Roteiros de Reels e Carrossel', 'Roteiro Reels (hook/payoff) + Outline Carrossel.', 'Reels + Carrossel (Outline)', 'Transformar ideia em dois formatos.', ['Roteiro 30s', 'Variações Hook', 'Páginas Carrossel'], {}),
+      createLesson('m3l5', 'Calendário editorial', 'Monte calendário de 14 dias com temas e KPIs.', 'Planilha calendário (14 dias)', 'Mistura de atração, prova e conversão.', ['14 Linhas tema/KPI', '2 posts conversão', '2 posts prova'], {}),
+      createLesson('m3l6', 'Revisão técnica de copy', 'Pegue copy ruim, liste 5 erros e reescreva.', 'Antes/Depois de copy', 'Treinar edição profissional.', ['Copy original', '5 Problemas objetivos', 'Versão final + Justificativa'], {})
+    ]
+  },
+  {
+    id: 'm4',
+    title: '4. Social Media de Negócio',
+    technicalSkill: 'Community Manager',
+    description: 'Gestão de algoritmos, comunidades e fluxos de agência.',
+    icon: 'fa-hashtag',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m4l1', 'Algoritmo e Retenção', 'Explique sinais de retenção e crie post para maximizar.', 'Post/Protótipo retenção', 'Aplicar teoria de sinais sociais.', ['Formato/Hook', 'Estrutura retenção', 'CTA salvar/enviar'], {}),
+      createLesson('m4l2', 'KPIs por formato', 'Tabela: formato x objetivo x KPI x meta.', 'Tabela KPIs + Hipóteses', 'Medir com lógica, não vaidade.', ['4 Formatos', 'Métricas aux', 'Plan de ajuste'], {}),
+      createLesson('m4l3', 'Comunidade: DMs e Comentários', 'Crie 12 respostas modelo para diversos cenários.', 'Playbook de respostas', 'Padronizar sem perder humanidade.', ['12 Modelos', 'Foco conversão', 'Regra escalonamento'], {}),
+      createLesson('m4l4', 'Rotina operacional SM', 'Workflow: briefing → roteiro → arte → revisão.', 'Workflow + Checklist Qualidade', 'Operar como agência profissional.', ['Etapas/SLA', 'Checklist aprovação', 'Print Quadro Trello/Notion'], {}),
+      createLesson('m4l5', 'Briefing e Aprovação', 'Crie template de briefing e preencha caso fictício.', 'Template + Briefing preenchido', 'Extração de requisitos técnicos.', ['Objetivo/KPI', 'Mensagem-chave', 'Restrições éticas'], {}),
+      createLesson('m4l6', 'Relatório mensal', 'Monte relatório: top conteúdos, queda e decisões.', 'Relatório mensal + Decisões', 'Transformar métricas em plano de ação.', ['Visão Geral', 'Top 3 e porquê', '5 Decisões próximas'], {})
+    ]
+  },
+  {
+    id: 'm5',
+    title: '5. Tráfego Pago Essencial',
+    technicalSkill: 'Media Buyer',
+    description: 'Estruturas de campanha, criativos e otimização de verba.',
+    icon: 'fa-bullseye',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m5l1', 'Mídia paga e Alavanca', 'Explique quando usar tráfego pago e o que esperar.', 'Plano de campanha (1 página)', 'Traduzir negócio em estrutura Ads.', ['Objetivo lead/venda', 'Público/Segmentação', 'Plano otimização'], {}),
+      createLesson('m5l2', 'Estrutura Objetivo/Público', 'Crie 2 conjuntos e 2 ângulos criativos.', 'Matriz 2x2 + Creatives', 'Planejar variações testáveis.', ['2 Públicos', '2 Ângulos', 'Copies/Mockups'], {}),
+      createLesson('m5l3', 'Pixel e Eventos', 'Explique eventos mínimos para lead e compra.', 'Checklist de rastreio', 'Garantir mensuração pré-investimento.', ['Eventos lead/compra', 'Plano validação', 'Erros comuns'], {}),
+      createLesson('m5l4', 'Criativos que vendem', '2 criativos: dor vs benefício. Escreva copies.', '2 Criativos + 2 Copies', 'Alinhamento público-mensagem.', ['Imagem/Roteiro', 'Justificativa público', 'Checklist qualidade'], {}),
+      createLesson('m5l5', 'KPIs: CTR, CPC, ROAS', 'Mini-caso: CTR baixo. Liste 5 hipóteses e ações.', 'Diagnóstico KPI', 'Troubleshooting estruturado.', ['5 Hipóteses', '5 Ações priorizadas', 'Plano teste 7 dias'], {}),
+      createLesson('m5l6', 'Orçamento e Alocação', 'Planos R$300 e R$3000. Justifique fases.', 'Plano de verba + Critérios escala', 'Alocar verba com disciplina.', ['2 Cenários', 'Fase teste/escala', 'Ponto de corte'], {})
+    ]
+  },
+  {
+    id: 'm6',
+    title: '6. Mídia Programática',
+    technicalSkill: 'Programmatic Trader',
+    description: 'O ecossistema DSP, SSP e compra via leilão RTB.',
+    icon: 'fa-robot',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m6l1', 'Ecossistema Programático', 'Explique fluxo de impressão entre SSP e DSP.', 'Diagrama Programático', 'Representar fluxo de compra/venda.', ['Diagrama completo', 'Explicação fluxo', 'Glossário 5 termos'], {}),
+      createLesson('m6l2', 'DSP, SSP e Ad Server', 'Quadro comparativo: função, quem usa e KPIs.', 'Quadro DSP/SSP/AdServer', 'Fixar responsabilidades técnicas.', ['Função de cada', 'KPIs associados', 'Exemplo uso'], {}),
+      createLesson('m6l3', 'RTB: Lógica do Leilão', 'Mini-caso: 3 anunciantes disputam impressão.', 'Caso RTB + Explicação', 'Entender RTB como sistema decisão.', ['Cenário 3 lances', 'Critério qualidade', 'Justificativa vencedor'], {}),
+      createLesson('m6l4', 'Segmentação: Contexto/Intenção', '3 planos: contextual, audiência e intenção.', 'Plano 3 estratégias', 'Treinar planejamento sem achismo.', ['Segmentação técnica', 'Trade-offs', 'Plano teste'], {}),
+      createLesson('m6l5', 'Brand Safety e Fraude', 'Liste riscos e crie checklist de prevenção.', 'Checklist Anti-fraude', 'Proteção de marca e eficiência.', ['Lista de exclusões', 'Sinais de fraude', 'Plano monitoramento'], {}),
+      createLesson('m6l6', 'Quando usar Programática', '3 cenários SIM e 3 NÃO. Explique lógica.', 'Matriz de decisão', 'Evitar uso por hype.', ['Cenários justificados', 'Critérios escala/verba', 'Alternativas'], {})
+    ]
+  },
+  {
+    id: 'm7',
+    title: '7. Métricas e Analytics',
+    technicalSkill: 'Data Strategist',
+    description: 'UTMs, dashboards e diagnóstico de conversão.',
+    icon: 'fa-chart-line',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m7l1', 'KPI vs Métrica', 'Escolha objetivo e defina KPIs principal e aux.', 'Tabela Obj → KPI', 'Medir com foco em resultado.', ['KPI Principal', '3 KPIs Auxiliares', 'Ação se falhar'], {}),
+      createLesson('m7l2', 'UTM e Rastreio', 'Crie padrão UTM e gere 5 exemplos de links.', 'Padrão UTM + 5 links', 'Disciplina de rastreio básico.', ['Convenção nomes', '5 Links reais', 'Tabela ref equipe'], {}),
+      createLesson('m7l3', 'Leitura de Painel', 'Crie mini-dashboard e defina 3 alertas.', 'Planilha Dashboard + Alertas', 'Transformar números em rotina.', ['Planilha funcional', '3 Alertas limiar', 'Guia leitura rápida'], {}),
+      createLesson('m7l4', 'Diagnóstico de Queda', 'Simule queda conversão: 5 hipóteses e testes.', 'Plano diagnóstico', 'Pensamento investigativo estruturado.', ['Prioridade Imp x Esf', 'Testes variável única', 'Decisão prevista'], {}),
+      createLesson('m7l5', 'Teste A/B Metódico', 'Plano A/B: hipótese, amostra e métrica sucesso.', 'Plano A/B Completo', 'Teste sem tentativa e erro.', ['Variável única', 'Tempo do teste', 'Decisão por cenário'], {}),
+      createLesson('m7l6', 'Relatório Executivo', 'Relatório de 1 pág: o que houve e recomendação.', 'Relatório Executivo (PDF)', 'Comunicar para tomada de decisão.', ['Resumo 3 linhas', '3 Insights principais', 'Plano ação 3-5 itens'], {})
+    ]
+  },
+  {
+    id: 'm8',
+    title: '8. Projetos e Operação',
+    technicalSkill: 'Project Manager',
+    description: 'Escopo, propostas comerciais e gestão de cliente.',
+    icon: 'fa-list-check',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m8l1', 'Briefing Profissional', 'Crie template e preencha caso real.', 'Template + Briefing preenchido', 'Padronizar descoberta técnica.', ['Objetivo/KPI/Público', 'Assets/Restrições', 'Checklist alinhamento'], {}),
+      createLesson('m8l2', 'Escopo e Prazos', 'Defina escopo para 30 dias de SM + Tráfego.', 'Escopo + Cronograma', 'Proteger execução com limites.', ['Lista entregas/semana', 'Revisões incluídas', 'Fora do escopo'], {}),
+      createLesson('m8l3', 'Proposta Comercial', 'Escreva proposta: problema, solução, valor.', 'Proposta Comercial (PDF)', 'Vender com clareza e segurança.', ['Metodologia resumida', 'Investimento/Pagto', 'Condições/SLA'], {}),
+      createLesson('m8l4', 'Gestão de Expectativa', '10 mensagens prontas para situações críticas.', 'Playbook 10 mensagens', 'Reduzir caos e ruído atendimento.', ['Casos: atraso/urgência', 'Limite + Próxima ação', 'Tom firme/educado'], {}),
+      createLesson('m8l5', 'Checklist de Qualidade', 'Checklist pré-pub aplicado em post real.', 'Checklist + Aplicação', 'Disciplina de qualidade final.', ['15 itens verificação', 'Antes/Depois post', 'LGPD/Copyright check'], {}),
+      createLesson('m8l6', 'Pós-projeto e Retenção', 'Plano de 30 dias pós entrega + continuidade.', 'Plano retenção + Proposta', 'Sustentar receita com valor real.', ['Check-ins 30 dias', 'Roteiro reunião res', 'Upsell ético rules'], {})
+    ]
+  },
+  {
+    id: 'm9',
+    title: '9. Carreira e Portfólio',
+    technicalSkill: 'Profissional de Elite',
+    description: 'Posicionamento, precificação e vitrine de casos.',
+    icon: 'fa-address-card',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m9l1', 'Trilhas e Competências', 'Compare Freela, Agência e CLT.', 'Mapa de carreira', 'Escolha consciente de caminho.', ['10 Competências/trilha', 'Entregas típicas', 'Plano 30 dias'], {}),
+      createLesson('m9l2', 'Portfólio que contrata', 'Crie portfólio com 3 projetos simulados/reais.', 'Página Portfólio (Notion)', 'Vitrine prática de competência.', ['Link página pública', '3 Projetos Processo/Res', 'Minha função/Tools'], {}),
+      createLesson('m9l3', 'Precificação e Pacotes', '3 pacotes (B/I/P) para social media.', 'Tabela pacotes + Revisão', 'Precificar com escopo definido.', ['Entregas por pacote', 'Preço/Justificativa', 'One-pager proposta'], {}),
+      createLesson('m9l4', 'Contratos e Risco', '10 cláusulas essenciais sem juridiquês.', 'Modelo acordo + Checklist risco', 'Reduzir risco com alinhamento.', ['Cláusulas Proteção', 'SLA Comunicação', 'Política Cancelamento'], {}),
+      createLesson('m9l5', 'Pitch e Entrevista', '10 Q&A técnicos + Pitch de 60s.', 'Simulação Q&A + Pitch (Video)', 'Comunicação segura e técnica.', ['10 Respostas Prova', 'Pitch 60s', 'Autoavaliação'], {}),
+      createLesson('m9l6', 'Rotina e Produtividade', 'Crie rotina semanal em blocos reais.', 'Agenda + Métricas pessoais', 'Consistência sem burnout.', ['Blocos Prod/Estudo', '3-5 Indicadores pessoais', 'Plano contingência'], {})
+    ]
+  },
+  {
+    id: 'm10',
+    title: '10. Formalização e Vida Real',
+    technicalSkill: 'Empreendedor Digital',
+    description: 'LGPD, Copyright, MEI e Projeto Capstone final.',
+    icon: 'fa-scale-balanced',
+    xpValue: 3000,
+    lessons: [
+      createLesson('m10l1', 'MEI/ME e Fisco', 'Explique quando MEI faz sentido e riscos.', 'Checklist MEI (Riscos)', 'Base para atuação profissional.', ['3 Casos Sim/Não', 'Checklist abertura', 'Organização NF'], {}),
+      createLesson('m10l2', 'Previdência e Proteção', 'Plano mínimo: reserva e separação contas.', 'Plano proteção (1 pág)', 'Sustentabilidade profissional.', ['Regras PJ/Pessoal', 'Reserva conceito', 'Rotina mensal org'], {}),
+      createLesson('m10l3', 'LGPD Prática', 'Mapeie dados de landing e defina retenção.', 'Mapa LGPD + Checklist', 'Reduzir risco legal coleta.', ['Finalidade por dado', 'Consentimento simples', 'Procedimento remoção'], {}),
+      createLesson('m10l4', 'Direito Autoral', 'Riscos de uso sem permissão e checklist.', 'Checklist Copyright + Exemplos', 'Proteção de marca e legal.', ['5 Riscos explicados', '10 Itens verificação', 'Modelo autorização'], {}),
+      createLesson('m10l5', 'Política de Privacidade', 'Escreva política curta para landing.', 'Modelo Política Privacidade', 'Conformidade para páginas leads.', ['Coleta/Finalidade', 'Direitos titular', 'Linguagem clara'], {}),
+      createLesson('m10l6', 'Capstone: Projeto Final', 'Plano marketing completo 30 dias.', 'Projeto Final + Banca IA', 'Demonstrar competência integrada.', ['Diagnóstico/Estratégia', 'Plano Conteúdo/Ads', 'Apresentação Final'], {})
     ]
   }
-];
-
-export const OPPORTUNITIES: Opportunity[] = [
-  { id: '1', businessName: 'Artesanato do Cais', title: 'Consultoria Marketing 4.0', location: 'Recife Antigo', lat: -8.063, lng: -34.871, type: 'freelance', reward: 'R$ 450', requiredSkill: 'Marketing 4.0' },
-  { id: '2', businessName: 'Bolo de Rolo da Maria', title: 'Otimização SEO Local', location: 'Afogados', lat: -8.077, lng: -34.908, type: 'pj', reward: 'R$ 600', requiredSkill: 'Growth' },
 ];
