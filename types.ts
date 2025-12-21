@@ -1,5 +1,7 @@
 
 export interface UserProfile {
+  username: string;
+  password?: string; // Armazenado localmente para o protótipo
   name: string;
   neighborhood: string;
   skill: string;
