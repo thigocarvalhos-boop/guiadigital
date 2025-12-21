@@ -17,7 +17,7 @@ export interface UserProfile {
   verificationCode?: string;
   isVerified: boolean;
   lgpdAccepted: boolean;
-  // Novos campos de diversidade
+  // Campos de Diversidade e Identidade do S.O.
   sexualOrientation: string;
   sexualOrientationOther?: string;
   genderIdentity: string;

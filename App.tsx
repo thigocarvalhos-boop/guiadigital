@@ -220,7 +220,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
     if (!form.neighborhood) missing.push('Bairro');
     if (!form.skill) missing.push('Vocação');
     
-    // Validações de diversidade
+    // Validações demográficas obrigatórias do S.O.
     if (!form.ethnicity) missing.push('Etnia');
     if (!form.sexualOrientation) missing.push('Orientação Sexual');
     if (!form.genderIdentity) missing.push('Identidade de Gênero');
@@ -228,9 +228,9 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
     if (!form.transIdentity) missing.push('Informação Trans/Travesti');
 
     if (missing.length > 0) { 
-      setError(`Campos faltantes: ${missing.join(', ')}`); 
+      setError(`Protocolo Incompleto: ${missing.join(', ')}`); 
       triggerVibration('warning');
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return; 
     }
     
@@ -257,8 +257,11 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-10 justify-center animate-in overflow-y-auto">
       <div className="space-y-12 max-w-sm mx-auto text-center">
         <h2 className="text-6xl font-black italic uppercase text-white leading-[0.8] tracking-tighter">GUIA <br/><span className="text-cyan-600">SOCIAL</span></h2>
-        <p className="text-slate-400 font-bold text-sm leading-relaxed border-l-4 border-white/5 pl-8 italic text-left">Seu Sistema Operacional de Mobilidade Econômica.</p>
-        <button onClick={() => setPhase('auth')} className="w-full py-6 bg-cyan-600 text-slate-950 font-black uppercase text-[10px] rounded-3xl active:scale-95 shadow-xl transition-all">Acessar Sistema</button>
+        <div className="space-y-4">
+           <p className="text-slate-200 font-black text-xs uppercase tracking-widest italic">Sistema Operacional de Mobilidade Social</p>
+           <p className="text-slate-500 font-bold text-[10px] leading-relaxed border-l-4 border-cyan-600 pl-8 italic text-left">Não apenas um curso, mas um ecossistema de transformação de talentos em renda real.</p>
+        </div>
+        <button onClick={() => setPhase('auth')} className="w-full py-6 bg-cyan-600 text-slate-950 font-black uppercase text-[10px] rounded-3xl active:scale-95 shadow-[0_0_50px_rgba(34,211,238,0.3)] transition-all">Iniciar Sistema</button>
       </div>
     </div>
   );
@@ -266,14 +269,14 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   if (phase === 'verification') return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-8 justify-center animate-in text-center">
       <div className="max-w-sm mx-auto w-full space-y-8">
-        <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">Validação</h2>
-        <p className="text-xs text-slate-500 uppercase font-black">Digite o código enviado no seu e-mail de matrícula:</p>
+        <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">Validação de Matrícula</h2>
+        <p className="text-xs text-slate-500 uppercase font-black">Digite o código enviado no seu dossiê digital:</p>
         <input className="w-full bg-slate-900 border-2 border-white/5 p-6 rounded-3xl text-white text-3xl text-center outline-none font-black tracking-[0.5em]" placeholder="000000" maxLength={6} value={verificationInput} onChange={e => setVerificationInput(e.target.value)} />
         <div className="p-4 bg-black rounded-2xl border border-white/10 text-left">
-           <p className="text-[8px] font-black text-cyan-600 uppercase mb-1">Log de Teste:</p>
-           <p className="text-[10px] font-mono text-slate-500 italic">Código recebido: {generatedCode}</p>
+           <p className="text-[8px] font-black text-cyan-600 uppercase mb-1">Logs do Sistema:</p>
+           <p className="text-[10px] font-mono text-slate-500 italic">Auth_Token: {generatedCode}</p>
         </div>
-        <button onClick={confirmVerification} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] rounded-3xl shadow-2xl">Validar Matrícula</button>
+        <button onClick={confirmVerification} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] rounded-3xl shadow-2xl">Confirmar Acesso</button>
       </div>
     </div>
   );
@@ -281,8 +284,8 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   if (phase === 'pending') return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-10 justify-center animate-in text-center">
       <div className="space-y-8 max-w-sm mx-auto">
-        <h2 className="text-3xl font-black italic uppercase text-white leading-none tracking-tighter">Matrícula <br/>Enviada</h2>
-        <p className="text-xs font-bold text-slate-400">O Instituto Guia Social recebeu seu dossiê e está processando a liberação.</p>
+        <h2 className="text-3xl font-black italic uppercase text-white leading-none tracking-tighter">Dossiê <br/>Processado</h2>
+        <p className="text-xs font-bold text-slate-400">O Instituto Guia Social está validando sua entrada no S.O. de Mobilidade.</p>
         <button onClick={() => {
           const users = JSON.parse(localStorage.getItem('guia_users_db') || '{}');
           if (users[form.username]) {
@@ -290,7 +293,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
             localStorage.setItem('guia_users_db', JSON.stringify(users));
             onComplete(users[form.username].profile, 0, {}, []);
           }
-        }} className="w-full py-6 bg-emerald-500 text-black font-black uppercase text-[10px] rounded-3xl shadow-lg">Aprovação Mentor (Modo Teste)</button>
+        }} className="w-full py-6 bg-emerald-500 text-black font-black uppercase text-[10px] rounded-3xl shadow-lg">Ativação Prioritária (Dev)</button>
       </div>
     </div>
   );
@@ -298,7 +301,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
   return (
     <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col p-8 justify-start animate-in overflow-y-auto pt-20 pb-40">
        <div className="max-w-sm mx-auto w-full space-y-12">
-         <h2 className="text-2xl font-black uppercase text-white italic tracking-tighter border-b border-white/10 pb-4">{authMode === 'signup' ? 'Dossiê de Matrícula' : 'Login de Acesso'}</h2>
+         <h2 className="text-2xl font-black uppercase text-white italic tracking-tighter border-b border-white/10 pb-4">{authMode === 'signup' ? 'Dossiê de Matrícula' : 'Login de Sistema'}</h2>
          
          {error && <p className="text-rose-500 text-[10px] font-black uppercase bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20 shadow-lg">{error}</p>}
          
@@ -306,14 +309,14 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
            <div className="space-y-4">
              <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="USUÁRIO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
              <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="SENHA" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
-             <button onClick={handleAuth} className="w-full py-6 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-3xl shadow-2xl">Conectar</button>
-             <button onClick={() => setAuthMode('signup')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">Ainda não sou matriculado</button>
+             <button onClick={handleAuth} className="w-full py-6 bg-white text-black font-black uppercase text-[10px] tracking-widest rounded-3xl shadow-2xl">Acessar Painel</button>
+             <button onClick={() => setAuthMode('signup')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">Ainda não possuo matrícula</button>
            </div>
          ) : (
            <div className="space-y-10">
              {/* SEÇÃO 01: IDENTIDADE BÁSICA */}
              <div className="space-y-4">
-               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">01. Identidade Básica</span>
+               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">01. Identidade de Matrícula</span>
                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="NOME COMPLETO" value={form.name} onChange={e => setForm({...form, name: e.target.value.toUpperCase()})} />
                <div className="grid grid-cols-2 gap-3">
                  <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="CPF" value={form.cpf} onChange={e => setForm({...form, cpf: e.target.value})} />
@@ -326,22 +329,22 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
              </div>
 
              {/* SEÇÃO 02: DIVERSIDADE, ETNIA E GÊNERO */}
-             <div className="space-y-8 bg-white/5 p-6 rounded-[40px] border border-white/5">
-                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block text-center">02. Diversidade e Gênero</span>
+             <div className="space-y-8 bg-white/5 p-6 rounded-[40px] border border-white/5 shadow-2xl">
+                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block text-center">02. Sensores de Diversidade</span>
                 
                 {/* ETNIA (RAÇA/COR) */}
                 <div className="space-y-3">
                    <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Etnia (Raça/Cor)</p>
                    <div className="flex flex-wrap gap-2">
                       {['Branca', 'Preta', 'Parda', 'Amarela', 'Indígena'].map(opt => (
-                        <button key={opt} onClick={() => setForm({...form, ethnicity: opt})} className={`px-4 py-3 rounded-2xl text-[9px] font-black border-2 transition-all ${form.ethnicity === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
+                        <button key={opt} onClick={() => setForm({...form, ethnicity: opt})} className={`px-4 py-3 rounded-2xl text-[9px] font-black border-2 transition-all ${form.ethnicity === opt ? 'bg-cyan-600 border-cyan-400 text-black shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
                       ))}
                    </div>
                 </div>
 
                 {/* Orientação Sexual */}
                 <div className="space-y-3">
-                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Qual é sua orientação sexual? (termo relativo às relações afetivo-sexuais)</p>
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Orientação Sexual (Afetivo-sexual)</p>
                    <div className="grid gap-2">
                       {[
                         'Lésbica', 'Gay', 'Bissexual', 'Heterossexual', 'Outra', 'Prefiro não declarar'
@@ -356,7 +359,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
 
                 {/* Identidade de Gênero */}
                 <div className="space-y-3">
-                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Qual é seu gênero/identidade de gênero? (termo relativo à identidade da pessoa)</p>
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Identidade de Gênero</p>
                    <div className="grid grid-cols-2 gap-2">
                       {['Feminina', 'Masculina', 'Não binárie', 'Outro'].map(opt => (
                         <button key={opt} onClick={() => setForm({...form, genderIdentity: opt})} className={`p-4 rounded-2xl text-[9px] font-black border-2 transition-all ${form.genderIdentity === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
@@ -369,7 +372,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
 
                 {/* Intersexo */}
                 <div className="space-y-3">
-                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Você é pessoa intersexo?</p>
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Pessoa Intersexo?</p>
                    <div className="grid grid-cols-2 gap-2">
                       {['Sim', 'Não'].map(opt => (
                         <button key={opt} onClick={() => setForm({...form, isIntersex: opt})} className={`p-4 rounded-2xl text-[9px] font-black border-2 transition-all ${form.isIntersex === opt ? 'bg-cyan-600 border-cyan-400 text-black' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{opt.toUpperCase()}</button>
@@ -379,7 +382,7 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
 
                 {/* Pessoa Trans/Travesti */}
                 <div className="space-y-3">
-                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Você é pessoa trans ou travesti?</p>
+                   <p className="text-[11px] font-bold text-slate-400 uppercase italic leading-tight">Pessoa Trans ou Travesti?</p>
                    <div className="grid gap-2">
                       {[
                         {v: 'Não', l: 'Não'},
@@ -400,15 +403,15 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
                 {isTransOrSimilar && (
                   <div className="space-y-3 animate-in border-t border-white/10 pt-6">
                      <p className="text-[11px] font-black text-cyan-600 uppercase italic leading-tight">Nome Social</p>
-                     <p className="text-[9px] text-slate-500 leading-tight italic mb-2">Nome utilizado por pessoas trans e travestis no meio social. Preencha caso não use seu nome de registro.</p>
+                     <p className="text-[9px] text-slate-500 leading-tight italic mb-2 text-justify">Utilizado por pessoas trans e travestis no meio social, em contraste com o nome registrado.</p>
                      <input className="w-full bg-slate-900 border-2 border-cyan-600/30 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="NOME SOCIAL (OPCIONAL)" value={form.socialName} onChange={e => setForm({...form, socialName: e.target.value.toUpperCase()})} />
                   </div>
                 )}
              </div>
 
-             {/* SEÇÃO 03: CONTATO E VOCAÇÃO */}
+             {/* SEÇÃO 03: CONTEXTO LOCAL E VOCAÇÃO */}
              <div className="space-y-4">
-               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">03. Contato e Vocação</span>
+               <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">03. Contexto e Vocação</span>
                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="TELEFONE / WHATSAPP" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="E-MAIL" value={form.email} onChange={e => setForm({...form, email: e.target.value.toLowerCase()})} />
                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black uppercase" placeholder="BAIRRO DE ATUAÇÃO" value={form.neighborhood} onChange={e => setForm({...form, neighborhood: e.target.value.toUpperCase()})} />
@@ -421,19 +424,19 @@ const Onboarding = ({ onComplete }: { onComplete: (p: UserProfile, xp: number, p
              </div>
 
              {/* LOGIN DATA */}
-             <div className="space-y-4 pt-6">
-                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">04. Dados de Acesso</span>
-                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="CRIE UM USUÁRIO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
-                <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="CRIE UMA SENHA" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
+             <div className="space-y-4 pt-6 border-t border-white/5">
+                <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest block mb-1">04. Credenciais de Acesso</span>
+                <input className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="USUÁRIO DE ACESSO" value={form.username} onChange={e => setForm({...form, username: e.target.value.toLowerCase()})} />
+                <input type="password" className="w-full bg-slate-900 border-2 border-white/5 p-5 rounded-3xl text-white text-sm outline-none font-black" placeholder="SENHA DO SISTEMA" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
              </div>
 
              <div className="p-4 bg-cyan-600/5 border border-cyan-600/10 rounded-2xl flex items-start gap-4 mt-6">
                 <input type="checkbox" checked={form.lgpd} onChange={e => setForm({...form, lgpd: e.target.checked})} className="mt-1 w-5 h-5 accent-cyan-600" id="lgpd" />
-                <label htmlFor="lgpd" className="text-[9px] font-bold text-slate-500 uppercase leading-tight italic">Autorizo o uso dos dados para fins educacionais e de geração de renda (LGPD).</label>
+                <label htmlFor="lgpd" className="text-[9px] font-bold text-slate-500 uppercase leading-tight italic">Autorizo o uso dos dados para fins de mobilidade social e geração de renda (LGPD).</label>
              </div>
 
              <button onClick={startVerification} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-[10px] tracking-widest rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.3)] active:scale-95 transition-all">Finalizar Dossiê</button>
-             <button onClick={() => setAuthMode('login')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">Já possuo acesso</button>
+             <button onClick={() => setAuthMode('login')} className="w-full text-center text-slate-500 font-black text-[9px] uppercase mt-4 tracking-widest">Já possuo credenciais</button>
            </div>
          )}
        </div>
@@ -504,18 +507,18 @@ const App = () => {
           
           <div className="space-y-10">
              <div className="space-y-4">
-                <span className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.4em]">Teoria de Mercado</span>
+                <span className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.4em]">Teoria do S.O.</span>
                 <p className="text-lg font-bold text-slate-300 italic border-l-4 border-cyan-600 pl-8 leading-relaxed">"{activeLesson.theory}"</p>
              </div>
 
-             <div className="bg-white/5 p-8 rounded-[40px] border border-white/5 space-y-4">
-                <span className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.4em]">Desafio de Campo</span>
+             <div className="bg-white/5 p-8 rounded-[40px] border border-white/5 space-y-4 shadow-2xl">
+                <span className="text-[9px] font-black text-cyan-600 uppercase tracking-[0.4em]">Desafio de Mobilidade</span>
                 <p className="text-sm font-bold text-slate-400">{activeLesson.challenge}</p>
              </div>
           </div>
 
           <div className="fixed bottom-10 left-8 right-8 max-w-2xl mx-auto">
-            <button onClick={handleCompleteLesson} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-xs rounded-3xl shadow-[0_0_50px_rgba(34,211,238,0.2)]">Validar Conhecimento</button>
+            <button onClick={handleCompleteLesson} className="w-full py-6 bg-cyan-600 text-black font-black uppercase text-xs rounded-3xl shadow-[0_0_50px_rgba(34,211,238,0.2)]">Validar Evolução</button>
           </div>
         </div>
       )}
@@ -525,11 +528,11 @@ const App = () => {
       <header className="px-8 py-10 flex justify-between items-end border-b border-white/5 sticky top-0 bg-slate-950/90 backdrop-blur-2xl z-50">
         <div>
           <h1 className="text-3xl font-black italic uppercase tracking-tighter leading-[0.85]">GUIA <span className="text-cyan-600">DIGITAL</span></h1>
-          <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.4em] mt-2">{profile.neighborhood}</p>
+          <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.4em] mt-2">S.O. MOBILIDADE SOCIAL</p>
         </div>
         <div className="flex flex-col items-end">
           <div className="text-base font-black text-cyan-500 italic leading-none">{xp} <span className="text-[9px] opacity-40">XP</span></div>
-          <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest mt-1">Nível {Math.floor(xp/1000) + 1}</div>
+          <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest mt-1">Status: Nível {Math.floor(xp/1000) + 1}</div>
         </div>
       </header>
 
@@ -538,16 +541,16 @@ const App = () => {
           <div className="space-y-12 animate-in">
             <div onClick={() => setView('mei')} className="bg-cyan-600 p-8 rounded-[48px] text-black space-y-4 active:scale-[0.98] transition-all shadow-[0_0_50px_rgba(34,211,238,0.2)] relative overflow-hidden group">
                <div className="absolute -right-6 -bottom-6 text-9xl text-black/10 group-hover:scale-110 transition-transform"><i className="fa-solid fa-rocket"></i></div>
-               <h2 className="text-3xl font-black uppercase italic leading-none tracking-tighter">TORNE-SE MEI: <br/>TIRE SEU SONHO DO PAPEL</h2>
-               <p className="text-xs font-bold uppercase italic opacity-80">Guia passo a passo para seu CNPJ.</p>
+               <h2 className="text-3xl font-black uppercase italic leading-none tracking-tighter">DECOLAGEM MEI: <br/>ATIVE SEU CNPJ</h2>
+               <p className="text-xs font-bold uppercase italic opacity-80">Formalize sua jornada no sistema.</p>
             </div>
 
-            <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Caminho de <span className="text-cyan-600">Formação</span></h2>
+            <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Matriz de <span className="text-cyan-600">Competências</span></h2>
             <div className="space-y-6">
               {INITIAL_MODULES.map(module => (
-                <div key={module.id} onClick={() => setSelectedModule(module)} className="p-8 rounded-[48px] bg-white/5 border-2 border-white/5 active:scale-[0.98] transition-all hover:bg-white/10 shadow-2xl">
+                <div key={module.id} onClick={() => setSelectedModule(module)} className="p-8 rounded-[48px] bg-white/5 border-2 border-white/5 active:scale-[0.98] transition-all hover:bg-white/10 shadow-2xl relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-6">
-                     <div className="w-14 h-14 rounded-2xl bg-cyan-600/10 text-cyan-600 flex items-center justify-center text-2xl border border-cyan-500/20"><i className={`fa-solid ${module.icon}`}></i></div>
+                     <div className="w-14 h-14 rounded-2xl bg-cyan-600/10 text-cyan-600 flex items-center justify-center text-2xl border border-cyan-500/20 group-hover:scale-110 transition-transform"><i className={`fa-solid ${module.icon}`}></i></div>
                      <span className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.3em] italic">{module.technicalSkill}</span>
                   </div>
                   <h3 className="text-xl font-black uppercase italic mb-2 tracking-tighter">{module.title}</h3>
@@ -563,14 +566,14 @@ const App = () => {
 
         {selectedModule && (
           <div className="animate-in space-y-12">
-             <button onClick={() => setSelectedModule(null)} className="text-[10px] font-black uppercase text-slate-600 flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full hover:text-white transition-all"><i className="fa-solid fa-arrow-left"></i> Voltar Painel</button>
+             <button onClick={() => setSelectedModule(null)} className="text-[10px] font-black uppercase text-slate-600 flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full hover:text-white transition-all"><i className="fa-solid fa-arrow-left"></i> Retornar à Matriz</button>
              <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-[0.8]">{selectedModule.title}</h2>
              <div className="space-y-5">
                {selectedModule.lessons.map(lesson => (
-                 <div key={lesson.id} onClick={() => setActiveLesson(lesson)} className={`p-8 rounded-[40px] border-2 transition-all active:scale-95 flex items-center justify-between ${progress[lesson.id] ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/10 shadow-xl'}`}>
+                 <div key={lesson.id} onClick={() => setActiveLesson(lesson)} className={`p-8 rounded-[40px] border-2 transition-all active:scale-95 flex items-center justify-between shadow-2xl ${progress[lesson.id] ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/10'}`}>
                     <div className="flex-1">
                       <h4 className="text-2xl font-black uppercase italic tracking-tighter leading-tight mb-2">{lesson.title}</h4>
-                      <span className="text-[9px] font-black text-cyan-600 uppercase tracking-widest bg-cyan-600/10 px-3 py-1 rounded-full border border-cyan-500/10">+{lesson.xpValue} XP</span>
+                      <span className="text-[9px] font-black text-cyan-600 uppercase tracking-widest bg-cyan-600/10 px-3 py-1 rounded-full border border-cyan-500/10">Validação: +{lesson.xpValue} XP</span>
                     </div>
                     {progress[lesson.id] ? <i className="fa-solid fa-circle-check text-emerald-500 text-3xl"></i> : <i className="fa-solid fa-chevron-right text-slate-700"></i>}
                  </div>
@@ -584,7 +587,7 @@ const App = () => {
             <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">Arsenal de <span className="text-cyan-600">IA</span></h2>
             {activeTool ? (
               <div className="space-y-8">
-                <button onClick={() => { setActiveTool(null); setToolResult(null); }} className="text-[10px] font-black uppercase text-slate-600 flex items-center gap-2 bg-white/5 px-6 py-3 rounded-full"><i className="fa-solid fa-arrow-left"></i> Voltar Arsenal</button>
+                <button onClick={() => { setActiveTool(null); setToolResult(null); }} className="text-[10px] font-black uppercase text-slate-600 flex items-center gap-2 bg-white/5 px-6 py-3 rounded-full"><i className="fa-solid fa-arrow-left"></i> Fechar Ferramenta</button>
                 <AIToolRunner tool={activeTool} userProfile={profile} onComplete={setToolResult} />
                 {toolResult && (
                   <div className="bg-slate-900 p-8 rounded-[40px] border-2 border-cyan-500/20 animate-in relative shadow-2xl">
@@ -611,11 +614,11 @@ const App = () => {
 
         {view === 'jobs' && (
           <div className="animate-in space-y-12">
-            <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">Mural de <span className="text-cyan-600">Renda</span></h2>
-            <div className="p-12 border-2 border-dashed border-white/5 rounded-[56px] text-center space-y-6">
-               <i className="fa-solid fa-box-open text-6xl text-slate-800"></i>
-               <p className="text-slate-500 uppercase font-black text-[10px] italic tracking-[0.3em]">Aguardando conexões no seu bairro...</p>
-               <p className="text-[11px] font-bold text-slate-600 uppercase">Complete mais módulos para desbloquear oportunidades reais.</p>
+            <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">Fluxo de <span className="text-cyan-600">Renda</span></h2>
+            <div className="p-12 border-2 border-dashed border-white/5 rounded-[56px] text-center space-y-6 bg-white/5">
+               <i className="fa-solid fa-wifi text-6xl text-cyan-600 animate-pulse"></i>
+               <p className="text-slate-500 uppercase font-black text-[10px] italic tracking-[0.3em]">Sincronizando oportunidades no bairro...</p>
+               <p className="text-[11px] font-bold text-slate-600 uppercase italic">Aumente sua XP para atrair convites de negócios locais.</p>
             </div>
           </div>
         )}
@@ -630,21 +633,24 @@ const App = () => {
              </div>
              <div>
                <h3 className="text-4xl font-black uppercase italic leading-none tracking-tighter">{profile.socialName || profile.name}</h3>
-               <p className="text-[11px] font-black text-cyan-600 uppercase italic mt-4 tracking-[0.4em]">{profile.neighborhood} • {profile.class}</p>
+               <p className="text-[11px] font-black text-cyan-600 uppercase italic mt-4 tracking-[0.4em]">{profile.neighborhood} • Turma: {profile.class}</p>
              </div>
              
              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/5 shadow-xl">
                    <p className="text-[9px] font-black text-slate-700 uppercase mb-2">TELEFONE</p>
                    <p className="text-xs font-black italic">{profile.phone}</p>
                 </div>
-                <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
-                   <p className="text-[9px] font-black text-slate-700 uppercase mb-2">ETNIA / GÊNERO</p>
-                   <p className="text-[10px] font-black italic">{profile.ethnicity} / {profile.genderIdentity}</p>
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/5 shadow-xl">
+                   <p className="text-[9px] font-black text-slate-700 uppercase mb-2">ETNIA / IDENTIDADE</p>
+                   <p className="text-[10px] font-black italic">{profile.ethnicity} • {profile.genderIdentity}</p>
                 </div>
              </div>
 
-             <button onClick={() => { localStorage.removeItem('guia_current_user'); window.location.reload(); }} className="w-full py-6 text-rose-500/60 font-black uppercase text-[10px] tracking-[0.4em] border-2 border-rose-500/10 rounded-[32px] mt-12 hover:text-rose-500 hover:border-rose-500 transition-all">Encerrar Sessão</button>
+             <div className="pt-10">
+                <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic mb-6">Matrícula Ativa no S.O. Guia Social</p>
+                <button onClick={() => { localStorage.removeItem('guia_current_user'); window.location.reload(); }} className="w-full py-6 text-rose-500/60 font-black uppercase text-[10px] tracking-[0.4em] border-2 border-rose-500/10 rounded-[32px] hover:text-rose-500 hover:border-rose-500 transition-all shadow-2xl">Desativar Terminal</button>
+             </div>
           </div>
         )}
       </main>
@@ -652,10 +658,10 @@ const App = () => {
       <nav className="fixed bottom-0 left-0 right-0 p-8 z-[1000] pointer-events-none">
         <div className="max-w-md mx-auto h-24 rounded-[48px] flex justify-around items-center px-8 glass-panel pointer-events-auto shadow-[0_-20px_60px_rgba(0,0,0,0.8)] border border-white/10">
           {[
-            { id: 'home', icon: 'fa-graduation-cap', label: 'CURSOS' },
+            { id: 'home', icon: 'fa-graduation-cap', label: 'MATRIZ' },
             { id: 'tools', icon: 'fa-bolt-lightning', label: 'ARSENAL' },
-            { id: 'jobs', icon: 'fa-briefcase', label: 'MURAL' },
-            { id: 'profile', icon: 'fa-id-card-clip', label: 'PERFIL' }
+            { id: 'jobs', icon: 'fa-briefcase', label: 'FLUXO' },
+            { id: 'profile', icon: 'fa-id-card-clip', label: 'TERMINAL' }
           ].map(item => (
             <button key={item.id} onClick={() => { setView(item.id as any); setSelectedModule(null); triggerVibration('light'); }} className={`flex flex-col items-center justify-center gap-2 transition-all ${view === item.id ? 'text-cyan-500 scale-110' : 'text-slate-700'}`}>
               <i className={`fa-solid ${item.icon} text-2xl`}></i>
