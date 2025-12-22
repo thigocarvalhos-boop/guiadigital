@@ -1,22 +1,17 @@
 {
-  "name": "Guia Digital",
-  "short_name": "Guia",
-  "description": "Sistema Operacional de Mobilidade Social: Formação em Marketing Digital para talentos locais e geração de renda real.",
+  "name": "GUIA DIGITAL | PROTOCOLO SOBERANIA",
+  "short_name": "GuiaDigital",
+  "description": "Protocolo de Resistência e Soberania Digital através do Conhecimento Aplicado.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#22d3ee",
+  "background_color": "#000000",
+  "theme_color": "#7c3aed",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2583/2583158.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ],
-  "requestFramePermissions": [
-    "camera",
-    "microphone",
-    "geolocation"
-  ]
+  "requestFramePermissions": []
 }

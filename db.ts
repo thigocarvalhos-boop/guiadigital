@@ -1,47 +1,28 @@
 
-export const initDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('GuiaDigital_SO_DB', 2);
-    
-    request.onupgradeneeded = (event: any) => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains('user_state')) {
-        db.createObjectStore('user_state', { keyPath: 'username' });
-      }
-      if (!db.objectStoreNames.contains('sync_queue')) {
-        db.createObjectStore('sync_queue', { keyPath: 'id', autoIncrement: true });
+export const initDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve) => {
+    const request = indexedDB.open('GUIA_PROTOCOLO_DB', 2);
+    request.onupgradeneeded = (e: any) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('operador')) {
+        db.createObjectStore('operador', { keyPath: 'username' });
       }
     };
-    
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
   });
 };
 
-export const addToUserStore = async (username: string, data: any) => {
-  const db: any = await initDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('user_state', 'readwrite');
-    const store = tx.objectStore('user_state');
-    const request = store.put({ username, ...data });
-    request.onsuccess = () => resolve(true);
-    request.onerror = () => reject(request.error);
-  });
+export const saveOperador = async (data: any) => {
+  const db = await initDB();
+  const tx = db.transaction('operador', 'readwrite');
+  tx.objectStore('operador').put(data);
 };
 
-export const getUserState = async (username: string) => {
-  const db: any = await initDB();
+export const getOperador = async (username: string): Promise<any> => {
+  const db = await initDB();
   return new Promise((resolve) => {
-    const tx = db.transaction('user_state', 'readonly');
-    const store = tx.objectStore('user_state');
-    const request = store.get(username);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(null);
+    const tx = db.transaction('operador', 'readonly');
+    const request = tx.objectStore('operador').get(username);
+    request.onsuccess = () => resolve(request.result || null);
   });
-};
-
-export const addToSyncQueue = async (data: any) => {
-  const db: any = await initDB();
-  const tx = db.transaction('sync_queue', 'readwrite');
-  tx.objectStore('sync_queue').add({ ...data, timestamp: Date.now() });
 };
