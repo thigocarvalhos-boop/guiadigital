@@ -1,509 +1,384 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
-import { UserProfile, Module, Lesson, AIReview, LessonState, PortfolioItem, TrailId } from './types.ts';
-import { MODULES } from './constants.tsx';
-import { saveOperador, getOperador } from './db.ts';
-
-const triggerVibration = (p: 'light' | 'success' | 'error') => {
-  if (!window.navigator.vibrate) return;
-  const map = { light: 10, success: [10, 30, 10], error: [50, 50, 50] };
-  window.navigator.vibrate(map[p] as any);
-};
+import React, { useState, useEffect } from 'react';
+import { GoogleGenAI } from "@google/genai";
+import { UserProfile, Track, Lesson, AuditResult } from './types.ts';
+import { TRACKS } from './constants.tsx';
 
 const App = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [view, setView] = useState<'matrix' | 'arsenal' | 'terminal'>('matrix');
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [activeTab, setActiveTab] = useState<'dash' | 'tracks' | 'dossier' | 'mural'>('dash');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
-  const [lessonState, setLessonState] = useState<LessonState>('THEORY');
-  const [readTime, setReadTime] = useState(0);
-  const [practiceInput, setPracticeInput] = useState('');
-  const [deliveryInput, setDeliveryInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const user = localStorage.getItem('active_operador');
-    if (user) getOperador(user).then(setProfile);
+    const saved = localStorage.getItem('guia_user');
+    if (saved) setUser(JSON.parse(saved));
   }, []);
 
   useEffect(() => {
-    if (activeLesson && lessonState === 'THEORY') {
-      timerRef.current = window.setInterval(() => setReadTime(v => v + 1), 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setReadTime(0);
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [activeLesson, lessonState]);
+    if (user) localStorage.setItem('guia_user', JSON.stringify(user));
+  }, [user]);
 
-  const save = (p: UserProfile) => {
-    setProfile(p);
-    saveOperador(p);
-    localStorage.setItem('active_operador', p.username);
-  };
+  const handleAudit = async (lesson: Lesson, delivery: string) => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const prompt = `
+      Você é um Mentor Sênior de Agência no Porto Digital (Recife).
+      Avalie a entrega do aluno para a lição: ${lesson.title}.
+      Entrega: ${delivery}
+      
+      Regras:
+      1. Use gírias locais (visse, boy, massa, oxente, bronca) de forma profissional.
+      2. Dê uma nota de 0 a 10.
+      3. Forneça um feedback técnico real e direto.
+      4. Retorne APENAS um JSON no formato: {"score": number, "feedback": "string", "mentor": "Nome do Mentor"}
+    `;
 
-  const audit = async (type: 'PRACTICE' | 'DELIVERY') => {
-    if (!activeLesson || !profile) return;
-    setLoading(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const systemInstruction = `Você é o GUI.A, Mentor Sênior do GUIA DIGITAL. 
-      Seu papel é avaliar com alto rigor técnico. Não aceite respostas genéricas, curtas ou sem fundamentos de mercado.
-      Avalie: Clareza Técnica, Coerência Estratégica e Vocabulário Profissional.
-      Para DELIVERIES (links), verifique se o link parece válido e atribua nota 0-10 baseada no esforço percebido.`;
-
-      const prompt = `AUDITORIA DE PROTOCOLO V5.0:
-        Operador: ${profile.name} (Trilha: ${profile.selectedTrail})
-        Lição: ${activeLesson.title}
-        Tipo de Avaliação: ${type}
-        Conteúdo Submetido: ${type === 'PRACTICE' ? practiceInput : deliveryInput}
-        
-        Gere uma resposta estritamente em JSON: { "verdict": "approved" | "revision", "feedback": "crítica construtiva e técnica", "score": 0-100 }`;
-
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: [{ parts: [{ text: prompt }] }],
-        config: { 
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              verdict: { type: Type.STRING },
-              feedback: { type: Type.STRING },
-              score: { type: Type.NUMBER }
-            },
-            required: ["verdict", "feedback", "score"]
-          }
-        }
+        config: { responseMimeType: "application/json" }
       });
-
-      const result: AIReview = JSON.parse(response.text || '{}');
-      if (result.verdict === 'approved') {
-        triggerVibration('success');
-        if (type === 'PRACTICE') {
-          setLessonState('REVIEW');
-        } else {
-          const item: PortfolioItem = {
-            id: Date.now().toString(),
-            title: activeLesson.title,
-            category: profile.selectedTrail.toUpperCase().replace('_', ' '),
-            description: practiceInput.substring(0, 150) + "...",
-            url: deliveryInput,
-            score: result.score,
-            approvedAt: Date.now()
-          };
-          const next = { 
-            ...profile, 
-            xp: profile.xp + activeLesson.xpValue, 
-            portfolio: [item, ...profile.portfolio] 
-          };
-          save(next);
-          setLessonState('COMPLETED');
-        }
-      } else {
-        triggerVibration('error');
-        alert(`REVISÃO DO MENTOR GUI.A:\n\n${result.feedback}`);
+      
+      const result: AuditResult = JSON.parse(response.text);
+      
+      if (user) {
+        const newMatrix = { ...user.matrix };
+        newMatrix[lesson.competency] = Math.min(10, (newMatrix[lesson.competency] + result.score) / (user.dossier.length > 0 ? 1.5 : 1));
+        
+        setUser({
+          ...user,
+          exp: user.exp + (result.score * 10),
+          matrix: newMatrix,
+          dossier: [
+            ...user.dossier,
+            { 
+              lessonId: lesson.id, 
+              lessonTitle: lesson.title, 
+              assetUrl: delivery, 
+              audit: result,
+              date: new Date().toLocaleDateString()
+            }
+          ]
+        });
       }
+      return result;
     } catch (e) {
-      alert("FALHA DE SINCRONIZAÇÃO. Tente novamente.");
-    } finally {
-      setLoading(false);
+      console.error(e);
+      return null;
     }
   };
 
-  if (!profile) return <Onboarding onComplete={save} />;
+  if (!user) return <Onboarding onComplete={setUser} />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
-      {/* HUD HEADER */}
-      <header className="sticky top-0 z-50 bg-black border-b-8 border-white p-6 flex justify-between items-center">
+    <div className="min-h-screen bg-dark pb-24">
+      {/* HUD Header */}
+      <header className="p-6 glass border-b border-white/5 sticky top-0 z-50 flex justify-between items-center">
         <div>
-          <h1 className="heavy text-4xl italic leading-none">GUIA<span className="text-purple-600">DIGITAL</span></h1>
-          <div className="flex items-center gap-2 mt-1">
-             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-             <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">GUI.A_SISTEMA_V5.1_ATIVO</span>
-          </div>
+          <h1 className="font-archivo text-xl text-primary tracking-tighter">GUI.A<span className="text-white">DIGITAL</span></h1>
+          <p className="text-[10px] font-mono text-secondary">LVL {user.level} // EXP {user.exp}</p>
         </div>
-        <div className="text-right">
-          <span className="text-[10px] font-black text-purple-600 uppercase">CAPITAL_INTELECTUAL</span>
-          <div className="flex items-center gap-3">
-            <span className="heavy text-4xl italic">{profile.xp.toLocaleString()}</span>
-            <div className="w-10 h-10 border-4 border-white flex items-center justify-center text-[12px] font-black">XP</div>
+        <div className="flex gap-4">
+          <div className="text-right">
+            <p className="text-[10px] text-white/40 font-mono">STATUS: ONLINE</p>
+            <p className="text-xs font-bold">{user.name.toUpperCase()}</p>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 p-6 pb-40 max-w-4xl mx-auto w-full">
-        {view === 'matrix' && !activeLesson && (
-          <div className="space-y-16">
-            <div className="space-y-4">
-              <h2 className="heavy text-6xl leading-[0.8] italic">CENTRAL_DE <br/><span className="text-purple-600">COMANDO</span></h2>
-              <div className="h-2 w-24 bg-white"></div>
-              <p className="text-lg font-bold italic text-slate-400">Trilha Ativa: {profile.selectedTrail.toUpperCase()}</p>
-            </div>
-
-            <div className="grid gap-10">
-              {MODULES.map(m => (
-                <div key={m.id} className={`brutal-card p-10 space-y-8 ${m.trailId === profile.selectedTrail ? 'border-purple-600' : 'opacity-40 grayscale'}`}>
-                  <div className="flex justify-between items-start">
-                    <i className={`fa-solid ${m.icon} text-4xl ${m.trailId === profile.selectedTrail ? 'text-purple-600' : 'text-slate-600'}`}></i>
-                    <span className="text-[10px] font-black text-slate-500 uppercase">ID_{m.id}</span>
+      <main className="p-6 max-w-4xl mx-auto">
+        {activeTab === 'dash' && <Dashboard user={user} />}
+        {activeTab === 'tracks' && (
+          <div className="space-y-6">
+            <h2 className="font-archivo text-2xl mb-8">TRILHAS DE APRENDIZADO</h2>
+            {TRACKS.map(track => (
+              <div key={track.id} className="glass p-6 rounded-2xl">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-4">
+                    <i className={`fa-solid ${track.icon} text-primary text-xl`}></i>
+                    <h3 className="font-bold">{track.title}</h3>
                   </div>
-                  <h3 className="heavy text-3xl italic">{m.title}</h3>
-                  <p className="text-sm font-bold text-slate-500 italic">{m.description}</p>
-                  <div className="space-y-4">
-                    {m.lessons.map(l => (
-                      <button 
-                        key={l.id} 
-                        disabled={m.trailId !== profile.selectedTrail}
-                        onClick={() => { setActiveLesson(l); setLessonState('THEORY'); triggerVibration('light'); }}
-                        className="brutal-btn"
-                      >
-                        {l.title} <i className="fa-solid fa-bolt-lightning text-xs ml-auto"></i>
-                      </button>
-                    ))}
-                  </div>
+                  <button 
+                    onClick={() => setActiveLesson(track.lessons[0])}
+                    className="bg-primary text-dark font-bold px-4 py-2 rounded-lg text-xs hover:scale-105 transition-transform"
+                  >
+                    INICIAR CORRE
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
-
-        {view === 'arsenal' && (
-          <div className="space-y-16">
-             <div className="space-y-4">
-              <h2 className="heavy text-6xl leading-[0.8] italic">ATIVOS_DE <br/><span className="text-purple-600">MERCADO</span></h2>
-              <div className="h-2 w-24 bg-white"></div>
-            </div>
-            {profile.portfolio.length === 0 ? (
-              <div className="p-20 border-8 border-dashed border-white/10 text-center">
-                <p className="heavy text-3xl italic text-slate-700">Nenhum ativo selado ainda.</p>
-              </div>
-            ) : (
-              <div className="grid gap-8">
-                {profile.portfolio.map(item => (
-                  <div key={item.id} className="brutal-card p-8 border-l-[16px] border-l-purple-600">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] font-black bg-purple-600 text-white px-3 py-1 uppercase">{item.category}</span>
-                      <span className="heavy text-2xl italic text-purple-600">Nota: {item.score}/100</span>
-                    </div>
-                    <h4 className="heavy text-3xl mb-4 italic">{item.title}</h4>
-                    <p className="text-slate-400 font-bold italic mb-6 line-clamp-2">{item.description}</p>
-                    <a href={item.url} target="_blank" rel="noreferrer" className="brutal-btn py-4 text-lg">
-                      <i className="fa-solid fa-eye mr-2"></i> VER_ENTREGÁVEL
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {view === 'terminal' && (
-          <div className="space-y-20 py-10">
-            <div className="flex flex-col md:flex-row items-center gap-10 bg-white/5 p-10 border-4 border-white">
-              <div className="w-32 h-32 bg-purple-600 flex items-center justify-center text-white text-6xl">
-                <i className="fa-solid fa-user-ninja"></i>
-              </div>
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                <h3 className="heavy text-5xl italic">{profile.name}</h3>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  <span className="bg-white text-black px-4 py-1 font-black italic uppercase text-xs">{profile.neighborhood}</span>
-                  <span className="border-2 border-purple-600 text-purple-600 px-4 py-1 font-black italic uppercase text-xs">TRILHA_{profile.selectedTrail.toUpperCase()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="brutal-card p-6 text-center">
-                    <span className="text-[10px] font-black text-slate-500 uppercase">Ativos_Totais</span>
-                    <div className="heavy text-4xl mt-2">{profile.portfolio.length}</div>
-                </div>
-                <div className="brutal-card p-6 text-center">
-                    <span className="text-[10px] font-black text-slate-500 uppercase">Nível_Operador</span>
-                    <div className="heavy text-4xl mt-2">SÊNIOR_01</div>
-                </div>
-            </div>
-            <button 
-              onClick={() => { if(confirm("FORMATAÇÃO TOTAL? Isso apagará todos os dados do sistema.")) { localStorage.clear(); window.location.reload(); } }}
-              className="w-full py-6 text-xs font-black text-red-600 border-4 border-red-600/20 hover:bg-red-600 hover:text-white transition-all uppercase"
-            >
-              [ FORMATAR_SISTEMA_E_APAGAR_PROGRESSO ]
-            </button>
-          </div>
-        )}
+        {activeTab === 'dossier' && <DossierView user={user} />}
+        {activeTab === 'mural' && <MuralView />}
       </main>
 
-      {/* NAVIGATION HUB */}
-      <nav className="fixed bottom-0 left-0 w-full bg-black border-t-8 border-white p-4 h-28 flex justify-around gap-4 z-[60]">
+      {/* Navigation */}
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md glass rounded-2xl h-16 flex items-center justify-around px-4 border border-white/10 shadow-2xl z-50">
         {[
-          { id: 'matrix', icon: 'fa-layer-group', label: 'CÉLULAS' },
-          { id: 'arsenal', icon: 'fa-vault', label: 'ARSENAL' },
-          { id: 'terminal', icon: 'fa-id-card', label: 'TERMINAL' }
-        ].map(item => (
+          { id: 'dash', icon: 'fa-grid-2', label: 'DASH' },
+          { id: 'tracks', icon: 'fa-code-branch', label: 'TRILHAS' },
+          { id: 'dossier', icon: 'fa-id-badge', label: 'DOSSIÊ' },
+          { id: 'mural', icon: 'fa-rocket', label: 'MURAL' }
+        ].map(tab => (
           <button 
-            key={item.id}
-            onClick={() => { setView(item.id as any); setActiveLesson(null); triggerVibration('light'); }}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 border-4 transition-all ${view === item.id ? 'bg-white text-black border-white' : 'border-white/5 text-slate-700'}`}
+            key={tab.id} 
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex flex-col items-center transition-all ${activeTab === tab.id ? 'text-primary' : 'text-white/40'}`}
           >
-            <i className={`fa-solid ${item.icon} text-2xl`}></i>
-            <span className="text-[8px] font-black italic tracking-widest">{item.label}</span>
+            <i className={`fa-solid ${tab.icon} text-lg`}></i>
+            <span className="text-[9px] font-bold mt-1">{tab.label}</span>
           </button>
         ))}
       </nav>
 
-      {/* INTERFACE DE LIÇÃO (FULLSCREEN) */}
+      {/* Lesson Modal */}
       {activeLesson && (
-        <div className="fixed inset-0 z-[1000] bg-black overflow-y-auto pb-40">
-          <header className="sticky top-0 bg-black border-b-4 border-purple-600 p-6 flex justify-between items-center z-10">
-            <button onClick={() => { setActiveLesson(null); setLessonState('THEORY'); }} className="w-12 h-12 border-2 border-white flex items-center justify-center text-xl hover:bg-white hover:text-black">
-              <i className="fa-solid fa-arrow-left"></i>
-            </button>
-            <div className="text-center">
-              <span className="text-xs font-black text-purple-600 uppercase italic tracking-widest">{activeLesson.title}</span>
-              <div className="flex gap-2 mt-2">
-                {['THEORY', 'QUIZ', 'PRACTICE', 'REVIEW', 'DELIVERY'].map((s, i) => {
-                  const states = ['THEORY', 'QUIZ', 'PRACTICE', 'REVIEW', 'DELIVERY', 'COMPLETED'];
-                  const cur = states.indexOf(lessonState);
-                  return <div key={s} className={`h-1 w-6 ${cur >= i ? 'bg-purple-600' : 'bg-slate-800'}`} />;
-                })}
-              </div>
-            </div>
-            <div className="w-12"></div>
-          </header>
-
-          <main className="max-w-2xl mx-auto p-8 pt-12">
-            {lessonState === 'THEORY' && (
-              <div className="space-y-12 animate-in">
-                <div className="p-8 border-l-8 border-purple-600 bg-white/5 space-y-6">
-                  <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">[ DIRETRIZ_TÉCNICA ]</span>
-                  <p className="text-2xl font-bold italic leading-relaxed whitespace-pre-wrap">{activeLesson.theory}</p>
-                </div>
-                <div className="flex justify-between items-center text-xs font-black text-slate-500 uppercase italic">
-                  <span>Tempo de Sincronização: {activeLesson.minReadSeconds}s</span>
-                  <span className={readTime >= activeLesson.minReadSeconds ? 'text-emerald-500' : 'text-orange-500'}>Ativo: {readTime}s</span>
-                </div>
-                <button 
-                  disabled={readTime < activeLesson.minReadSeconds} 
-                  onClick={() => setLessonState('QUIZ')}
-                  className="brutal-btn py-10 text-2xl italic"
-                >
-                  VALIDAR_ENTENDIMENTO
-                </button>
-              </div>
-            )}
-
-            {lessonState === 'QUIZ' && (
-              <div className="space-y-10 animate-in">
-                <h3 className="heavy text-4xl italic leading-tight">{activeLesson.quiz.question}</h3>
-                <div className="grid gap-4">
-                  {activeLesson.quiz.options.map((opt, i) => (
-                    <button 
-                      key={i} 
-                      onClick={() => {
-                        if (i === activeLesson.quiz.correctIndex) {
-                          setLessonState('PRACTICE');
-                          triggerVibration('success');
-                        } else {
-                          setLessonState('THEORY');
-                          triggerVibration('error');
-                          alert("NEGATIVO: Releia a diretriz técnica com atenção.");
-                        }
-                      }}
-                      className="brutal-btn p-8 text-xl text-left italic border-white/10 hover:border-white"
-                    >
-                      <span className="opacity-20 mr-2">{i+1}.</span> {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {lessonState === 'PRACTICE' && (
-              <div className="space-y-10 animate-in">
-                <div className="p-8 border-2 border-white/10 bg-white/5 space-y-6">
-                  <span className="text-[10px] font-black text-slate-400 uppercase">[ LABORATÓRIO_DE_ESCRITA ]</span>
-                  <p className="heavy text-2xl italic leading-tight">{activeLesson.challenge}</p>
-                </div>
-                <textarea 
-                  value={practiceInput} 
-                  onChange={e => setPracticeInput(e.target.value)}
-                  className="h-80 text-lg font-bold italic p-8" 
-                  placeholder="Redija sua argumentação técnica aqui..." 
-                />
-                <div className="flex justify-between text-[10px] font-black text-slate-500 italic uppercase">
-                  <span className={practiceInput.length < activeLesson.minChars ? 'text-orange-500' : 'text-emerald-500'}>Caracteres: {practiceInput.length} / {activeLesson.minChars}</span>
-                  <span>Mentor_IA: Online</span>
-                </div>
-                <button 
-                  disabled={practiceInput.length < activeLesson.minChars || loading} 
-                  onClick={() => audit('PRACTICE')}
-                  className={`brutal-btn py-10 text-3xl italic ${loading ? 'is-loading' : ''}`}
-                >
-                  {loading ? 'AUDITANDO...' : 'SOLICITAR_APROVAÇÃO'}
-                </button>
-              </div>
-            )}
-
-            {lessonState === 'REVIEW' && (
-              <div className="space-y-12 animate-in text-center">
-                 <div className="w-24 h-24 bg-purple-600 mx-auto flex items-center justify-center text-white text-5xl">
-                    <i className="fa-solid fa-clipboard-check"></i>
-                 </div>
-                 <h3 className="heavy text-5xl italic text-purple-600">AUDITORIA_APROVADA</h3>
-                 <p className="text-xl font-bold italic text-slate-300 leading-relaxed border-y-2 border-white/10 py-10">
-                    {activeLesson.reviewContent}
-                 </p>
-                 <button 
-                  onClick={() => setLessonState('DELIVERY')}
-                  className="brutal-btn py-10 text-3xl italic"
-                >
-                  IR_PARA_ENTREGA_PRÁTICA
-                </button>
-              </div>
-            )}
-
-            {lessonState === 'DELIVERY' && (
-              <div className="space-y-10 animate-in">
-                <div className="p-8 border-2 border-emerald-500/20 bg-emerald-500/5 space-y-6">
-                  <span className="text-[10px] font-black text-emerald-500 uppercase">[ PROVA_DE_VALOR_REAL ]</span>
-                  <p className="heavy text-2xl italic">Execute este trabalho no mundo real (ex: Canvas, Link do Post, Documento Google) e insira o link público abaixo para selagem.</p>
-                </div>
-                <input 
-                  value={deliveryInput} 
-                  onChange={e => setDeliveryInput(e.target.value)}
-                  placeholder="https://link-do-seu-trabalho.com" 
-                  className="text-xl py-8" 
-                />
-                <button 
-                  disabled={!deliveryInput.includes('http') || loading} 
-                  onClick={() => audit('DELIVERY')}
-                  className={`brutal-btn py-10 text-3xl italic shadow-[12px_12px_0px_#7c3aed] ${loading ? 'is-loading' : ''}`}
-                >
-                  {loading ? 'SELANDO...' : 'SELAR_ATIVO_DEFINITIVO'}
-                </button>
-              </div>
-            )}
-
-            {lessonState === 'COMPLETED' && (
-              <div className="text-center space-y-12 py-10 animate-in">
-                <div className="w-40 h-40 bg-emerald-500 border-8 border-white mx-auto flex items-center justify-center text-black text-7xl shadow-[16px_16px_0px_#fff]">
-                  <i className="fa-solid fa-medal"></i>
-                </div>
-                <h3 className="heavy text-6xl italic leading-none">ATIVO <br/><span className="text-emerald-500">CONQUISTADO</span></h3>
-                <p className="text-slate-500 font-black italic uppercase text-xs">Este item agora faz parte do seu Arsenal Profissional.</p>
-                <button onClick={() => { setActiveLesson(null); setView('arsenal'); }} className="brutal-btn py-10 text-2xl">VOLTAR_À_MATRIZ</button>
-              </div>
-            )}
-          </main>
-        </div>
+        <LessonPlayer 
+          lesson={activeLesson} 
+          onClose={() => setActiveLesson(null)} 
+          onAudit={handleAudit}
+        />
       )}
     </div>
   );
 };
 
-const Onboarding = ({ onComplete }: any) => {
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [trail, setTrail] = useState<TrailId | ''>('');
-  const [agreed, setAgreed] = useState(false);
+const Dashboard = ({ user }: { user: UserProfile }) => (
+  <div className="animate-in fade-in duration-500">
+    <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="glass p-6 rounded-2xl border-l-4 border-primary">
+        <p className="text-[10px] text-white/40 font-mono mb-2">MAESTRIA MÉDIA</p>
+        <p className="text-3xl font-archivo">{(Object.values(user.matrix).reduce((a,b)=>a+b,0)/4).toFixed(1)}</p>
+      </div>
+      <div className="glass p-6 rounded-2xl border-l-4 border-secondary">
+        <p className="text-[10px] text-white/40 font-mono mb-2">ATIVOS AUDITADOS</p>
+        <p className="text-3xl font-archivo">{user.dossier.length}</p>
+      </div>
+    </div>
+    
+    <section className="glass p-6 rounded-2xl mb-8">
+      <h3 className="font-archivo text-sm text-primary mb-6">MATRIZ DE COMPETÊNCIAS</h3>
+      <div className="space-y-4 font-mono text-xs">
+        {Object.entries(user.matrix).map(([key, val]) => (
+          <div key={key}>
+            <div className="flex justify-between mb-1">
+              <span>{key.toUpperCase()}</span>
+              <span>{val.toFixed(1)}/10</span>
+            </div>
+            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-1000" 
+                style={{ width: `${val * 10}%` }}
+              ></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
+const LessonPlayer = ({ lesson, onClose, onAudit }: { lesson: Lesson, onClose: () => void, onAudit: any }) => {
+  const [step, setStep] = useState(1);
+  const [delivery, setDelivery] = useState('');
+  const [isAuditing, setIsAuditing] = useState(false);
+  const [result, setResult] = useState<AuditResult | null>(null);
+
+  const startAudit = async () => {
+    setIsAuditing(true);
+    const res = await onAudit(lesson, delivery);
+    setResult(res);
+    setIsAuditing(false);
+    setStep(5);
+  };
 
   return (
-    <div className="fixed inset-0 bg-black z-[2000] p-6 flex flex-col justify-center items-center overflow-y-auto">
-      <div className="max-w-xl w-full space-y-12 py-10 animate-in">
-        {step === 0 && (
-          <div className="space-y-10">
-            <h1 className="heavy text-7xl italic leading-none">GUIA<br/><span className="text-purple-600">DIGITAL</span></h1>
-            <div className="p-8 border-l-[12px] border-white space-y-8 bg-white/5">
-              <h2 className="heavy text-3xl italic">MANIFESTO_OPERACIONAL</h2>
-              <p className="text-lg font-bold italic text-slate-300 leading-relaxed">
-                Este não é um curso. É um sistema de soberania econômica. <br/><br/>
-                Onde o sistema vê carência, ativamos potência territorial. <br/><br/>
-                O conhecimento aqui é sua arma de mobilidade social. Use-o com rigor técnico.
-              </p>
-              <button 
-                onClick={() => { setAgreed(!agreed); triggerVibration('success'); }} 
-                className={`w-full py-6 text-xl font-black uppercase border-4 transition-all ${agreed ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-transparent border-white text-white'}`}
-              >
-                {agreed ? "[ PROTOCOLO ACEITO ]" : "[ ACEITAR O PROTOCOLO ]"}
-              </button>
-            </div>
-            <button 
-              disabled={!agreed} 
-              onClick={() => setStep(1)} 
-              className="brutal-btn py-10 text-3xl italic shadow-[12px_12px_0px_#7c3aed]"
-            >
-              INICIAR_ATIVAÇÃO
-            </button>
-          </div>
-        )}
+    <div className="fixed inset-0 z-[100] bg-dark/95 backdrop-blur-xl p-6 flex flex-col">
+      <div className="flex justify-between items-center mb-8">
+        <span className="text-[10px] font-mono text-primary">LIÇÃO ID: {lesson.id}</span>
+        <button onClick={onClose} className="text-white/40 hover:text-white"><i className="fa-solid fa-xmark text-2xl"></i></button>
+      </div>
+
+      <div className="flex-1 max-w-2xl mx-auto w-full">
+        <div className="flex gap-2 mb-8">
+          {[1,2,3,4,5].map(s => (
+            <div key={s} className={`h-1 flex-1 rounded-full ${step >= s ? 'bg-primary' : 'bg-white/10'}`}></div>
+          ))}
+        </div>
 
         {step === 1 && (
-          <div className="space-y-10">
-            <h2 className="heavy text-5xl italic leading-tight">IDENTIDADE_OPERACIONAL</h2>
-            <div className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-slate-500 italic uppercase ml-2">Nome_do_Operador</label>
-                <input value={name} onChange={e => setName(e.target.value)} className="text-2xl py-6" placeholder="DIGITE AQUI" />
-              </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-slate-500 italic uppercase ml-2">Zona_de_Atuação (Bairro)</label>
-                <input value={neighborhood} onChange={e => setNeighborhood(e.target.value)} className="text-2xl py-6" placeholder="DIGITE AQUI" />
-              </div>
-            </div>
-            <button 
-              disabled={!name || !neighborhood} 
-              onClick={() => setStep(2)} 
-              className="brutal-btn py-10 text-3xl italic shadow-[12px_12px_0px_#7c3aed]"
-            >
-              AVANÇAR_AO_COMANDO
-            </button>
+          <div className="animate-in slide-in-from-bottom-4">
+            <h2 className="font-archivo text-2xl text-primary mb-4 uppercase">{lesson.title}</h2>
+            <p className="text-white/80 leading-relaxed mb-8">{lesson.theory}</p>
+            <button onClick={() => setStep(2)} className="btn-primary w-full py-4 rounded-xl font-bold bg-primary text-dark">ENTENDIDO, BORA!</button>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-10">
-             <h2 className="heavy text-5xl italic leading-tight">ESCOLHA_SUA_TRILHA</h2>
-             <div className="grid gap-4">
-                {[
-                  { id: 'social_media', label: 'SOCIAL MEDIA', icon: 'fa-hashtag' },
-                  { id: 'trafego', label: 'GESTOR DE TRÁFEGO', icon: 'fa-bullseye' },
-                  { id: 'video', label: 'EDITOR DE VÍDEO', icon: 'fa-video' },
-                  { id: 'design', label: 'DESIGNER DIGITAL', icon: 'fa-palette' }
-                ].map(t => (
+          <div className="animate-in slide-in-from-bottom-4">
+            <h3 className="font-archivo text-xl mb-6">VALIDAÇÃO TÉCNICA</h3>
+            <div className="glass p-6 rounded-2xl mb-8">
+              <p className="mb-6">{lesson.quiz.question}</p>
+              <div className="space-y-3">
+                {lesson.quiz.options.map((opt, i) => (
                   <button 
-                    key={t.id}
-                    onClick={() => setTrail(t.id as TrailId)}
-                    className={`brutal-btn py-6 flex items-center justify-start gap-6 ${trail === t.id ? 'bg-purple-600 text-white border-purple-600' : ''}`}
+                    key={i} 
+                    onClick={() => i === lesson.quiz.answer ? setStep(3) : alert('Errou o passo, boy! Tenta de novo.')}
+                    className="w-full p-4 rounded-xl border border-white/10 text-left hover:bg-white/5 transition-colors"
                   >
-                    <i className={`fa-solid ${t.icon} text-2xl`}></i>
-                    <span className="heavy text-xl italic">{t.label}</span>
+                    {opt}
                   </button>
                 ))}
-             </div>
-             <button 
-              disabled={!trail} 
-              onClick={() => {
-                const p: UserProfile = { 
-                  username: name.toLowerCase().replace(/\s/g, '_'), 
-                  name, 
-                  neighborhood, 
-                  selectedTrail: trail as TrailId,
-                  xp: 0, 
-                  portfolio: [], 
-                  joinedAt: Date.now() 
-                };
-                onComplete(p);
-                triggerVibration('success');
-              }}
-              className="brutal-btn py-10 text-3xl italic shadow-[12px_12px_0px_#7c3aed]"
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="animate-in slide-in-from-bottom-4">
+            <h3 className="font-archivo text-xl mb-6">LAB DE ESCRITA</h3>
+            <p className="text-white/60 mb-6">{lesson.labPrompt}</p>
+            <textarea 
+              className="w-full h-48 glass p-4 rounded-2xl outline-none focus:ring-2 ring-primary mb-8"
+              placeholder="Digite aqui seu raciocínio estratégico..."
+            ></textarea>
+            <button onClick={() => setStep(4)} className="btn-primary w-full py-4 rounded-xl font-bold bg-primary text-dark">PRONTO PARA ENTREGAR</button>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="animate-in slide-in-from-bottom-4">
+            <h3 className="font-archivo text-xl mb-6">ENTREGA MULTIMODAL</h3>
+            <p className="text-white/60 mb-6">Mande o link do seu ativo (Canva/Figma/Drive):</p>
+            <input 
+              value={delivery}
+              onChange={e => setDelivery(e.target.value)}
+              className="w-full glass p-4 rounded-2xl outline-none mb-8"
+              placeholder="https://..."
+            />
+            <button 
+              disabled={isAuditing}
+              onClick={startAudit} 
+              className="btn-primary w-full py-4 rounded-xl font-bold bg-primary text-dark flex items-center justify-center gap-4"
             >
-              ATIVAR_TERMINAL_V5
+              {isAuditing ? <><i className="fa-solid fa-spinner animate-spin"></i> AUDITANDO NO PORTO...</> : 'SUBMETER PARA AUDITORIA'}
             </button>
           </div>
         )}
+
+        {step === 5 && result && (
+          <div className="animate-in zoom-in-95">
+             <div className="text-center mb-8">
+                <div className="inline-block px-8 py-4 glass rounded-3xl border-2 border-primary mb-4">
+                   <p className="text-4xl font-archivo">{result.score}</p>
+                   <p className="text-[10px] font-mono tracking-widest uppercase">Nota do Mentor</p>
+                </div>
+                <h3 className="font-archivo text-primary">AUDITORIA CONCLUÍDA!</h3>
+             </div>
+             
+             <div className="glass p-6 rounded-2xl mb-8 font-mono">
+                <div className="flex items-center gap-3 mb-4">
+                   <div className="w-8 h-8 rounded-full bg-secondary"></div>
+                   <p className="text-xs font-bold">{result.mentor} diz:</p>
+                </div>
+                <p className="text-sm text-white/80 leading-relaxed italic">"{result.feedback}"</p>
+             </div>
+
+             <button onClick={onClose} className="w-full py-4 rounded-xl border border-primary text-primary font-bold">VOLTAR PARA O DASHBOARD</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const DossierView = ({ user }: { user: UserProfile }) => (
+  <div className="animate-in slide-in-from-bottom-4">
+    <h2 className="font-archivo text-2xl mb-8">MEU DOSSIÊ DIGITAL</h2>
+    <div className="grid gap-6">
+      {user.dossier.map((item, i) => (
+        <div key={i} className="glass p-6 rounded-2xl flex gap-6 items-center">
+           <div className="w-20 h-20 rounded-xl bg-surface flex items-center justify-center border border-white/10 shrink-0">
+              <i className="fa-solid fa-file-signature text-2xl text-primary"></i>
+           </div>
+           <div>
+              <h4 className="font-bold text-primary">{item.lessonTitle}</h4>
+              <p className="text-[10px] font-mono text-white/40 mb-2">{item.date} // NOTA: {item.audit.score}</p>
+              <p className="text-xs text-white/60 line-clamp-2 italic">"{item.audit.feedback}"</p>
+           </div>
+        </div>
+      ))}
+      {user.dossier.length === 0 && (
+        <div className="text-center py-20 opacity-20">
+          <i className="fa-solid fa-box-open text-6xl mb-4"></i>
+          <p className="font-archivo">NADA AUDITADO AINDA, BOY.</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const MuralView = () => (
+  <div className="animate-in slide-in-from-bottom-4 space-y-8">
+    <h2 className="font-archivo text-2xl">MURAL DE ACELERAÇÃO</h2>
+    
+    <div className="grid gap-4">
+      <div className="glass p-6 rounded-2xl border-l-4 border-cyan-400">
+        <h4 className="font-bold mb-2 flex items-center gap-2">
+          <i className="fa-solid fa-building-flag"></i> GO RECIFE
+        </h4>
+        <p className="text-xs text-white/60 mb-4">Conecte seu perfil diretamente ao portal de empregabilidade da prefeitura.</p>
+        <a href="https://gorecife.recife.pe.gov.br" target="_blank" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Conectar agora</a>
+      </div>
+
+      <div className="glass p-6 rounded-2xl border-l-4 border-emerald-400">
+        <h4 className="font-bold mb-2 flex items-center gap-2">
+          <i className="fa-solid fa-address-card"></i> FORMALIZAÇÃO MEI
+        </h4>
+        <p className="text-xs text-white/60 mb-4">Saia da informalidade. Guia prático para emitir sua nota fiscal de serviço.</p>
+        <a href="https://www.gov.br/empresas-e-negocios/pt-br/empreendedor" target="_blank" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Portal do Empreendedor</a>
+      </div>
+    </div>
+
+    <section>
+      <h3 className="font-archivo text-sm text-primary mb-6">PRÓXIMOS GIGS</h3>
+      <div className="space-y-3 opacity-50 grayscale pointer-events-none">
+         <div className="glass p-4 rounded-xl border border-white/5 flex justify-between items-center">
+            <span className="text-xs font-bold">Social Media JR (Agência B)</span>
+            <span className="text-[10px] bg-white/10 px-2 py-1 rounded">REQUISITO: ESTRATÉGIA LVL 8</span>
+         </div>
+      </div>
+    </section>
+  </div>
+);
+
+const Onboarding = ({ onComplete }: { onComplete: (u: UserProfile) => void }) => {
+  const [name, setName] = useState('');
+  return (
+    <div className="fixed inset-0 bg-dark z-[200] flex items-center justify-center p-8">
+      <div className="max-w-md w-full text-center">
+        <h1 className="font-archivo text-4xl text-primary mb-4 tracking-tighter">GUI.A<br/><span className="text-white">DIGITAL</span></h1>
+        <p className="text-white/40 font-mono text-xs mb-12 uppercase tracking-[0.2em]">Sua carreira no Porto Digital começa aqui.</p>
+        
+        <input 
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="COMO TE CHAMAM NO RECHE?"
+          className="w-full glass p-5 rounded-2xl font-archivo text-center outline-none focus:ring-2 ring-primary mb-6"
+        />
+        
+        <button 
+          disabled={!name}
+          onClick={() => onComplete({
+            name, level: 1, exp: 0, 
+            matrix: { Estrategia: 0, Escrita: 0, Analise: 0, Tecnica: 0 },
+            dossier: []
+          })}
+          className="w-full py-5 bg-primary text-dark font-archivo text-lg rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(0,242,255,0.3)]"
+        >
+          INICIALIZAR OS
+        </button>
       </div>
     </div>
   );

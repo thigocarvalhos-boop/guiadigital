@@ -1,74 +1,78 @@
+
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GUIA DIGITAL | PROTOCOLO V5.0</title>
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2583/2583158.png">
+    <title>GUI.A DIGITAL | Career OS</title>
     <link rel="manifest" href="metadata.json">
-    <meta name="theme-color" content="#000000">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #000000; --accent: #ff3e00; --purple: #7c3aed; --white: #ffffff; }
-        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        :root {
+            --cyan: #00f2ff;
+            --emerald: #10b981;
+            --bg: #020617;
+        }
+        
         body { 
-            font-family: 'JetBrains Mono', monospace; 
-            background-color: var(--bg); 
-            color: var(--white); 
-            margin: 0; 
-            overflow-x: hidden; 
-            line-height: 1.5;
+            background-color: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
-        body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 40px 40px; z-index: -1; pointer-events: none;
+
+        .font-archivo { font-family: 'Archivo Black', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .heavy { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.05em; }
-        .brutal-card {
-            background: #000; border: 6px solid #fff;
-            box-shadow: 12px 12px 0px var(--purple);
-            transition: all 0.1s;
+
+        .neon-border {
+            position: relative;
+            border-radius: 12px;
+            background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                        linear-gradient(45deg, var(--cyan), var(--emerald)) border-box;
+            border: 2px solid transparent;
         }
-        .brutal-btn {
-            background: #fff; color: #000; font-weight: 800; text-transform: uppercase;
-            padding: 1.5rem; border: 6px solid #fff; box-shadow: 8px 8px 0px var(--accent);
-            cursor: pointer; width: 100%; text-align: center; font-size: 1.2rem;
-            display: flex; align-items: center; justify-content: center; gap: 1rem;
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 242, 255, 0.1);
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
         }
-        .brutal-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--accent); }
-        .brutal-btn:disabled { background: #333; color: #666; border-color: #444; box-shadow: none; cursor: not-allowed; }
-        input, textarea {
-            background: #000 !important; border: 4px solid #fff !important;
-            color: #fff !important; border-radius: 0 !important; padding: 1.2rem !important;
-            font-family: 'JetBrains Mono', monospace; width: 100%; outline: none;
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
         }
-        input:focus, textarea:focus { border-color: var(--purple) !important; }
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-        .is-loading { animation: glitch 0.2s infinite; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
     </style>
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "@google/genai": "https://esm.sh/@google/genai@1.34.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+        "lucide-react": "https://esm.sh/lucide-react@^0.454.0"
+      }
+    }
+    </script>
 </head>
-<body>
+<body class="bg-slate-950">
+    <div class="scanline"></div>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
 </body>

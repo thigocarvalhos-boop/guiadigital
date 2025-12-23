@@ -1,6 +1,7 @@
 
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./index.tsx",
@@ -10,15 +11,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        slate: {
-          950: '#020617',
-        },
-        cyan: {
-          500: '#22d3ee',
-        }
+        primary: '#00f2ff',
+        secondary: '#10b981',
+        dark: '#020617',
+        surface: '#0f172a',
       },
       fontFamily: {
-        sans: ['Montserrat', 'sans-serif'],
+        archivo: ['Archivo Black', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
       },
     },
   },

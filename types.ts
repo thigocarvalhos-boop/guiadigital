@@ -1,67 +1,66 @@
 
-export type LessonState = 'THEORY' | 'QUIZ' | 'PRACTICE' | 'REVIEW' | 'DELIVERY' | 'COMPLETED';
+export type Competency = 'Estrategia' | 'Escrita' | 'Analise' | 'Tecnica';
 
-export type TrailId = 'social_media' | 'trafego' | 'video' | 'design';
-
-export interface UserProfile {
-  username: string;
-  name: string;
-  neighborhood: string;
-  selectedTrail: TrailId;
-  xp: number;
-  portfolio: PortfolioItem[];
-  joinedAt: number;
+export interface MasteryMatrix {
+  Estrategia: number;
+  Escrita: number;
+  Analise: number;
+  Tecnica: number;
 }
 
+export interface AuditResult {
+  score: number;
+  feedback: string;
+  mentor: string;
+}
+
+/**
+ * Representa um item entregue no portfólio do usuário.
+ */
 export interface PortfolioItem {
+  lessonId: string;
+  lessonTitle: string;
+  assetUrl: string;
+  audit: AuditResult;
+  date: string;
+}
+
+/**
+ * Representa uma oportunidade de trabalho ou gig no ecossistema.
+ */
+export interface Opportunity {
   id: string;
   title: string;
-  category: string;
-  description: string;
-  url: string;
-  score: number;
-  approvedAt: number;
-}
-
-export interface Quiz {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
+  description?: string;
+  matchingScore?: number;
 }
 
 export interface Lesson {
   id: string;
   title: string;
+  category: string;
   theory: string;
-  minReadSeconds: number;
-  quiz: Quiz;
-  challenge: string;
-  reviewContent: string;
-  minChars: number;
-  xpValue: number;
+  quiz: {
+    question: string;
+    options: string[];
+    answer: number;
+  };
+  labPrompt: string;
+  deliveryType: 'link' | 'media';
+  competency: Competency;
 }
 
-export interface Module {
+export interface Track {
   id: string;
-  trailId: TrailId;
   title: string;
   icon: string;
-  description: string;
   lessons: Lesson[];
 }
 
-export interface AIReview {
-  verdict: 'approved' | 'revision';
-  feedback: string;
-  score: number;
-}
-
-export interface Opportunity {
-  id: string;
-  title: string;
-  businessName: string;
-  description: string;
-  location: string;
-  matchingScore?: number;
+export interface UserProfile {
+  name: string;
+  level: number;
+  exp: number;
+  matrix: MasteryMatrix;
+  dossier: PortfolioItem[];
 }
