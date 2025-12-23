@@ -4,6 +4,60 @@ import { GoogleGenAI } from "@google/genai";
 import { UserProfile, Track, Lesson, AuditResult } from './types.ts';
 import { TRACKS } from './constants.tsx';
 
+/**
+ * FlyerCard: Componente de exibição de trilhas com efeito de zoom suave na imagem.
+ */
+// Fix: Use React.FC to properly handle React's reserved props like 'key'
+const FlyerCard: React.FC<{ track: Track; onStart: () => void }> = ({ track, onStart }) => {
+  return (
+    <div 
+      className="group relative overflow-hidden rounded-[2rem] glass border-white/10 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/50 cursor-pointer"
+      onClick={onStart}
+    >
+      {/* Container da Imagem com Zoom */}
+      <div className="relative aspect-video overflow-hidden">
+        <img 
+          src={track.imageUrl} 
+          alt={track.title} 
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+        />
+        {/* Overlay Gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+        
+        {/* Ícone Flutuante */}
+        <div className="absolute top-4 right-4 h-10 w-10 rounded-xl glass border-white/20 flex items-center justify-center text-primary shadow-lg backdrop-blur-md">
+          <i className={`fa-solid ${track.icon}`}></i>
+        </div>
+      </div>
+
+      {/* Conteúdo do Card */}
+      <div className="p-6">
+        <span className="text-[10px] font-mono font-bold text-secondary uppercase tracking-[0.2em] mb-2 block">
+          {track.lessons.length} LIÇÕES DISPONÍVEIS
+        </span>
+        <h3 className="font-archivo text-xl text-white mb-4 group-hover:text-primary transition-colors">
+          {track.title.toUpperCase()}
+        </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex -space-x-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-6 w-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[8px] font-bold">
+                {i}
+              </div>
+            ))}
+            <div className="h-6 w-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-[8px] text-primary font-bold">
+              +
+            </div>
+          </div>
+          <button className="text-[10px] font-archivo text-primary flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+            INICIAR CORRE <i className="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'dash' | 'tracks' | 'dossier' | 'mural'>('dash');
@@ -19,6 +73,7 @@ const App = () => {
   }, [user]);
 
   const handleAudit = async (lesson: Lesson, delivery: string) => {
+    // Initializing GoogleGenAI inside the handler to ensure it uses the correct context/key
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = `
       Você é um Mentor Sênior de Agência no Porto Digital (Recife).
@@ -39,7 +94,9 @@ const App = () => {
         config: { responseMimeType: "application/json" }
       });
       
-      const result: AuditResult = JSON.parse(response.text);
+      // Accessing response.text directly as it is a property in the @google/genai SDK
+      const responseText = response.text || '{}';
+      const result: AuditResult = JSON.parse(responseText);
       
       if (user) {
         const newMatrix = { ...user.matrix };
@@ -89,24 +146,20 @@ const App = () => {
       <main className="p-6 max-w-4xl mx-auto">
         {activeTab === 'dash' && <Dashboard user={user} />}
         {activeTab === 'tracks' && (
-          <div className="space-y-6">
-            <h2 className="font-archivo text-2xl mb-8">TRILHAS DE APRENDIZADO</h2>
-            {TRACKS.map(track => (
-              <div key={track.id} className="glass p-6 rounded-2xl">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
-                    <i className={`fa-solid ${track.icon} text-primary text-xl`}></i>
-                    <h3 className="font-bold">{track.title}</h3>
-                  </div>
-                  <button 
-                    onClick={() => setActiveLesson(track.lessons[0])}
-                    className="bg-primary text-dark font-bold px-4 py-2 rounded-lg text-xs hover:scale-105 transition-transform"
-                  >
-                    INICIAR CORRE
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <div>
+              <h2 className="font-archivo text-2xl mb-2">TRILHAS DE APRENDIZADO</h2>
+              <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Escolha seu caminho no Porto Digital</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {TRACKS.map(track => (
+                <FlyerCard 
+                  key={track.id} 
+                  track={track} 
+                  onStart={() => setActiveLesson(track.lessons[0])} 
+                />
+              ))}
+            </div>
           </div>
         )}
         {activeTab === 'dossier' && <DossierView user={user} />}
@@ -179,7 +232,12 @@ const Dashboard = ({ user }: { user: UserProfile }) => (
   </div>
 );
 
-const LessonPlayer = ({ lesson, onClose, onAudit }: { lesson: Lesson, onClose: () => void, onAudit: any }) => {
+// Fix: Correctly type the onAudit prop to improve reliability and fix implicit any warnings
+const LessonPlayer = ({ lesson, onClose, onAudit }: { 
+  lesson: Lesson, 
+  onClose: () => void, 
+  onAudit: (lesson: Lesson, delivery: string) => Promise<AuditResult | null> 
+}) => {
   const [step, setStep] = useState(1);
   const [delivery, setDelivery] = useState('');
   const [isAuditing, setIsAuditing] = useState(false);
@@ -329,7 +387,7 @@ const MuralView = () => (
           <i className="fa-solid fa-building-flag"></i> GO RECIFE
         </h4>
         <p className="text-xs text-white/60 mb-4">Conecte seu perfil diretamente ao portal de empregabilidade da prefeitura.</p>
-        <a href="https://gorecife.recife.pe.gov.br" target="_blank" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Conectar agora</a>
+        <a href="https://gorecife.recife.pe.gov.br" target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Conectar agora</a>
       </div>
 
       <div className="glass p-6 rounded-2xl border-l-4 border-emerald-400">
@@ -337,7 +395,7 @@ const MuralView = () => (
           <i className="fa-solid fa-address-card"></i> FORMALIZAÇÃO MEI
         </h4>
         <p className="text-xs text-white/60 mb-4">Saia da informalidade. Guia prático para emitir sua nota fiscal de serviço.</p>
-        <a href="https://www.gov.br/empresas-e-negocios/pt-br/empreendedor" target="_blank" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Portal do Empreendedor</a>
+        <a href="https://www.gov.br/empresas-e-negocios/pt-br/empreendedor" target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Portal do Empreendedor</a>
       </div>
     </div>
 

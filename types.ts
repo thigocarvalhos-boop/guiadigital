@@ -54,6 +54,7 @@ export interface Track {
   id: string;
   title: string;
   icon: string;
+  imageUrl: string;
   lessons: Lesson[];
 }
 

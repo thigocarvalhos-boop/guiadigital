@@ -6,6 +6,7 @@ export const TRACKS: Track[] = [
     id: 'social-media',
     title: 'Social Media Strategy',
     icon: 'fa-hashtag',
+    imageUrl: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800',
     lessons: [
       {
         id: 'sm-1',
@@ -27,6 +28,7 @@ export const TRACKS: Track[] = [
     id: 'visual-design',
     title: 'Visual Design Labs',
     icon: 'fa-palette',
+    imageUrl: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800',
     lessons: [
       {
         id: 'vd-1',
