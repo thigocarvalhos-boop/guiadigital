@@ -3,6 +3,17 @@ export type Competency = 'Estrategia' | 'Escrita' | 'Analise' | 'Tecnica' | 'Des
 
 export type LessonState = 'THEORY' | 'QUIZ' | 'PRACTICE' | 'SUBMISSION' | 'REVIEW';
 
+export type UserRole = 'ADMIN' | 'EDITOR' | 'MONITOR' | 'USER';
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  userId: string;
+  userName: string;
+  action: string;
+  target: string;
+}
+
 export interface MasteryMatrix {
   Estrategia: number;
   Escrita: number;
@@ -12,30 +23,11 @@ export interface MasteryMatrix {
   Audiovisual: number;
 }
 
-export interface Rubric {
-  execucao_pratica: number;
-  qualidade_tecnica: number;
-  estrategia_clareza: number;
-  profissionalismo: number;
-}
-
 export interface AuditResult {
   score: number;
   feedback: string;
   mentor: string;
-  rubrica?: Rubric;
   aprovado: boolean;
-}
-
-/**
- * Interface representing a professional opportunity for matching
- */
-export interface Opportunity {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  matchingScore?: number;
 }
 
 export interface PortfolioItem {
@@ -79,11 +71,24 @@ export interface Track {
   lessons: Lesson[];
 }
 
+// Added Opportunity interface to fix "Module '"./types.ts"' has no exported member 'Opportunity'" error in utils.ts
+export interface Opportunity {
+  id: string;
+  title: string;
+  company: string;
+  description: string;
+  location: string;
+  matchingScore?: number;
+}
+
 export interface UserProfile {
+  id: string;
   name: string;
+  email: string;
+  role: UserRole;
   level: number;
   exp: number;
   matrix: MasteryMatrix;
   dossier: PortfolioItem[];
-  currentTrackId?: string;
+  status: 'ACTIVE' | 'BLOCKED';
 }
