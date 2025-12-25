@@ -4,43 +4,87 @@ import { Track } from './types.ts';
 export const TRACKS: Track[] = [
   {
     id: 'social-media',
-    title: 'Social Media Strategy',
-    icon: 'fa-hashtag',
-    imageUrl: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800',
+    title: 'Gestão de Redes Sociais',
+    icon: '📊',
+    imageUrl: '',
     lessons: [
       {
         id: 'sm-1',
-        title: 'Posicionamento e Voz',
-        category: 'Social Media',
-        theory: 'Definir o posicionamento é o primeiro passo para não ser só mais um no feed. No Porto Digital, as marcas que se destacam são as que têm alma e estratégia.',
+        title: 'Domínio de Algoritmo',
+        category: 'ESTRATÉGIA',
+        theory: 'Deixe de ser "postador" e vire estrategista. Aprenda a dominar o algoritmo e criar comunidades lucrativas.',
         quiz: {
-          question: "O que define a 'Voz da Marca'?",
-          options: ["O volume do áudio dos vídeos", "A personalidade expressa na comunicação", "Apenas as cores do logo"],
+          question: "Qual o foco da nova economia de atenção?",
+          options: ["Likes", "Retenção e Comunidade", "Quantidade de posts"],
           answer: 1
         },
-        labPrompt: "Escreva uma bio de Instagram para um café tecnológico no Bairro do Recife.",
+        labPrompt: "Desenhe uma estratégia de 3 posts focada em retenção para um negócio local.",
         deliveryType: 'link',
         competency: 'Estrategia'
       }
     ]
   },
   {
-    id: 'visual-design',
-    title: 'Visual Design Labs',
-    icon: 'fa-palette',
-    imageUrl: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800',
+    id: 'ads-manager',
+    title: 'Gestor de Tráfego Pago',
+    icon: '📈',
+    imageUrl: '',
     lessons: [
       {
-        id: 'vd-1',
-        title: 'Composição de Ativos',
-        category: 'Design',
-        theory: 'Design não é só "perfumaria", é hierarquia de informação. Aprenda a guiar o olho do usuário.',
+        id: 'tp-1',
+        title: 'Lucro com Anúncios',
+        category: 'TRÁFEGO',
+        theory: 'Aprenda a investir dinheiro e trazer lucro real para negócios locais usando Meta e Google Ads.',
         quiz: {
-          question: "Qual o elemento principal da hierarquia visual?",
-          options: ["O contraste", "O tamanho do arquivo", "A quantidade de fontes"],
+          question: "O que é ROAS?",
+          options: ["Retorno sobre investimento em anúncios", "Custo por clique", "Número de seguidores"],
           answer: 0
         },
-        labPrompt: "Crie um card de evento no Canva para um Meetup de Devs.",
+        labPrompt: "Crie a estrutura de uma campanha de 'Mensagens' para uma pizzaria no seu bairro.",
+        deliveryType: 'link',
+        competency: 'Analise'
+      }
+    ]
+  },
+  {
+    id: 'video-mobile',
+    title: 'Editor de Vídeo Mobile',
+    icon: '🎬',
+    imageUrl: '',
+    lessons: [
+      {
+        id: 'vm-1',
+        title: 'Vídeos que Vendem',
+        category: 'VÍDEO',
+        theory: 'Domine storytelling, ganchos de atenção e edição profissional no celular.',
+        quiz: {
+          question: "Quanto tempo dura o 'gancho' ideal?",
+          options: ["10 segundos", "3 segundos", "30 segundos"],
+          answer: 1
+        },
+        labPrompt: "Edite um vídeo de 15s com 3 cortes dinâmicos e uma legenda de destaque.",
+        deliveryType: 'link',
+        competency: 'Tecnica'
+      }
+    ]
+  },
+  {
+    id: 'ai-creative',
+    title: 'Design & AI Artist',
+    icon: '🎨',
+    imageUrl: '',
+    lessons: [
+      {
+        id: 'ai-1',
+        title: 'Prompt Engineering',
+        category: 'DESIGN',
+        theory: 'Crie identidades visuais e artes de alta performance usando IA Generativa.',
+        quiz: {
+          question: "O que define a qualidade de uma imagem em IA?",
+          options: ["A sorte", "A clareza do prompt e referências", "O preço da ferramenta"],
+          answer: 1
+        },
+        labPrompt: "Gere o conceito visual de uma marca de streetwear usando técnicas de Prompting.",
         deliveryType: 'link',
         competency: 'Tecnica'
       }

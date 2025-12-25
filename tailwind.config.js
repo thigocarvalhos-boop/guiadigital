@@ -11,16 +11,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#00f2ff',
-        secondary: '#10b981',
-        dark: '#020617',
-        surface: '#0f172a',
+        hyper: '#00f2ff',
+        electric: '#7000ff',
+        hot: '#ff007a',
+        darker: '#030014',
       },
       fontFamily: {
-        archivo: ['Archivo Black', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Space Grotesk', 'sans-serif'],
+        outfit: ['Outfit', 'sans-serif'],
       },
+      borderRadius: {
+        '4xl': '32px',
+        '5xl': '48px',
+      },
+      animation: {
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      }
     },
   },
   plugins: [],

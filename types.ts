@@ -12,11 +12,13 @@ export interface AuditResult {
   score: number;
   feedback: string;
   mentor: string;
+  rubrics?: {
+    technical: number;
+    creativity: number;
+    impact: number;
+  };
 }
 
-/**
- * Representa um item entregue no portfólio do usuário.
- */
 export interface PortfolioItem {
   lessonId: string;
   lessonTitle: string;
@@ -25,9 +27,6 @@ export interface PortfolioItem {
   date: string;
 }
 
-/**
- * Representa uma oportunidade de trabalho ou gig no ecossistema.
- */
 export interface Opportunity {
   id: string;
   title: string;

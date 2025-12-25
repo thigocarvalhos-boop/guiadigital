@@ -1,445 +1,445 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { UserProfile, Track, Lesson, AuditResult } from './types.ts';
+import { UserProfile, Lesson, AuditResult } from './types.ts';
 import { TRACKS } from './constants.tsx';
-
-/**
- * FlyerCard: Componente de exibição de trilhas com efeito de zoom suave na imagem.
- */
-// Fix: Use React.FC to properly handle React's reserved props like 'key'
-const FlyerCard: React.FC<{ track: Track; onStart: () => void }> = ({ track, onStart }) => {
-  return (
-    <div 
-      className="group relative overflow-hidden rounded-[2rem] glass border-white/10 shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/50 cursor-pointer"
-      onClick={onStart}
-    >
-      {/* Container da Imagem com Zoom */}
-      <div className="relative aspect-video overflow-hidden">
-        <img 
-          src={track.imageUrl} 
-          alt={track.title} 
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-        />
-        {/* Overlay Gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-        
-        {/* Ícone Flutuante */}
-        <div className="absolute top-4 right-4 h-10 w-10 rounded-xl glass border-white/20 flex items-center justify-center text-primary shadow-lg backdrop-blur-md">
-          <i className={`fa-solid ${track.icon}`}></i>
-        </div>
-      </div>
-
-      {/* Conteúdo do Card */}
-      <div className="p-6">
-        <span className="text-[10px] font-mono font-bold text-secondary uppercase tracking-[0.2em] mb-2 block">
-          {track.lessons.length} LIÇÕES DISPONÍVEIS
-        </span>
-        <h3 className="font-archivo text-xl text-white mb-4 group-hover:text-primary transition-colors">
-          {track.title.toUpperCase()}
-        </h3>
-        <div className="flex items-center justify-between">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-6 w-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[8px] font-bold">
-                {i}
-              </div>
-            ))}
-            <div className="h-6 w-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-[8px] text-primary font-bold">
-              +
-            </div>
-          </div>
-          <button className="text-[10px] font-archivo text-primary flex items-center gap-2 group-hover:translate-x-1 transition-transform">
-            INICIAR CORRE <i className="fa-solid fa-arrow-right"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const App = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState<'dash' | 'tracks' | 'dossier' | 'mural'>('dash');
-  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  const [activeTab, setActiveTab] = useState<'visao' | 'corre' | 'dossie' | 'mural'>('corre');
+  const [activeMission, setActiveMission] = useState<Lesson | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('guia_user');
+    const saved = localStorage.getItem('guia_street_os_v1');
     if (saved) setUser(JSON.parse(saved));
   }, []);
 
   useEffect(() => {
-    if (user) localStorage.setItem('guia_user', JSON.stringify(user));
+    if (user) localStorage.setItem('guia_street_os_v1', JSON.stringify(user));
   }, [user]);
 
-  const handleAudit = async (lesson: Lesson, delivery: string) => {
-    // Initializing GoogleGenAI inside the handler to ensure it uses the correct context/key
+  const runAudit = async (lesson: Lesson, delivery: string) => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `
-      Você é um Mentor Sênior de Agência no Porto Digital (Recife).
-      Avalie a entrega do aluno para a lição: ${lesson.title}.
-      Entrega: ${delivery}
-      
-      Regras:
-      1. Use gírias locais (visse, boy, massa, oxente, bronca) de forma profissional.
-      2. Dê uma nota de 0 a 10.
-      3. Forneça um feedback técnico real e direto.
-      4. Retorne APENAS um JSON no formato: {"score": number, "feedback": "string", "mentor": "Nome do Mentor"}
-    `;
+    const prompt = `[STREET_AUDIT_PROTOCOL::V2]
+    SITUAÇÃO: Auditoria técnica para talento de periferia no Porto Digital.
+    ATIVO: ${lesson.title}
+    COMPETÊNCIA: ${lesson.competency}
+    ENTREGA: "${delivery}"
+    
+    META: Avalie com rigor técnico, mas use um tom de "Mentor de Quebrada" (direto, incentivador, papo reto).
+    FORMATO OBRIGATÓRIO (JSON):
+    {
+      "score": número (0-10),
+      "feedback": "Papo reto sobre a entrega, focado em evolução real",
+      "mentor": "NODE_RECIFE_STREET",
+      "rubrics": {
+        "tecnica": número (0-100),
+        "estilo": número (0-100),
+        "impacto": número (0-100)
+      }
+    }`;
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: [{ parts: [{ text: prompt }] }],
-        config: { responseMimeType: "application/json" }
+        model: 'gemini-3-pro-preview',
+        contents: prompt,
+        config: { 
+          responseMimeType: "application/json",
+          thinkingConfig: { thinkingBudget: 4000 }
+        }
       });
       
-      // Accessing response.text directly as it is a property in the @google/genai SDK
-      const responseText = response.text || '{}';
-      const result: AuditResult = JSON.parse(responseText);
-      
+      const result = JSON.parse(response.text || '{}');
       if (user) {
         const newMatrix = { ...user.matrix };
-        newMatrix[lesson.competency] = Math.min(10, (newMatrix[lesson.competency] + result.score) / (user.dossier.length > 0 ? 1.5 : 1));
-        
+        newMatrix[lesson.competency] = Math.min(10, (newMatrix[lesson.competency] * 0.88) + (result.score * 0.12));
         setUser({
           ...user,
-          exp: user.exp + (result.score * 10),
+          exp: user.exp + (result.score * 100),
           matrix: newMatrix,
-          dossier: [
-            ...user.dossier,
-            { 
-              lessonId: lesson.id, 
-              lessonTitle: lesson.title, 
-              assetUrl: delivery, 
-              audit: result,
-              date: new Date().toLocaleDateString()
-            }
-          ]
+          dossier: [{ 
+            lessonId: lesson.id, 
+            lessonTitle: lesson.title, 
+            assetUrl: delivery, 
+            audit: result, 
+            date: new Date().toLocaleDateString('pt-BR') 
+          }, ...user.dossier]
         });
       }
       return result;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
+    } catch (e) { return null; }
   };
 
-  if (!user) return <Onboarding onComplete={setUser} />;
+  if (!user) return <InitStreetSession onComplete={setUser} />;
 
   return (
-    <div className="min-h-screen bg-dark pb-24">
-      {/* HUD Header */}
-      <header className="p-6 glass border-b border-white/5 sticky top-0 z-50 flex justify-between items-center">
-        <div>
-          <h1 className="font-archivo text-xl text-primary tracking-tighter">GUI.A<span className="text-white">DIGITAL</span></h1>
-          <p className="text-[10px] font-mono text-secondary">LVL {user.level} // EXP {user.exp}</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="text-right">
-            <p className="text-[10px] text-white/40 font-mono">STATUS: ONLINE</p>
-            <p className="text-xs font-bold">{user.name.toUpperCase()}</p>
+    <div className="flex h-screen bg-[#020617] text-white overflow-hidden selection:bg-hot-pink/40">
+      {/* Sidebar Street Dock */}
+      <aside className="w-20 lg:w-64 flex flex-col border-r-4 border-black bg-black/40 z-50">
+        <div className="p-6 flex items-center gap-4">
+          <div className="w-12 h-12 bg-hot-pink flex items-center justify-center rotate-3 shadow-[4px_4px_0_#00f2ff]">
+            <span className="archivo-bold text-black text-2xl">G</span>
+          </div>
+          <div className="hidden lg:block">
+            <h1 className="archivo-bold text-sm tracking-tighter leading-none">GUI.A <br/><span className="text-cyan">Digital</span></h1>
           </div>
         </div>
-      </header>
 
-      <main className="p-6 max-w-4xl mx-auto">
-        {activeTab === 'dash' && <Dashboard user={user} />}
-        {activeTab === 'tracks' && (
-          <div className="space-y-8 animate-in fade-in duration-500">
-            <div>
-              <h2 className="font-archivo text-2xl mb-2">TRILHAS DE APRENDIZADO</h2>
-              <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Escolha seu caminho no Porto Digital</p>
+        <nav className="flex-1 mt-10 px-3 space-y-4">
+          {[
+            { id: 'visao', label: 'Sua Visão', icon: 'fa-eye' },
+            { id: 'corre', label: 'O Corre', icon: 'fa-bolt' },
+            { id: 'dossie', label: 'Dossiê', icon: 'fa-folder-open' },
+            { id: 'mural', label: 'Mural', icon: 'fa-bullhorn' }
+          ].map(item => (
+            <button 
+              key={item.id}
+              onClick={() => setActiveTab(item.id as any)}
+              className={`w-full flex items-center gap-4 p-4 transition-all group border-b-2 ${activeTab === item.id ? 'border-hot-pink bg-hot-pink/10' : 'border-transparent text-slate-500 hover:text-white'}`}
+            >
+              <i className={`fa-solid ${item.icon} text-xl w-6`}></i>
+              <span className="hidden lg:block archivo-bold text-[11px] tracking-widest">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-6 lg:block hidden">
+          <div className="p-4 border-2 border-dashed border-slate-800 rounded-lg">
+             <p className="mono text-[9px] text-slate-600 mb-2 uppercase">Conexão Estável</p>
+             <div className="flex gap-1">
+                {[1,1,1,1,0].map((b,i) => <div key={i} className={`h-3 w-1 ${b ? 'bg-cyan' : 'bg-slate-800'}`}></div>)}
+             </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col relative">
+        <header className="h-20 border-b-4 border-black flex items-center justify-between px-8 bg-slate-900/30 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <span className="mono text-xs text-hot-pink font-bold">SYSTEM_LOG::ACCESS_GRANTED</span>
+            <div className="h-4 w-px bg-slate-800"></div>
+            <h2 className="archivo-bold text-lg text-white neon-text-cyan">{activeTab}</h2>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-right hidden sm:block">
+               <p className="archivo-bold text-[10px] text-slate-500">Reputação Total</p>
+               <p className="text-xl font-black text-white mono">{user.exp.toLocaleString()}<span className="text-hot-pink">XP</span></p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {TRACKS.map(track => (
-                <FlyerCard 
-                  key={track.id} 
-                  track={track} 
-                  onStart={() => setActiveLesson(track.lessons[0])} 
-                />
-              ))}
+            <div className="w-12 h-12 bg-slate-800 p-1 border-2 border-white/10 overflow-hidden -rotate-3">
+               <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.name}`} className="w-full h-full" />
             </div>
           </div>
-        )}
-        {activeTab === 'dossier' && <DossierView user={user} />}
-        {activeTab === 'mural' && <MuralView />}
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar">
+          <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {activeTab === 'visao' && <VisaoView user={user} />}
+            {activeTab === 'corre' && <CorreHub onSelect={setActiveMission} />}
+            {activeTab === 'dossie' && <DossieView dossier={user.dossier} />}
+            {activeTab === 'mural' && <MuralHub />}
+          </div>
+        </div>
       </main>
 
-      {/* Navigation */}
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md glass rounded-2xl h-16 flex items-center justify-around px-4 border border-white/10 shadow-2xl z-50">
-        {[
-          { id: 'dash', icon: 'fa-grid-2', label: 'DASH' },
-          { id: 'tracks', icon: 'fa-code-branch', label: 'TRILHAS' },
-          { id: 'dossier', icon: 'fa-id-badge', label: 'DOSSIÊ' },
-          { id: 'mural', icon: 'fa-rocket', label: 'MURAL' }
-        ].map(tab => (
-          <button 
-            key={tab.id} 
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex flex-col items-center transition-all ${activeTab === tab.id ? 'text-primary' : 'text-white/40'}`}
-          >
-            <i className={`fa-solid ${tab.icon} text-lg`}></i>
-            <span className="text-[9px] font-bold mt-1">{tab.label}</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* Lesson Modal */}
-      {activeLesson && (
-        <LessonPlayer 
-          lesson={activeLesson} 
-          onClose={() => setActiveLesson(null)} 
-          onAudit={handleAudit}
+      {activeMission && (
+        <MissionEnvironment 
+          lesson={activeMission} 
+          onClose={() => setActiveMission(null)} 
+          onAudit={runAudit} 
         />
       )}
     </div>
   );
 };
 
-const Dashboard = ({ user }: { user: UserProfile }) => (
-  <div className="animate-in fade-in duration-500">
-    <div className="grid grid-cols-2 gap-4 mb-8">
-      <div className="glass p-6 rounded-2xl border-l-4 border-primary">
-        <p className="text-[10px] text-white/40 font-mono mb-2">MAESTRIA MÉDIA</p>
-        <p className="text-3xl font-archivo">{(Object.values(user.matrix).reduce((a,b)=>a+b,0)/4).toFixed(1)}</p>
+const VisaoView = ({ user }: { user: UserProfile }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="lg:col-span-2 space-y-8">
+      <div className="p-10 card-street rounded-none border-l-[8px] border-l-hot-pink">
+        <h1 className="archivo-bold text-6xl text-white mb-2">{user.name}</h1>
+        <p className="mono text-cyan font-bold tracking-widest text-sm uppercase">Pai d'égua do Porto Digital // Nível 01</p>
       </div>
-      <div className="glass p-6 rounded-2xl border-l-4 border-secondary">
-        <p className="text-[10px] text-white/40 font-mono mb-2">ATIVOS AUDITADOS</p>
-        <p className="text-3xl font-archivo">{user.dossier.length}</p>
-      </div>
-    </div>
-    
-    <section className="glass p-6 rounded-2xl mb-8">
-      <h3 className="font-archivo text-sm text-primary mb-6">MATRIZ DE COMPETÊNCIAS</h3>
-      <div className="space-y-4 font-mono text-xs">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {Object.entries(user.matrix).map(([key, val]) => (
-          <div key={key}>
-            <div className="flex justify-between mb-1">
-              <span>{key.toUpperCase()}</span>
-              <span>{val.toFixed(1)}/10</span>
+          <div key={key} className="p-8 card-street relative group">
+            <div className="absolute top-4 right-4 text-slate-800 group-hover:text-cyan transition-colors">
+               <i className="fa-solid fa-bolt-lightning text-3xl"></i>
             </div>
-            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-1000" 
-                style={{ width: `${val * 10}%` }}
-              ></div>
+            <p className="archivo-bold text-[10px] text-slate-500 mb-1">{key}</p>
+            <div className="flex items-baseline gap-2 mb-4">
+              <span className="text-5xl font-black text-white mono">{(val * 10).toFixed(0)}</span>
+              <span className="text-hot-pink font-bold text-xl">%</span>
+            </div>
+            <div className="h-3 w-full bg-black/50 border border-white/5">
+              <div className="h-full bg-gradient-to-r from-hot-pink to-cyan shadow-[0_0_10px_rgba(0,242,255,0.5)]" style={{ width: `${val * 10}%` }}></div>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
+    
+    <div className="space-y-6">
+       <div className="card-street p-8 bg-hot-pink text-black">
+          <h3 className="archivo-bold text-xl mb-4 leading-none">Status do Sistema</h3>
+          <ul className="mono text-xs space-y-3 font-bold">
+             <li className="flex justify-between"><span>CPU:</span> <span>HACKING</span></li>
+             <li className="flex justify-between"><span>MEM:</span> <span>98%</span></li>
+             <li className="flex justify-between"><span>PORTA:</span> <span>RECIFE_PD</span></li>
+          </ul>
+       </div>
+       <div className="card-street p-8">
+          <h3 className="archivo-bold text-sm text-slate-500 mb-6">Últimas Atividades</h3>
+          <div className="space-y-4">
+             {[1,2].map(i => (
+               <div key={i} className="flex gap-4 items-start border-l-2 border-slate-800 pl-4">
+                  <div className="text-[10px] mono text-slate-600">02:45</div>
+                  <div className="text-xs font-bold text-slate-300">Auditoria de Ativo concluída com sucesso.</div>
+               </div>
+             ))}
+          </div>
+       </div>
+    </div>
   </div>
 );
 
-// Fix: Correctly type the onAudit prop to improve reliability and fix implicit any warnings
-const LessonPlayer = ({ lesson, onClose, onAudit }: { 
-  lesson: Lesson, 
-  onClose: () => void, 
-  onAudit: (lesson: Lesson, delivery: string) => Promise<AuditResult | null> 
-}) => {
-  const [step, setStep] = useState(1);
-  const [delivery, setDelivery] = useState('');
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [result, setResult] = useState<AuditResult | null>(null);
+const CorreHub = ({ onSelect }: any) => (
+  <div className="space-y-12">
+    <div className="relative">
+       <div className="absolute -top-4 -left-4 w-20 h-20 bg-cyan/10 blur-3xl rounded-full"></div>
+       <h2 className="archivo-bold text-6xl text-white tracking-tighter">O CORRE <span className="text-hot-pink">NÃO PARA</span></h2>
+       <p className="mono text-slate-500 text-sm mt-4 font-bold max-w-xl">
+          Transforme seu talento em ativos reais auditados. Escolha seu caminho e suba o nível.
+       </p>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {TRACKS.map(track => (
+        <div 
+          key={track.id} 
+          onClick={() => onSelect(track.lessons[0])}
+          className="card-street p-10 cursor-pointer group relative overflow-hidden flex flex-col justify-between h-[320px]"
+        >
+          <div className="absolute top-0 right-0 p-8 text-9xl text-white/[0.03] group-hover:text-hot-pink/5 transition-all">
+            {track.icon}
+          </div>
+          <div className="z-10">
+            <div className="flex items-center gap-4 mb-6">
+               <div className="w-16 h-16 bg-black flex items-center justify-center text-4xl border-2 border-slate-800 group-hover:border-cyan transition-all">
+                  {track.icon}
+               </div>
+               <div>
+                  <p className="mono text-[10px] text-hot-pink font-black uppercase">{track.lessons[0].category}</p>
+                  <h3 className="archivo-bold text-2xl text-white group-hover:neon-text-cyan transition-all">{track.title}</h3>
+               </div>
+            </div>
+            <p className="text-slate-400 text-sm leading-relaxed font-medium italic">
+               "{track.lessons[0].theory}"
+            </p>
+          </div>
+          <button className="btn-brasa py-3 px-8 text-xs self-start group-hover:px-12 transition-all">
+             Acessar Laboratório
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
-  const startAudit = async () => {
-    setIsAuditing(true);
-    const res = await onAudit(lesson, delivery);
+const MissionEnvironment = ({ lesson, onClose, onAudit }: any) => {
+  const [step, setStep] = useState(1);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const handleAudit = async () => {
+    setLoading(true);
+    const res = await onAudit(lesson, input);
     setResult(res);
-    setIsAuditing(false);
-    setStep(5);
+    setLoading(false);
+    setStep(3);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-dark/95 backdrop-blur-xl p-6 flex flex-col">
-      <div className="flex justify-between items-center mb-8">
-        <span className="text-[10px] font-mono text-primary">LIÇÃO ID: {lesson.id}</span>
-        <button onClick={onClose} className="text-white/40 hover:text-white"><i className="fa-solid fa-xmark text-2xl"></i></button>
-      </div>
-
-      <div className="flex-1 max-w-2xl mx-auto w-full">
-        <div className="flex gap-2 mb-8">
-          {[1,2,3,4,5].map(s => (
-            <div key={s} className={`h-1 flex-1 rounded-full ${step >= s ? 'bg-primary' : 'bg-white/10'}`}></div>
-          ))}
+    <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+      <div className="w-full max-w-4xl card-street border-hot-pink/20 rounded-none flex flex-col min-h-[80vh] bg-[#020617] relative">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-hot-pink via-cyan to-hot-pink animate-pulse"></div>
+        
+        <div className="p-8 border-b-2 border-black flex justify-between items-center bg-white/5">
+          <div className="flex items-center gap-4">
+            <span className="archivo-bold text-hot-pink text-xs tracking-widest">LAB::NA_VERA</span>
+            <div className="h-4 w-px bg-slate-800"></div>
+            <span className="mono text-[10px] text-slate-500 uppercase">{lesson.title}</span>
+          </div>
+          <button onClick={onClose} className="hover:text-hot-pink transition-colors"><i className="fa-solid fa-xmark text-2xl"></i></button>
         </div>
 
-        {step === 1 && (
-          <div className="animate-in slide-in-from-bottom-4">
-            <h2 className="font-archivo text-2xl text-primary mb-4 uppercase">{lesson.title}</h2>
-            <p className="text-white/80 leading-relaxed mb-8">{lesson.theory}</p>
-            <button onClick={() => setStep(2)} className="btn-primary w-full py-4 rounded-xl font-bold bg-primary text-dark">ENTENDIDO, BORA!</button>
-          </div>
-        )}
+        <div className="flex-1 p-8 sm:p-12 space-y-12">
+          {step === 1 && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+              <div className="space-y-6">
+                <h1 className="archivo-bold text-6xl text-white leading-none italic">O QUE HÁ<br/><span className="text-cyan">POR TRÁS?</span></h1>
+                <p className="text-slate-400 text-xl font-medium leading-relaxed italic border-l-4 border-hot-pink pl-6">
+                  "{lesson.theory}"
+                </p>
+              </div>
+              
+              <div className="p-10 card-street bg-black/40 border-cyan/20">
+                 <h5 className="archivo-bold text-xs text-cyan mb-6">OBJETIVO DO CORRE</h5>
+                 <p className="text-2xl font-black text-white leading-tight">
+                    {lesson.labPrompt}
+                 </p>
+              </div>
 
-        {step === 2 && (
-          <div className="animate-in slide-in-from-bottom-4">
-            <h3 className="font-archivo text-xl mb-6">VALIDAÇÃO TÉCNICA</h3>
-            <div className="glass p-6 rounded-2xl mb-8">
-              <p className="mb-6">{lesson.quiz.question}</p>
-              <div className="space-y-3">
-                {lesson.quiz.options.map((opt, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => i === lesson.quiz.answer ? setStep(3) : alert('Errou o passo, boy! Tenta de novo.')}
-                    className="w-full p-4 rounded-xl border border-white/10 text-left hover:bg-white/5 transition-colors"
-                  >
-                    {opt}
-                  </button>
-                ))}
+              <button onClick={() => setStep(2)} className="btn-brasa w-full py-6 text-lg">
+                 ESTOU PRONTO
+              </button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-8 animate-in fade-in">
+              <div className="flex justify-between items-center">
+                <span className="mono text-[10px] text-cyan uppercase font-bold neon-text-cyan">Hackeando Ativo...</span>
+                <span className="mono text-[10px] text-slate-600 font-bold">CHARS: {input.length}</span>
+              </div>
+              <textarea 
+                autoFocus
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="// Manda sua visão técnica aqui. Seja brabo."
+                className="w-full h-[400px] bg-black border-2 border-slate-800 p-8 text-xl mono text-cyan focus:border-hot-pink outline-none transition-all shadow-inner"
+              />
+              <div className="flex gap-4">
+                <button onClick={() => setStep(1)} className="p-6 border-2 border-slate-800 archivo-bold text-[10px] tracking-widest text-slate-500">Voltar</button>
+                <button 
+                  disabled={!input || loading} 
+                  onClick={handleAudit} 
+                  className="flex-1 btn-brasa py-6 relative overflow-hidden"
+                >
+                  {loading ? 'AUDITANDO A RESPONSA...' : 'SUBMETER PRO PAPO RETO'}
+                  {loading && <div className="scanline"></div>}
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 3 && (
-          <div className="animate-in slide-in-from-bottom-4">
-            <h3 className="font-archivo text-xl mb-6">LAB DE ESCRITA</h3>
-            <p className="text-white/60 mb-6">{lesson.labPrompt}</p>
-            <textarea 
-              className="w-full h-48 glass p-4 rounded-2xl outline-none focus:ring-2 ring-primary mb-8"
-              placeholder="Digite aqui seu raciocínio estratégico..."
-            ></textarea>
-            <button onClick={() => setStep(4)} className="btn-primary w-full py-4 rounded-xl font-bold bg-primary text-dark">PRONTO PARA ENTREGAR</button>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="animate-in slide-in-from-bottom-4">
-            <h3 className="font-archivo text-xl mb-6">ENTREGA MULTIMODAL</h3>
-            <p className="text-white/60 mb-6">Mande o link do seu ativo (Canva/Figma/Drive):</p>
-            <input 
-              value={delivery}
-              onChange={e => setDelivery(e.target.value)}
-              className="w-full glass p-4 rounded-2xl outline-none mb-8"
-              placeholder="https://..."
-            />
-            <button 
-              disabled={isAuditing}
-              onClick={startAudit} 
-              className="btn-primary w-full py-4 rounded-xl font-bold bg-primary text-dark flex items-center justify-center gap-4"
-            >
-              {isAuditing ? <><i className="fa-solid fa-spinner animate-spin"></i> AUDITANDO NO PORTO...</> : 'SUBMETER PARA AUDITORIA'}
-            </button>
-          </div>
-        )}
-
-        {step === 5 && result && (
-          <div className="animate-in zoom-in-95">
-             <div className="text-center mb-8">
-                <div className="inline-block px-8 py-4 glass rounded-3xl border-2 border-primary mb-4">
-                   <p className="text-4xl font-archivo">{result.score}</p>
-                   <p className="text-[10px] font-mono tracking-widest uppercase">Nota do Mentor</p>
+          {step === 3 && result && (
+            <div className="space-y-12 animate-in zoom-in-95 text-center">
+              <div className="space-y-4">
+                <p className="archivo-bold text-xs text-slate-500 tracking-widest">Score de Proficiência</p>
+                <div className="text-[120px] font-black text-white italic archivo-bold leading-none flex items-center justify-center">
+                  {result.score.toFixed(1)}<span className="text-hot-pink text-4xl">/10</span>
                 </div>
-                <h3 className="font-archivo text-primary">AUDITORIA CONCLUÍDA!</h3>
-             </div>
-             
-             <div className="glass p-6 rounded-2xl mb-8 font-mono">
-                <div className="flex items-center gap-3 mb-4">
-                   <div className="w-8 h-8 rounded-full bg-secondary"></div>
-                   <p className="text-xs font-bold">{result.mentor} diz:</p>
-                </div>
-                <p className="text-sm text-white/80 leading-relaxed italic">"{result.feedback}"</p>
-             </div>
+              </div>
 
-             <button onClick={onClose} className="w-full py-4 rounded-xl border border-primary text-primary font-bold">VOLTAR PARA O DASHBOARD</button>
-          </div>
-        )}
+              <div className="grid grid-cols-3 gap-4">
+                {Object.entries(result.rubrics || {}).map(([key, val]: any) => (
+                  <div key={key} className="p-6 card-street border-white/5 text-center">
+                    <p className="mono text-[9px] text-slate-500 uppercase mb-2 font-bold">{key}</p>
+                    <p className="text-2xl font-black text-white mono">{val}%</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-10 card-street bg-white/5 border-hot-pink/30 text-left relative">
+                <div className="absolute top-0 right-0 p-4 mono text-[8px] text-slate-700 italic">NODE_AUDITOR_V2</div>
+                <h4 className="archivo-bold text-xs text-hot-pink mb-4">PAPO DO MENTOR:</h4>
+                <p className="text-white text-2xl font-bold leading-tight italic">"{result.feedback}"</p>
+              </div>
+
+              <button onClick={onClose} className="btn-brasa w-full py-6 text-xl shadow-[0_10px_40px_rgba(255,0,122,0.4)]">
+                 Arquivar no Dossiê
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-const DossierView = ({ user }: { user: UserProfile }) => (
-  <div className="animate-in slide-in-from-bottom-4">
-    <h2 className="font-archivo text-2xl mb-8">MEU DOSSIÊ DIGITAL</h2>
-    <div className="grid gap-6">
-      {user.dossier.map((item, i) => (
-        <div key={i} className="glass p-6 rounded-2xl flex gap-6 items-center">
-           <div className="w-20 h-20 rounded-xl bg-surface flex items-center justify-center border border-white/10 shrink-0">
-              <i className="fa-solid fa-file-signature text-2xl text-primary"></i>
-           </div>
-           <div>
-              <h4 className="font-bold text-primary">{item.lessonTitle}</h4>
-              <p className="text-[10px] font-mono text-white/40 mb-2">{item.date} // NOTA: {item.audit.score}</p>
-              <p className="text-xs text-white/60 line-clamp-2 italic">"{item.audit.feedback}"</p>
-           </div>
-        </div>
-      ))}
-      {user.dossier.length === 0 && (
-        <div className="text-center py-20 opacity-20">
-          <i className="fa-solid fa-box-open text-6xl mb-4"></i>
-          <p className="font-archivo">NADA AUDITADO AINDA, BOY.</p>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const MuralView = () => (
-  <div className="animate-in slide-in-from-bottom-4 space-y-8">
-    <h2 className="font-archivo text-2xl">MURAL DE ACELERAÇÃO</h2>
-    
-    <div className="grid gap-4">
-      <div className="glass p-6 rounded-2xl border-l-4 border-cyan-400">
-        <h4 className="font-bold mb-2 flex items-center gap-2">
-          <i className="fa-solid fa-building-flag"></i> GO RECIFE
-        </h4>
-        <p className="text-xs text-white/60 mb-4">Conecte seu perfil diretamente ao portal de empregabilidade da prefeitura.</p>
-        <a href="https://gorecife.recife.pe.gov.br" target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Conectar agora</a>
-      </div>
-
-      <div className="glass p-6 rounded-2xl border-l-4 border-emerald-400">
-        <h4 className="font-bold mb-2 flex items-center gap-2">
-          <i className="fa-solid fa-address-card"></i> FORMALIZAÇÃO MEI
-        </h4>
-        <p className="text-xs text-white/60 mb-4">Saia da informalidade. Guia prático para emitir sua nota fiscal de serviço.</p>
-        <a href="https://www.gov.br/empresas-e-negocios/pt-br/empreendedor" target="_blank" rel="noopener noreferrer" className="text-primary text-xs font-bold uppercase tracking-tighter underline">Portal do Empreendedor</a>
-      </div>
-    </div>
-
-    <section>
-      <h3 className="font-archivo text-sm text-primary mb-6">PRÓXIMOS GIGS</h3>
-      <div className="space-y-3 opacity-50 grayscale pointer-events-none">
-         <div className="glass p-4 rounded-xl border border-white/5 flex justify-between items-center">
-            <span className="text-xs font-bold">Social Media JR (Agência B)</span>
-            <span className="text-[10px] bg-white/10 px-2 py-1 rounded">REQUISITO: ESTRATÉGIA LVL 8</span>
+const DossieView = ({ dossier }: any) => (
+  <div className="space-y-12 animate-in fade-in">
+    <h2 className="archivo-bold text-5xl text-white tracking-tighter">DOSSIÊ DE <span className="text-cyan">RESPONSA</span></h2>
+    <div className="grid grid-cols-1 gap-6">
+       {dossier.map((item: any, i: number) => (
+         <div key={i} className="card-street p-8 flex flex-col sm:flex-row justify-between items-center gap-6 group hover:border-hot-pink">
+            <div className="flex items-center gap-8">
+               <div className="archivo-bold text-7xl text-slate-800 group-hover:text-white transition-colors leading-none italic">{item.audit.score}</div>
+               <div>
+                  <h4 className="archivo-bold text-xl text-white">{item.lessonTitle}</h4>
+                  <div className="flex gap-4 mt-2">
+                    <span className="mono text-[10px] text-slate-600 font-bold uppercase">{item.date}</span>
+                    <span className="mono text-[10px] text-cyan font-black uppercase tracking-widest">Validado</span>
+                  </div>
+               </div>
+            </div>
+            <button className="btn-brasa py-3 px-10 text-[10px]">Ver Detalhes</button>
          </div>
-      </div>
-    </section>
+       ))}
+       {dossier.length === 0 && (
+         <div className="py-32 text-center card-street border-dashed border-slate-800">
+            <p className="mono text-slate-700 font-bold">Sem dados no dossiê. Vá fazer o corre.</p>
+         </div>
+       )}
+    </div>
   </div>
 );
 
-const Onboarding = ({ onComplete }: { onComplete: (u: UserProfile) => void }) => {
-  const [name, setName] = useState('');
-  return (
-    <div className="fixed inset-0 bg-dark z-[200] flex items-center justify-center p-8">
-      <div className="max-w-md w-full text-center">
-        <h1 className="font-archivo text-4xl text-primary mb-4 tracking-tighter">GUI.A<br/><span className="text-white">DIGITAL</span></h1>
-        <p className="text-white/40 font-mono text-xs mb-12 uppercase tracking-[0.2em]">Sua carreira no Porto Digital começa aqui.</p>
-        
-        <input 
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="COMO TE CHAMAM NO RECHE?"
-          className="w-full glass p-5 rounded-2xl font-archivo text-center outline-none focus:ring-2 ring-primary mb-6"
-        />
-        
-        <button 
-          disabled={!name}
-          onClick={() => onComplete({
-            name, level: 1, exp: 0, 
-            matrix: { Estrategia: 0, Escrita: 0, Analise: 0, Tecnica: 0 },
-            dossier: []
-          })}
-          className="w-full py-5 bg-primary text-dark font-archivo text-lg rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(0,242,255,0.3)]"
-        >
-          INICIALIZAR OS
-        </button>
-      </div>
+const MuralHub = () => (
+  <div className="space-y-12">
+    <h2 className="archivo-bold text-5xl text-white tracking-tighter">MURAL DE <span className="text-brasa">GIGS</span></h2>
+    <div className="p-12 card-street bg-gradient-to-br from-brasa/20 to-transparent relative group overflow-hidden">
+       <div className="absolute top-0 right-0 p-8 text-9xl text-brasa/5 group-hover:text-brasa/10 transition-all rotate-12">
+          <i className="fa-solid fa-briefcase"></i>
+       </div>
+       <div className="relative z-10 space-y-8 max-w-xl">
+          <div className="w-16 h-16 bg-brasa flex items-center justify-center text-white rotate-3 shadow-[4px_4px_0_white]">
+             <i className="fa-solid fa-rocket text-2xl"></i>
+          </div>
+          <h3 className="archivo-bold text-4xl text-white leading-none">O Mercado do Porto tá de Olho.</h3>
+          <p className="text-slate-400 text-lg leading-relaxed font-medium italic border-l-4 border-brasa pl-6">
+             Seu dossiê auditado é o seu ticket. Empresas filtram talentos diretamente pela matriz de ativos do GUI.A. Mantenha a responsa.
+          </p>
+          <button className="btn-brasa py-5 px-12 text-[12px]">Explorar Gigs</button>
+       </div>
     </div>
-  );
-};
+  </div>
+);
 
-export default App;
+const InitStreetSession = ({ onComplete }: any) => {
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleStart = () => {
+    setLoading(true);
+    setTimeout(() => {
+      onComplete({
+        name, level: 1, exp: 0, 
+        matrix: { Estrategia: 0, Escrita: 0, Analise: 0, Tecnica: 0 },
+        dossier: []
+      });
+    }, 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center px-8 relative overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vh] bg-hot-pink/5 rounded-full blur-[120px]"></div>
+      
+      <div className="max-w-2xl w-full space-y-12 relative z-10 text-center">
+        <div className="space-y-4">
+          <div className="w-24 h-24 bg-white rounded-none rotate-6 mx-auto flex items-center justify-center shadow-[8px_8px_0_#ff007a]">
+             <span className="archivo-bold text-black text-6xl">G</span>
+          </div>
+          <h1 className="archivo-bold text-6xl text-white tracking-tighter italic">GUI.A <span className="text-cyan">STREET</span></h1>
+          <p className="mono text-hot-pink font-black uppercase tracking-[0.4em] text-xs">Career Operating System v2.026</p>
+        </div>
+
+        <div className="card-street p-12 space-y-12">
+          <div className="space-y-4">
+             <p className="archivo-bold text-[10px] text-slate-500 tracking-widest">Protocolo de Identidade</p>
+             <input 
+              autoFocus
+              value={name}
