@@ -1,18 +1,9 @@
 
 export type Competency = 'Estrategia' | 'Escrita' | 'Analise' | 'Tecnica' | 'Design' | 'Audiovisual';
 
-export type LessonState = 'THEORY' | 'QUIZ' | 'PRACTICE' | 'SUBMISSION' | 'REVIEW';
+export type LessonState = 'THEORY' | 'QUIZ' | 'PRACTICE' | 'SUBMISSION' | 'REVIEW' | 'PORTFOLIO_PREVIEW';
 
 export type UserRole = 'ADMIN' | 'EDITOR' | 'MONITOR' | 'USER';
-
-export interface AuditLog {
-  id: string;
-  timestamp: string;
-  userId: string;
-  userName: string;
-  action: string;
-  target: string;
-}
 
 export interface MasteryMatrix {
   Estrategia: number;
@@ -31,17 +22,12 @@ export interface AuditResult {
 }
 
 export interface PortfolioItem {
+  id: string;
   lessonId: string;
   lessonTitle: string;
   trackId: string;
   writtenResponse: string;
-  deliveryEvidence: {
-    objetivo: string;
-    metodo: string;
-    entregavel: string;
-    resultado: string;
-    autoavaliacao: string;
-  };
+  evidenceImage?: string; // Base64 ou URL da imagem do trabalho
   audit: AuditResult;
   date: string;
   versao: number;
@@ -52,6 +38,7 @@ export interface Lesson {
   title: string;
   category: string;
   theoryContent: string;
+  clientBriefing?: string; // Simulação de um cliente real
   quiz: {
     question: string;
     options: string[];
@@ -69,16 +56,6 @@ export interface Track {
   description: string;
   icon: string;
   lessons: Lesson[];
-}
-
-// Added Opportunity interface to fix "Module '"./types.ts"' has no exported member 'Opportunity'" error in utils.ts
-export interface Opportunity {
-  id: string;
-  title: string;
-  company: string;
-  description: string;
-  location: string;
-  matchingScore?: number;
 }
 
 export interface UserProfile {

@@ -7,69 +7,50 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
-    <title>GUI.A DIGITAL | CAREER OS v4.3</title>
+    <title>GUI.A DIGITAL | CAREER OS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          darkMode: 'class',
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+                brand: ['"Archivo Black"', 'sans-serif'],
+                mono: ['"JetBrains Mono"', 'monospace'],
+              },
+              borderRadius: {
+                '4xl': '32px',
+                '5xl': '48px',
+              },
+            }
+          }
+        }
+    </script>
     <style>
         :root {
             --slate-950: #020617;
             --indigo-600: #4f46e5;
-            --indigo-500: #6366f1;
-            --emerald-500: #10b981;
         }
-        
-        /* Acessibilidade AAA */
-        html {
-            scroll-behavior: smooth;
-        }
-
+        html { scroll-behavior: smooth; }
         body { 
             background-color: var(--slate-950); 
             color: #f8fafc; 
             margin: 0; 
-            font-family: 'Inter', sans-serif;
-            text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
-            font-size: 16px;
             min-height: 100vh;
         }
-
-        /* Barra de rolagem visível apenas quando necessário */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.3);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--indigo-600);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--indigo-500);
-        }
-
         #loading-overlay {
             position: fixed; inset: 0; background: var(--slate-950);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 9999; transition: opacity 0.4s ease-out; font-family: 'JetBrains Mono', monospace;
         }
-
         .loader-bar { width: 200px; height: 2px; background: rgba(255, 255, 255, 0.05); position: relative; margin-top: 20px; overflow: hidden; }
         .loader-progress { position: absolute; height: 100%; width: 50%; background: var(--indigo-600); box-shadow: 0 0 15px var(--indigo-600); animation: move 1.5s infinite ease-in-out; }
         @keyframes move { 0% { left: -50%; } 100% { left: 100%; } }
-
-        *:focus-visible {
-            outline: 3px solid var(--indigo-500) !important;
-            outline-offset: 4px;
-        }
-
-        .readable-text { 
-            line-height: 1.8; 
-            letter-spacing: 0.02em; 
-            max-width: 75ch;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 
     <script type="importmap">
@@ -87,7 +68,7 @@
 </head>
 <body>
     <div id="loading-overlay" aria-hidden="true">
-        <div style="color: var(--indigo-600); font-weight: bold; letter-spacing: 1em; font-size: 10px; text-transform: uppercase;">
+        <div style="color: var(--indigo-600); font-weight: bold; letter-spacing: 0.5em; font-size: 10px; text-transform: uppercase;">
             GUI.A_DIGITAL_BOOTING
         </div>
         <div class="loader-bar">

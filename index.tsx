@@ -3,15 +3,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
-console.log("STREET_OS: Booting sequence initiated...");
+console.log("GUI.A_DIGITAL: Iniciando sequência de boot...");
 
-const startApp = () => {
-  const rootElement = document.getElementById('root');
-  if (!rootElement) {
-    console.error('STREET_OS_FATAL: Root element missing in DOM');
-    return;
-  }
+const rootElement = document.getElementById('root');
 
+if (rootElement) {
   try {
     const root = createRoot(rootElement);
     root.render(
@@ -26,16 +22,12 @@ const startApp = () => {
       setTimeout(() => {
         loader.style.opacity = '0';
         setTimeout(() => loader.remove(), 400);
-        console.log("STREET_OS: Visual interface active.");
-      }, 500);
+        console.log("GUI.A_DIGITAL: Interface ativa.");
+      }, 800);
     }
   } catch (err) {
-    console.error('STREET_OS_FATAL_INIT:', err);
+    console.error('GUI.A_DIGITAL_FATAL_INIT:', err);
   }
-};
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startApp);
 } else {
-  startApp();
+  console.error('GUI.A_DIGITAL: Elemento #root não encontrado no DOM.');
 }
