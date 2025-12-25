@@ -15,24 +15,54 @@ export interface MuralItem {
 
 export const MURAL_ITEMS: MuralItem[] = [
   {
+    id: 'm1',
+    type: 'AVISO',
+    title: 'Sincronização de Dossiê',
+    content: 'Boy, não esquece de revisar teu portfólio antes de bater um papo com cliente. O mercado olha a técnica, mas o brilho nos olhos conta muito.',
+    date: 'Dica do Dia',
+    icon: 'fa-sync'
+  },
+  {
+    id: 'm-capacitacoes-go',
+    type: 'EVENTO',
+    title: '+ CAPACITAÇÕES ON LINE',
+    content: 'O GO Recife oferece diversos cursos gratuitos para você se especializar. Acesse o portal e turbine seu Dossiê com novos certificados técnicos.',
+    date: 'GO Recife',
+    icon: 'fa-graduation-cap',
+    links: [
+      { label: 'Ver Cursos Disponíveis', url: 'https://gorecife.recife.pe.gov.br/cursos', icon: 'fa-laptop-code' }
+    ]
+  },
+  {
+    id: 'm-vagas-go',
+    type: 'DICA',
+    title: 'SE LIGA NAS VAGAS GO recife',
+    content: 'A oportunidade que você busca pode estar a um clique. Explore as vagas abertas no portal oficial e conecte seu talento ao mercado.',
+    date: 'GO Recife',
+    icon: 'fa-briefcase',
+    links: [
+      { label: 'Acessar Oportunidades', url: 'https://gorecife.recife.pe.gov.br/oportunidades', icon: 'fa-magnifying-glass-chart' }
+    ]
+  },
+  {
     id: 'm-guia-social',
     type: 'INSTITUCIONAL',
-    title: 'INSTITUTO GUIA SOCIAL _',
-    content: 'Conheça a organização que impulsiona o GUI.A DIGITAL. Transformamos o futuro de jovens através da tecnologia social, ética e inclusão produtiva.',
+    title: 'CONHEÇA MAIS SOBRE O INSTITUTO GUIA SOCIAL _',
+    content: 'Transformamos o futuro de jovens através da tecnologia social, ética e inclusão produtiva. Estamos aqui para guiar seu corre.',
     date: 'Institucional',
     icon: 'fa-heart',
     links: [
-      { label: 'Website', url: 'https://www.institutoguiasocial.org', icon: 'fa-globe' },
-      { label: 'Instagram', url: 'https://instagram.com/institutoguiasocial', icon: 'fa-brands fa-instagram' },
-      { label: 'WhatsApp', url: 'https://wa.me/5581991828743', icon: 'fa-brands fa-whatsapp' },
-      { label: 'Email', url: 'mailto:institutoguiasocial@gmail.com', icon: 'fa-envelope' }
+      { label: 'www.institutoguiasocial.org', url: 'https://www.institutoguiasocial.org', icon: 'fa-globe' },
+      { label: '@institutoguiasocial', url: 'https://instagram.com/institutoguiasocial', icon: 'fa-brands fa-instagram' },
+      { label: 'Manda um zap: 81 99182-8743', url: 'https://wa.me/5581991828743', icon: 'fa-brands fa-whatsapp' },
+      { label: 'Email: institutoguiasocial@gmail.com', url: 'mailto:institutoguiasocial@gmail.com', icon: 'fa-envelope' }
     ]
   },
   {
     id: 'm-mei',
     type: 'MEI',
     title: 'SEJA MEI _ PROTOCOLO DE FORMALIZAÇÃO',
-    content: 'O MEI é um modelo simplificado de empresa criado para tirar do mercado informal trabalhadores autônomos. Com o registro, você passa a contar com benefícios previdenciários e a possibilidade de emitir notas fiscais profissionais.',
+    content: 'O MEI é um modelo simplificado de empresa criado para tirar do mercado informal trabalhadores autônomos. Com o registro da MEI, você passa a contar com benefícios previdenciários e emissão de notas fiscais.',
     date: 'Destaque',
     icon: 'fa-id-card',
     links: [
@@ -46,42 +76,12 @@ export const MURAL_ITEMS: MuralItem[] = [
     requirements: [
       'Não ter participação em outra empresa como sócio ou titular',
       'Faturar até R$ 81.000,00 por ano',
-      'Exercer atividades permitidas (até 1 principal e 15 secundárias)'
+      'Exercer atividades permitidas (Ex: Pintores, Cabeleireiros, Vendedores)'
     ],
     details: [
-      'Documentos: RG, Dados de Contato, Endereço Residencial e do Negócio.',
-      'Conta gov.br: Necessário nível Prata ou Ouro.'
+      'Documentos: RG, Contato, Endereço e Local do Negócio.',
+      'Conta gov.br: Nível Prata ou Ouro obrigatório.'
     ]
-  },
-  {
-    id: 'm-capacitacoes',
-    type: 'EVENTO',
-    title: '+ CAPACITAÇÕES ON LINE',
-    content: 'O GO Recife oferece diversos cursos gratuitos para você se especializar. Acesse o portal e turbine seu Dossiê Patrimonial com novos conhecimentos técnicos.',
-    date: 'GO Recife',
-    icon: 'fa-graduation-cap',
-    links: [
-      { label: 'Ver Cursos Disponíveis', url: 'https://gorecife.recife.pe.gov.br/cursos', icon: 'fa-laptop-code' }
-    ]
-  },
-  {
-    id: 'm-vagas',
-    type: 'DICA',
-    title: 'SE LIGA NAS VAGAS GO recife',
-    content: 'A oportunidade que você busca pode estar a um clique. Explore as vagas abertas no GO Recife e conecte seu talento ao mercado local.',
-    date: 'GO Recife',
-    icon: 'fa-briefcase',
-    links: [
-      { label: 'Explorar Oportunidades', url: 'https://gorecife.recife.pe.gov.br/oportunidades', icon: 'fa-search-dollar' }
-    ]
-  },
-  {
-    id: 'm1',
-    type: 'AVISO',
-    title: 'Sincronização de Dossiê',
-    content: 'Boy, não esquece de revisar teu portfólio antes de bater um papo com cliente. O mercado olha a técnica, mas o brilho nos olhos conta muito.',
-    date: 'Hoje',
-    icon: 'fa-sync'
   }
 ];
 

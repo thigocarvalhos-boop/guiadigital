@@ -20,15 +20,34 @@
         }
         
         /* Acessibilidade AAA */
+        html {
+            scroll-behavior: smooth;
+        }
+
         body { 
             background-color: var(--slate-950); 
             color: #f8fafc; 
             margin: 0; 
-            overflow: hidden; 
             font-family: 'Inter', sans-serif;
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
-            font-size: 16px; /* Base size for accessibility */
+            font-size: 16px;
+            min-height: 100vh;
+        }
+
+        /* Barra de rolagem visível apenas quando necessário */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--indigo-600);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--indigo-500);
         }
 
         #loading-overlay {
@@ -41,28 +60,15 @@
         .loader-progress { position: absolute; height: 100%; width: 50%; background: var(--indigo-600); box-shadow: 0 0 15px var(--indigo-600); animation: move 1.5s infinite ease-in-out; }
         @keyframes move { 0% { left: -50%; } 100% { left: 100%; } }
 
-        /* Foco ultra-visível conforme LBI e WCAG */
         *:focus-visible {
-            outline: 5px solid var(--indigo-500) !important;
-            outline-offset: 6px;
-            box-shadow: 0 0 0 10px rgba(99, 102, 241, 0.2) !important;
+            outline: 3px solid var(--indigo-500) !important;
+            outline-offset: 4px;
         }
 
-        /* Tipografia Acessível */
         .readable-text { 
             line-height: 1.8; 
             letter-spacing: 0.02em; 
-            max-width: 75ch; /* Ideal line length for reading */
-        }
-
-        /* Suporte para quem prefere movimento reduzido */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
+            max-width: 75ch;
         }
     </style>
 
@@ -88,7 +94,7 @@
             <div class="loader-progress"></div>
         </div>
     </div>
-    <div id="root" role="main"></div>
+    <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>

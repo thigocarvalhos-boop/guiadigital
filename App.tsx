@@ -4,7 +4,7 @@ import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult, Track } from './types';
 import { TRACKS, MURAL_ITEMS, MuralItem } from './constants';
 
-// Auxiliares Áudio e Reconhecimento
+// Auxiliares Áudio
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);
@@ -79,17 +79,15 @@ const App: React.FC = () => {
 
   const simplifyLanguage = async (text: string) => {
     if (isOffline) return;
-    setSimplifiedText("Simplificando conteúdo para melhor compreensão...");
+    setSimplifiedText("Simplificando conteúdo...");
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
       const res = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `Reescreva o seguinte conteúdo usando a técnica de 'Linguagem Simples' para acessibilidade cognitiva. Use frases curtas, voz ativa e evite jargões complexos: "${text}"`,
+        contents: `Simplifique para linguagem periférica/acessível: "${text}"`,
       });
       setSimplifiedText(res.text || text);
-    } catch (e) {
-      setSimplifiedText("Não foi possível simplificar no momento.");
-    }
+    } catch (e) { setSimplifiedText("Erro na simplificação."); }
   };
 
   const speak = async (text: string) => {
@@ -98,7 +96,7 @@ const App: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Diga de forma pausada, clara e acessível: ${text}` }] }],
+        contents: [{ parts: [{ text }] }],
         config: { 
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }
@@ -113,20 +111,16 @@ const App: React.FC = () => {
         source.connect(ctx.destination);
         source.start();
       }
-    } catch (e) { console.error("TTS_ERROR:", e); }
+    } catch (e) { console.error(e); }
   };
 
   const handleAudit = async (lesson: Lesson, content: string) => {
-    if (isOffline) return { score: 0, feedback: "Offline. Seu progresso foi salvo localmente.", aprovado: false };
+    if (isOffline) return { score: 0, feedback: "Offline.", aprovado: false };
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `[GUI.A_AUDIT] Audite entrega técnica: ${lesson.title}. 
-    CONTEÚDO DO ALUNO: ${content}.
-    REGRAS: Mentor exigente. Foco em inclusão e clareza. Responda em JSON.`;
-    
     try {
       const res = await ai.models.generateContent({ 
         model: 'gemini-3-pro-preview', 
-        contents: prompt, 
+        contents: `Audite: ${lesson.title}. Conteúdo: ${content}`, 
         config: { 
           responseMimeType: 'application/json',
           responseSchema: {
@@ -142,9 +136,7 @@ const App: React.FC = () => {
         } 
       });
       return JSON.parse(res.text || '{}');
-    } catch (error) { 
-      return { score: 0, feedback: "Instabilidade na mentoria IA.", aprovado: false }; 
-    }
+    } catch (error) { return { score: 0, feedback: "Erro na auditoria.", aprovado: false }; }
   };
 
   if (!user) return <Onboarding onComplete={setUser} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
@@ -152,89 +144,73 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-indigo-600 focus:text-white focus:p-4 focus:rounded-b-xl focus:shadow-2xl">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-indigo-600 focus:p-4">
         Pular para o conteúdo principal
       </a>
 
-      <nav className={`h-24 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 backdrop-blur-lg ${isDarkMode ? 'border-slate-800 bg-slate-950/90' : 'border-slate-200 bg-white/95'}`} role="navigation" aria-label="Menu Principal">
+      <nav className={`h-24 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 backdrop-blur-lg ${isDarkMode ? 'border-slate-800 bg-slate-950/90' : 'border-slate-200 bg-white/95'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-lg shadow-indigo-500/20">G</div>
-          <span className="font-black text-lg uppercase hidden sm:block">GUI.A <span className="text-indigo-500 italic">DIGITAL</span></span>
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-lg">G</div>
+          <span className="font-black text-sm uppercase hidden sm:block tracking-widest">GUI.A <span className="text-indigo-500 italic">DIGITAL</span></span>
         </div>
 
         <div className="flex gap-1 md:gap-2 h-full items-center">
           <NavBtn active={activeTab === 'trilhas'} onClick={() => setActiveTab('trilhas')} icon="fa-bolt" label="Trilhas" />
           <NavBtn active={activeTab === 'dossie'} onClick={() => setActiveTab('dossie')} icon="fa-briefcase" label="Dossiê" />
           <NavBtn active={activeTab === 'mural'} onClick={() => setActiveTab('mural')} icon="fa-bullhorn" label="Mural" />
-          <NavBtn active={activeTab === 'manifesto'} onClick={() => setActiveTab('manifesto')} icon="fa-fingerprint" label="Ética" />
+          <NavBtn active={activeTab === 'manifesto'} onClick={() => setActiveTab('manifesto')} icon="fa-fingerprint" label="Manifesto" />
         </div>
 
         <div className="flex items-center gap-2">
-          <button 
-            onClick={toggleVoiceCommands}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isVoiceActive ? 'bg-red-500 text-white animate-pulse' : (isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600')}`}
-            aria-label="Ativar Comandos de Voz"
-            title="Comandos: Trilhas, Dossiê, Mural, Manifesto"
-          >
+          <button onClick={toggleVoiceCommands} className={`w-10 h-10 rounded-full flex items-center justify-center ${isVoiceActive ? 'bg-red-500 text-white animate-pulse' : (isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600')}`}>
             <i className={`fa-solid ${isVoiceActive ? 'fa-microphone' : 'fa-microphone-slash'}`}></i>
           </button>
-          
-          <button 
-            onClick={toggleTheme}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus:ring-4 focus:ring-indigo-500 outline-none ${isDarkMode ? 'bg-slate-800 text-amber-400' : 'bg-white text-indigo-600 shadow-md border border-slate-100'}`}
-            aria-label={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-          >
-            <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-xl`}></i>
+          <button onClick={toggleTheme} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-slate-800 text-amber-400' : 'bg-white text-indigo-600 shadow-sm border'}`}>
+            <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
           </button>
         </div>
       </nav>
 
-      <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-12 outline-none" role="main" tabIndex={-1}>
-        {activeLesson ? (
-          <LessonEngine 
-            lesson={activeLesson} 
-            state={lessonState} 
-            setState={setLessonState} 
-            onAudit={handleAudit}
-            onSpeak={speak}
-            onSimplify={simplifyLanguage}
-            simplifiedText={simplifiedText}
-            setSimplifiedText={setSimplifiedText}
-            onExit={() => { setActiveLesson(null); setSimplifiedText(null); }}
-            user={user}
-            setUser={setUser}
-            isDarkMode={isDarkMode}
-            isOffline={isOffline}
-          />
-        ) : (
-          <div className="max-w-5xl mx-auto pb-16">
-            {activeTab === 'trilhas' && <TrilhasView user={user} onSelect={(l: Lesson) => { setActiveLesson(l); setLessonState('THEORY'); }} isDarkMode={isDarkMode} />}
-            {activeTab === 'dossie' && <DossieView dossier={user.dossier} matrix={user.matrix} isDarkMode={isDarkMode} />}
-            {activeTab === 'mural' && <MuralView isDarkMode={isDarkMode} />}
-            {activeTab === 'manifesto' && <ManifestoView isDarkMode={isDarkMode} />}
-          </div>
-        )}
+      <main id="main-content" className="flex-1 p-4 md:p-12 focus:outline-none">
+        <div className="max-w-5xl mx-auto pb-16">
+          {activeLesson ? (
+            <LessonEngine 
+              lesson={activeLesson} 
+              state={lessonState} 
+              setState={setLessonState} 
+              onAudit={handleAudit}
+              onSpeak={speak}
+              onSimplify={simplifyLanguage}
+              simplifiedText={simplifiedText}
+              setSimplifiedText={setSimplifiedText}
+              onExit={() => { setActiveLesson(null); setSimplifiedText(null); }}
+              user={user}
+              setUser={setUser}
+              isDarkMode={isDarkMode}
+              isOffline={isOffline}
+            />
+          ) : (
+            <>
+              {activeTab === 'trilhas' && <TrilhasView user={user} onSelect={(l: Lesson) => { setActiveLesson(l); setLessonState('THEORY'); }} isDarkMode={isDarkMode} />}
+              {activeTab === 'dossie' && <DossieView dossier={user.dossier} matrix={user.matrix} isDarkMode={isDarkMode} />}
+              {activeTab === 'mural' && <MuralView isDarkMode={isDarkMode} />}
+              {activeTab === 'manifesto' && <ManifestoView isDarkMode={isDarkMode} />}
+            </>
+          )}
+        </div>
       </main>
 
-      <footer className={`p-8 border-t text-center text-[10px] font-black tracking-[0.4em] uppercase ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-        GUI.A DIGITAL v4.3 | Acessibilidade Digital LBI & WCAG 2.1
+      <footer className={`p-8 border-t text-center text-[9px] font-black tracking-[0.4em] uppercase ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+        GUI.A DIGITAL / INSTITUTO GUIA SOCIAL
       </footer>
     </div>
   );
 };
 
 const NavBtn = ({ active, onClick, icon, label }: any) => (
-  <button 
-    onClick={onClick}
-    aria-current={active ? 'page' : undefined}
-    className={`flex flex-col items-center justify-center min-w-[60px] min-h-[60px] md:min-w-[80px] transition-all rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/50 ${
-      active 
-        ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20' 
-        : 'text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/5'
-    }`}
-  >
-    <i className={`fa-solid ${icon} text-xl md:text-2xl`} aria-hidden="true"></i>
-    <span className="text-[9px] font-black uppercase mt-1 hidden sm:block tracking-widest">{label}</span>
+  <button onClick={onClick} className={`flex flex-col items-center justify-center min-w-[64px] transition-all rounded-xl ${active ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-indigo-500'}`}>
+    <i className={`fa-solid ${icon} text-lg md:text-xl`}></i>
+    <span className="text-[8px] font-black uppercase mt-1 hidden sm:block">{label}</span>
   </button>
 );
 
@@ -251,102 +227,62 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onSimplify, s
     setLoading(false);
     if (result.aprovado) {
       const newItem: PortfolioItem = {
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
-        trackId: lesson.category,
-        writtenResponse: written,
-        deliveryEvidence: { objetivo: '', metodo: '', entregavel: '', resultado: '', autoavaliacao: '' },
-        audit: result,
-        date: new Date().toLocaleDateString(),
-        versao: 1
+        lessonId: lesson.id, lessonTitle: lesson.title, trackId: lesson.category,
+        writtenResponse: written, deliveryEvidence: { objetivo: '', metodo: '', entregavel: '', resultado: '', autoavaliacao: '' },
+        audit: result, date: new Date().toLocaleDateString(), versao: 1
       };
       const comp = lesson.competency as keyof typeof user.matrix;
       const newMatrix = { ...user.matrix };
       newMatrix[comp] = Math.min(newMatrix[comp] + 15, 100);
-      setUser({ ...user, level: user.level + (result.score > 8 ? 1 : 0), exp: user.exp + (result.score * 100), matrix: newMatrix, dossier: [newItem, ...user.dossier] });
+      setUser({ ...user, level: user.level + 1, exp: user.exp + 100, matrix: newMatrix, dossier: [newItem, ...user.dossier] });
       setState('REVIEW');
     }
   };
 
   return (
-    <article className="max-w-4xl mx-auto space-y-12 animate-in slide-in-from-bottom-6 duration-500">
-      <header className="flex items-center justify-between">
-        <button onClick={onExit} className="min-h-[48px] px-6 rounded-2xl bg-slate-200 dark:bg-slate-800 font-black uppercase text-xs tracking-widest hover:bg-indigo-600 hover:text-white transition-all">
-          <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
-        </button>
+    <article className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+      <header className="flex justify-between items-center">
+        <button onClick={onExit} className="px-6 py-3 rounded-xl bg-slate-200 dark:bg-slate-800 font-black text-xs uppercase hover:bg-indigo-600 hover:text-white transition-all">Voltar</button>
         <div className="flex gap-2">
-          <button 
-            onClick={() => onSimplify(lesson.theoryContent)}
-            className="w-12 h-12 rounded-xl border-2 border-indigo-500/30 text-indigo-500 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all"
-            aria-label="Simplificar Linguagem do Texto"
-            title="Linguagem Simples"
-          >
-            <i className="fa-solid fa-brain"></i>
-          </button>
-          <button 
-            onClick={() => onSpeak(simplifiedText || lesson.theoryContent)}
-            className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20"
-            aria-label="Ouvir conteúdo"
-          >
-            <i className="fa-solid fa-volume-high"></i>
-          </button>
+          <button onClick={() => onSimplify(lesson.theoryContent)} className="w-10 h-10 rounded-xl border border-indigo-500 text-indigo-500 flex items-center justify-center"><i className="fa-solid fa-brain"></i></button>
+          <button onClick={() => onSpeak(simplifiedText || lesson.theoryContent)} className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center"><i className="fa-solid fa-volume-high"></i></button>
         </div>
       </header>
 
       {state === 'THEORY' && (
-        <section className="space-y-10">
-          <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-[0.9]">{lesson.title}</h1>
-          <div className={`p-8 md:p-12 border-l-[12px] border-indigo-600 rounded-r-[40px] text-xl md:text-3xl leading-relaxed shadow-2xl ${isDarkMode ? 'bg-slate-900/50 text-slate-100' : 'bg-white text-slate-900 shadow-indigo-500/5'}`}>
-            <p className="readable-text italic font-medium">
-              {simplifiedText || lesson.theoryContent}
-            </p>
-            {simplifiedText && (
-              <button onClick={() => setSimplifiedText(null)} className="mt-8 text-sm font-black uppercase text-indigo-500 border-b-2 border-indigo-500">Ver original</button>
-            )}
+        <section className="space-y-8">
+          <h1 className="text-4xl md:text-6xl font-black uppercase italic leading-none">{lesson.title}</h1>
+          <div className={`p-8 border-l-[8px] border-indigo-600 rounded-r-3xl text-xl md:text-2xl leading-relaxed shadow-xl ${isDarkMode ? 'bg-slate-900' : 'bg-white'}`}>
+            <p className="readable-text italic">{simplifiedText || lesson.theoryContent}</p>
           </div>
-          <button onClick={() => setState('PRACTICE')} className="w-full h-24 bg-indigo-600 text-white rounded-3xl text-2xl font-black uppercase shadow-2xl hover:bg-indigo-500 active:scale-95 transition-all outline-none focus:ring-8 focus:ring-indigo-500/30">Praticar Agora</button>
+          <button onClick={() => setState('PRACTICE')} className="w-full h-20 bg-indigo-600 text-white rounded-2xl text-xl font-black uppercase shadow-xl hover:bg-indigo-500">Praticar Agora</button>
         </section>
       )}
 
       {state === 'PRACTICE' && (
-        <section className="space-y-8">
-          <div className="p-10 border-4 border-dashed border-indigo-500/20 rounded-[48px] bg-indigo-500/5 italic text-2xl">
-            "{lesson.practicePrompt}"
-          </div>
-          <div className="space-y-4">
-            <label htmlFor="user-submission" className="block text-xs font-black uppercase tracking-[0.4em] text-slate-500">Sua Resolução Técnica (mín. 50 caracteres)</label>
-            <textarea 
-              id="user-submission"
-              value={written}
-              onChange={e => setWritten(e.target.value)}
-              className={`w-full h-96 border-4 rounded-[40px] p-10 text-2xl font-mono outline-none transition-all resize-none shadow-inner focus:border-indigo-600 ${isDarkMode ? 'bg-slate-950 border-slate-900 text-emerald-400' : 'bg-white border-slate-200 text-slate-950'}`}
-              placeholder="// Descreva seu processo..."
-            />
-          </div>
-          <button 
-            disabled={loading || written.length < 50 || isOffline}
-            onClick={finish}
-            className={`w-full h-24 rounded-3xl text-2xl font-black uppercase flex items-center justify-center gap-4 transition-all shadow-2xl ${written.length >= 50 ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-slate-300 text-slate-500 opacity-50 cursor-not-allowed'}`}
-          >
-            {loading ? <i className="fa-solid fa-sync animate-spin"></i> : <i className="fa-solid fa-cloud-arrow-up"></i>}
-            {loading ? 'Validando...' : 'Incorporar ao Dossiê'}
+        <section className="space-y-6">
+          <div className="p-8 border-2 border-dashed border-indigo-500/30 rounded-3xl bg-indigo-500/5 italic text-lg">"{lesson.practicePrompt}"</div>
+          <textarea 
+            value={written} onChange={e => setWritten(e.target.value)}
+            className={`w-full h-80 border-2 rounded-3xl p-8 text-xl font-mono outline-none focus:border-indigo-600 ${isDarkMode ? 'bg-slate-950 border-slate-900' : 'bg-white'}`}
+            placeholder="Seu processo..."
+          />
+          <button disabled={loading || written.length < 50} onClick={finish} className="w-full h-20 bg-emerald-600 text-white rounded-2xl text-xl font-black uppercase shadow-xl">
+            {loading ? 'Validando...' : 'Entregar Protocolo'}
           </button>
         </section>
       )}
 
       {state === 'REVIEW' && (
-        <section className="text-center space-y-16 py-12">
-          <div className="w-40 h-40 bg-emerald-500 rounded-[50px] mx-auto flex items-center justify-center text-6xl text-white shadow-[0_20px_60px_-15px_rgba(16,185,129,0.5)] animate-bounce">
-            <i className="fa-solid fa-stamp"></i>
+        <section className="text-center py-12 space-y-8">
+          <div className="w-24 h-24 bg-emerald-500 rounded-full mx-auto flex items-center justify-center text-4xl text-white shadow-xl animate-bounce">
+            <i className="fa-solid fa-check"></i>
           </div>
-          <div className="space-y-4">
-            <h1 className="text-6xl font-black uppercase italic tracking-tighter">PROTOCOLO OK.</h1>
-            <div className={`p-12 border-l-[16px] border-emerald-500 rounded-r-[50px] text-left max-w-3xl mx-auto shadow-2xl ${isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900 border border-slate-100'}`}>
-              <p className="text-2xl font-bold font-mono italic leading-relaxed">"{audit?.feedback}"</p>
-              <p className="mt-8 text-xs font-black uppercase tracking-widest text-indigo-500">Validador: {audit?.mentor}</p>
-            </div>
+          <h1 className="text-4xl font-black uppercase italic">Protocolo Aprovado</h1>
+          <div className={`p-8 border-l-8 border-emerald-500 rounded-r-3xl text-left max-w-2xl mx-auto ${isDarkMode ? 'bg-slate-900' : 'bg-white border'}`}>
+            <p className="text-xl italic font-bold">"{audit?.feedback}"</p>
           </div>
-          <button onClick={onExit} className="w-full max-w-md h-20 bg-indigo-600 text-white rounded-[30px] font-black uppercase text-xl shadow-2xl hover:bg-indigo-500 transition-all">Retornar ao Hub</button>
+          <button onClick={onExit} className="px-12 h-16 bg-indigo-600 text-white rounded-2xl font-black uppercase shadow-xl">Continuar</button>
         </section>
       )}
     </article>
@@ -354,45 +290,41 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onSimplify, s
 };
 
 const ManifestoView = ({ isDarkMode }: any) => (
-  <article className="py-12 space-y-24 animate-in fade-in duration-1000">
-    <header className="text-center space-y-8">
-      <h1 className={`text-6xl md:text-9xl font-black italic uppercase leading-[0.8] tracking-tighter ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
-        Manifesto<br/><span className="text-indigo-600">GUIA DIGITAL _</span>
-      </h1>
-      <div className="h-2 w-32 bg-indigo-600 mx-auto rounded-full"></div>
-    </header>
-    <div className={`space-y-16 text-3xl md:text-5xl font-black italic leading-[1.2] border-l-[16px] border-indigo-600 pl-8 md:pl-20 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-      <p className="readable-text">Este não é apenas um app. É uma ponte de <span className="text-indigo-600">acessibilidade econômica</span>.</p>
-      <p className="text-indigo-600 readable-text">"Dignidade é ter o domínio da técnica. Inclusão é remover a barreira entre o talento e a oportunidade."</p>
-      <p className="readable-text">"Aqui, o capacitismo morre. Seus ativos técnicos valem mais que sua condição. O mercado precisa de soluções, e nós somos a resposta."</p>
+  <article className="py-12 space-y-16 animate-in fade-in duration-700">
+    <h1 className="text-5xl md:text-8xl font-black italic uppercase leading-none tracking-tighter">Manifesto<br/><span className="text-indigo-600">GUIA DIGITAL _</span></h1>
+    <div className={`space-y-8 text-2xl md:text-4xl font-black italic leading-tight border-l-8 border-indigo-600 pl-8 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+      <p>Este não é apenas um app. É uma ponte de acessibilidade econômica.</p>
+      <p className="text-indigo-600">"Dignidade é ter o domínio da técnica. Inclusão é remover a barreira entre o talento e a oportunidade."</p>
     </div>
   </article>
 );
 
 const DossieView = ({ dossier, matrix, isDarkMode }: any) => (
-  <div className="space-y-16 animate-in fade-in duration-700">
-    <header className="space-y-4">
-      <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">Dossiê<br/><span className="text-indigo-500">Patrimonial.</span></h1>
-    </header>
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-      <div className="lg:col-span-2 space-y-8">
-        {dossier.map((item: any, i: number) => (
-          <article key={i} className={`p-10 border-2 rounded-[50px] flex flex-col md:flex-row justify-between gap-8 transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <div className="space-y-6">
-              <span className="text-[10px] font-black bg-indigo-600 text-white px-5 py-2 rounded-full uppercase tracking-widest">{item.trackId}</span>
-              <h3 className="text-3xl font-black uppercase leading-none">{item.lessonTitle}</h3>
-              <p className="text-xl italic">"{item.writtenResponse.substring(0, 150)}..."</p>
-            </div>
-            <div className="text-7xl font-black">{item.audit.score}</div>
-          </article>
-        ))}
+  <div className="space-y-12 animate-in fade-in duration-500">
+    <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">Dossiê<br/><span className="text-indigo-500">Patrimonial.</span></h1>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2 space-y-6">
+        {dossier.length === 0 ? <p className="text-slate-500 italic">Nenhum protocolo entregue ainda.</p> : 
+          dossier.map((item: any, i: number) => (
+            <article key={i} className={`p-8 border-2 rounded-3xl transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+              <div className="flex justify-between items-start gap-4">
+                <div className="space-y-4">
+                  <span className="text-[8px] font-black bg-indigo-600 text-white px-3 py-1 rounded-full uppercase tracking-widest">{item.trackId}</span>
+                  <h3 className="text-2xl font-black uppercase">{item.lessonTitle}</h3>
+                  <p className="text-sm italic opacity-70">"{item.writtenResponse.substring(0, 100)}..."</p>
+                </div>
+                <div className="text-5xl font-black">{item.audit.score}</div>
+              </div>
+            </article>
+          ))
+        }
       </div>
-      <div className={`p-10 border-4 rounded-[60px] ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-        <h3 className="text-3xl font-black uppercase text-indigo-500 mb-8">Maestria</h3>
+      <div className={`p-8 border-4 rounded-3xl h-fit sticky top-32 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <h3 className="text-xl font-black uppercase text-indigo-500 mb-6 tracking-widest">Maestria Técnica</h3>
         {Object.entries(matrix).map(([skill, value]: any) => (
-          <div key={skill} className="mb-6">
-            <div className="flex justify-between text-xs font-black uppercase mb-2"><span>{skill}</span><span>{value}%</span></div>
-            <div className="h-4 rounded-full bg-slate-200 overflow-hidden"><div style={{ width: `${value}%` }} className="h-full bg-indigo-500"></div></div>
+          <div key={skill} className="mb-4">
+            <div className="flex justify-between text-[10px] font-black uppercase mb-1"><span>{skill}</span><span>{value}%</span></div>
+            <div className="h-2 rounded-full bg-slate-200 overflow-hidden"><div style={{ width: `${value}%` }} className="h-full bg-indigo-500"></div></div>
           </div>
         ))}
       </div>
@@ -402,148 +334,59 @@ const DossieView = ({ dossier, matrix, isDarkMode }: any) => (
 
 const MuralView = ({ isDarkMode }: any) => {
   const [expandedMEI, setExpandedMEI] = useState(false);
-
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
-      <header className="space-y-4">
-        <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">Mural do<br/><span className="text-indigo-600">CORRE _</span></h1>
-      </header>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">Mural do<br/><span className="text-indigo-600">CORRE _</span></h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {MURAL_ITEMS.map(item => {
-          // Card Especial MEI
           if (item.type === 'MEI') {
             return (
-              <article key={item.id} className={`md:col-span-2 p-10 border-4 rounded-[60px] transition-all relative overflow-hidden ${isDarkMode ? 'bg-slate-900 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
-                <div className="flex flex-col md:flex-row justify-between gap-10">
-                  <div className="flex-1 space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-emerald-600 text-white rounded-3xl flex items-center justify-center text-3xl shadow-xl shadow-emerald-500/20">
-                        <i className={`fa-solid ${item.icon}`}></i>
-                      </div>
-                      <span className="text-xs font-black text-emerald-600 uppercase tracking-[0.4em]">{item.date}</span>
-                    </div>
-                    <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.9]">{item.title}</h2>
-                    <p className={`text-xl leading-relaxed font-medium ${isDarkMode ? 'text-slate-400' : 'text-emerald-900'}`}>{item.content}</p>
-                    
-                    {!expandedMEI ? (
-                      <button 
-                        onClick={() => setExpandedMEI(true)}
-                        className="h-16 px-10 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:bg-emerald-500 active:scale-95 transition-all"
-                      >
-                        Abrir Protocolo Completo
-                      </button>
-                    ) : (
-                      <div className="space-y-12 pt-8 animate-in slide-in-from-top-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {item.links?.map((link, idx) => (
-                            <a 
-                              key={idx} 
-                              href={link.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all hover:scale-[1.02] active:scale-95 ${isDarkMode ? 'bg-slate-950 border-slate-800 hover:border-emerald-500 text-slate-300' : 'bg-white border-emerald-100 hover:border-emerald-500 text-emerald-900 shadow-sm'}`}
-                            >
-                              <i className={`fa-solid ${link.icon} text-3xl mb-4 text-emerald-500`}></i>
-                              <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">{link.label}</span>
-                            </a>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                          <div className={`p-8 rounded-[40px] space-y-6 ${isDarkMode ? 'bg-slate-950 border-2 border-slate-800' : 'bg-white shadow-sm border border-emerald-100'}`}>
-                            <h4 className="text-emerald-500 font-black uppercase tracking-widest">Requisitos</h4>
-                            <ul className="space-y-4">
-                              {item.requirements?.map((req, idx) => (
-                                <li key={idx} className="flex gap-3 text-sm font-bold italic leading-snug">
-                                  <i className="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
-                                  <span>{req}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className={`p-8 rounded-[40px] space-y-6 ${isDarkMode ? 'bg-slate-950 border-2 border-slate-800' : 'bg-white shadow-sm border border-emerald-100'}`}>
-                            <h4 className="text-emerald-500 font-black uppercase tracking-widest">Atenção</h4>
-                            <ul className="space-y-4">
-                              {item.details?.map((det, idx) => (
-                                <li key={idx} className="flex gap-3 text-sm font-medium leading-relaxed opacity-80">
-                                  <i className="fa-solid fa-circle-info text-amber-500 mt-1"></i>
-                                  <span>{det}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                        <button onClick={() => setExpandedMEI(false)} className="text-[10px] font-black uppercase text-emerald-600 border-b-2 border-emerald-600">Recolher Protocolo</button>
-                      </div>
-                    )}
+              <article key={item.id} className={`md:col-span-2 p-8 border-4 rounded-3xl transition-all ${isDarkMode ? 'bg-slate-900 border-emerald-500/20' : 'bg-emerald-50 border-emerald-100'}`}>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-2xl"><i className={`fa-solid ${item.icon}`}></i></div>
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{item.date}</span>
                   </div>
+                  <h2 className="text-3xl font-black uppercase italic leading-none">{item.title}</h2>
+                  <p className="text-lg opacity-80">{item.content}</p>
+                  <button onClick={() => setExpandedMEI(!expandedMEI)} className="text-[10px] font-black uppercase text-emerald-600 border-b-2 border-emerald-600">
+                    {expandedMEI ? 'Recolher Protocolo' : 'Abrir Protocolo Completo'}
+                  </button>
+                  {expandedMEI && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-6 animate-in slide-in-from-top-2">
+                      {item.links?.map((link, idx) => (
+                        <a key={idx} href={link.url} target="_blank" rel="noopener" className={`p-4 rounded-xl border flex items-center gap-3 transition-all hover:bg-emerald-600 hover:text-white ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white'}`}>
+                          <i className={`fa-solid ${link.icon}`}></i>
+                          <span className="text-[9px] font-black uppercase tracking-widest">{link.label}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </article>
             );
           }
-
-          // Card Especial Institucional (Guia Social)
-          if (item.type === 'INSTITUCIONAL') {
-            return (
-              <article key={item.id} className={`p-10 border-4 rounded-[60px] transition-all relative overflow-hidden ${isDarkMode ? 'bg-slate-900 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200'}`}>
-                 <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-indigo-600 text-white rounded-3xl flex items-center justify-center text-3xl shadow-xl shadow-indigo-500/20">
-                        <i className={`fa-solid ${item.icon}`}></i>
-                      </div>
-                      <span className="text-xs font-black text-indigo-600 uppercase tracking-[0.4em]">{item.date}</span>
-                    </div>
-                    <h2 className="text-3xl font-black uppercase italic tracking-tighter leading-none">{item.title}</h2>
-                    <p className={`text-xl leading-relaxed font-medium ${isDarkMode ? 'text-slate-400' : 'text-indigo-900'}`}>{item.content}</p>
-                    <div className="grid grid-cols-2 gap-3 pt-4">
-                       {item.links?.map((link, idx) => (
-                         <a 
-                          key={idx} 
-                          href={link.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all hover:bg-indigo-600 hover:text-white ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-indigo-100 text-indigo-950'}`}
-                         >
-                            <i className={`fa-solid ${link.icon} text-lg`}></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest">{link.label}</span>
-                         </a>
-                       ))}
-                    </div>
-                 </div>
-              </article>
-            );
-          }
-
-          // Card Genérico (Com suporte a links)
+          const isInstitutional = item.type === 'INSTITUCIONAL';
           return (
-            <article key={item.id} className={`p-10 border-4 rounded-[50px] transition-all flex flex-col justify-between ${isDarkMode ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-600/30' : 'bg-white border-slate-100 shadow-2xl shadow-indigo-500/5 hover:border-indigo-300'}`}>
+            <article key={item.id} className={`p-8 border-2 rounded-3xl flex flex-col justify-between transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white shadow-xl'}`}>
               <div className="space-y-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`w-16 h-16 flex items-center justify-center rounded-3xl text-3xl shadow-lg ${item.type === 'AVISO' ? 'bg-amber-500 text-white' : 'bg-indigo-600 text-white'}`} aria-hidden="true">
-                    <i className={`fa-solid ${item.icon}`}></i>
+                <div className="flex justify-between items-start">
+                  <div className={`w-12 h-12 flex items-center justify-center rounded-xl text-xl text-white ${isInstitutional ? 'bg-indigo-600' : (item.type === 'AVISO' ? 'bg-amber-500' : 'bg-slate-700')}`}><i className={`fa-solid ${item.icon}`}></i></div>
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{item.date}</span>
+                </div>
+                <h3 className="text-2xl font-black uppercase leading-tight">{item.title}</h3>
+                <p className="text-lg opacity-80">{item.content}</p>
+                {item.links && (
+                  <div className="grid grid-cols-1 gap-2 pt-4">
+                    {item.links.map((link, idx) => (
+                      <a key={idx} href={link.url} target="_blank" rel="noopener" className="flex items-center gap-3 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all text-indigo-500">
+                        <i className={`fa-solid ${link.icon}`}></i>
+                        <span className="text-[9px] font-black uppercase tracking-widest">{link.label}</span>
+                      </a>
+                    ))}
                   </div>
-                  <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{item.date}</span>
-                </div>
-                <h3 className="text-3xl font-black uppercase tracking-tighter leading-tight">{item.title}</h3>
-                <p className={`text-xl leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>{item.content}</p>
+                )}
               </div>
-              
-              {item.links && item.links.length > 0 && (
-                <div className="mt-8 space-y-3">
-                  {item.links.map((link, idx) => (
-                    <a 
-                      key={idx} 
-                      href={link.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-3 w-full h-16 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all"
-                    >
-                      <i className={`fa-solid ${link.icon}`}></i>
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
-              )}
             </article>
           );
         })}
@@ -553,19 +396,17 @@ const MuralView = ({ isDarkMode }: any) => {
 };
 
 const TrilhasView = ({ user, onSelect, isDarkMode }: any) => (
-  <div className="space-y-16 animate-in fade-in duration-1000">
-    <header className="space-y-4 text-center md:text-left">
-      <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8]">Protocolos<br/><span className="text-indigo-600">ATIVOS _</span></h1>
-    </header>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+  <div className="space-y-12 animate-in fade-in duration-700">
+    <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">Protocolos<br/><span className="text-indigo-600">ATIVOS _</span></h1>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {TRACKS.map(track => (
-        <article key={track.id} className={`p-12 border-4 rounded-[60px] transition-all flex flex-col justify-between min-h-[450px] group ${isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-indigo-600/50' : 'bg-white border-slate-200 shadow-2xl shadow-indigo-500/5 hover:border-indigo-500'}`}>
-          <div className="space-y-8">
-            <span className="text-8xl block group-hover:scale-110 transition-transform duration-500" role="img" aria-label={track.title}>{track.icon}</span>
-            <h2 className="text-4xl font-black uppercase tracking-tighter leading-none">{track.title}</h2>
-            <p className={`text-xl font-medium leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>{track.description}</p>
+        <article key={track.id} className={`p-8 border-4 rounded-3xl flex flex-col justify-between group min-h-[320px] ${isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-indigo-600/50' : 'bg-white shadow-xl'}`}>
+          <div className="space-y-4">
+            <span className="text-6xl block group-hover:scale-110 transition-transform">{track.icon}</span>
+            <h2 className="text-3xl font-black uppercase leading-none">{track.title}</h2>
+            <p className="text-lg opacity-70 italic">{track.description}</p>
           </div>
-          <button onClick={() => onSelect(track.lessons[0])} className="mt-12 h-20 bg-indigo-600 text-white font-black uppercase tracking-[0.3em] text-xs rounded-3xl shadow-2xl hover:bg-indigo-500 active:scale-95 transition-all outline-none focus:ring-8 focus:ring-indigo-500/30">Executar Módulo</button>
+          <button onClick={() => onSelect(track.lessons[0])} className="mt-8 h-16 bg-indigo-600 text-white font-black uppercase text-xs tracking-widest rounded-xl shadow-xl hover:bg-indigo-500 transition-all">Executar Módulo</button>
         </article>
       ))}
     </div>
@@ -575,26 +416,12 @@ const TrilhasView = ({ user, onSelect, isDarkMode }: any) => (
 const Onboarding = ({ onComplete, isDarkMode, toggleTheme }: any) => {
   const [nome, setNome] = useState('');
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-8 text-center transition-colors duration-500 ${isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-950'}`}>
-      <div className="w-28 h-28 bg-indigo-600 text-white rounded-[32px] flex items-center justify-center text-6xl font-black rotate-6 mb-16 shadow-2xl shadow-indigo-600/50 animate-bounce">G</div>
-      <div className="space-y-6 mb-24">
-        <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter mb-4 leading-none">GUI.A<br/><span className="text-indigo-600">DIGITAL</span></h1>
-      </div>
-      <div className="w-full max-w-xl space-y-16">
-        <input 
-          autoFocus
-          value={nome}
-          onChange={e => setNome(e.target.value)}
-          className={`w-full bg-transparent border-b-8 py-6 text-center text-5xl md:text-7xl font-black uppercase outline-none ${isDarkMode ? 'border-slate-800 focus:border-indigo-600' : 'border-slate-300 focus:border-indigo-500'}`}
-          placeholder="TEU NOME?"
-        />
-        <button 
-          disabled={!nome}
-          onClick={() => onComplete({ name: nome, level: 1, exp: 0, matrix: { Estrategia: 10, Escrita: 10, Analise: 10, Tecnica: 10, Design: 10, Audiovisual: 10 }, dossier: [] })}
-          className="w-full h-24 bg-indigo-600 text-white rounded-[40px] font-black uppercase text-2xl shadow-2xl hover:bg-indigo-500"
-        >
-          Acessar Sistema
-        </button>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-8 text-center ${isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-950'}`}>
+      <div className="w-20 h-20 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-4xl font-black mb-12 animate-bounce">G</div>
+      <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter mb-16 leading-none">GUI.A<br/><span className="text-indigo-600">DIGITAL</span></h1>
+      <div className="w-full max-w-md space-y-12">
+        <input autoFocus value={nome} onChange={e => setNome(e.target.value)} className={`w-full bg-transparent border-b-4 py-4 text-center text-4xl font-black uppercase outline-none ${isDarkMode ? 'border-slate-800 focus:border-indigo-600' : 'border-slate-300 focus:border-indigo-500'}`} placeholder="TEU NOME?" />
+        <button disabled={!nome} onClick={() => onComplete({ name: nome, level: 1, exp: 0, matrix: { Estrategia: 10, Escrita: 10, Analise: 10, Tecnica: 10, Design: 10, Audiovisual: 10 }, dossier: [] })} className="w-full h-20 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xl shadow-xl">Acessar Sistema</button>
       </div>
     </div>
   );
