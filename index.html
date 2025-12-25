@@ -16,7 +16,13 @@
             --hot-pink: #ff007a;
             --cyan: #00f2ff;
         }
-        body { background-color: var(--slate-950); color: #f8fafc; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+        body { 
+            background-color: var(--slate-950); 
+            color: #f8fafc; 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Inter', sans-serif; 
+        }
         #loading-overlay {
             position: fixed; inset: 0; background: var(--slate-950);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -25,6 +31,14 @@
         .loader-bar { width: 200px; height: 2px; background: rgba(255, 255, 255, 0.1); position: relative; margin-top: 20px; overflow: hidden; }
         .loader-progress { position: absolute; height: 100%; width: 50%; background: var(--hot-pink); box-shadow: 0 0 10px var(--hot-pink); animation: move 1.5s infinite ease-in-out; }
         @keyframes move { 0% { left: -50%; } 100% { left: 100%; } }
+        
+        .scanline {
+            width: 100%; height: 100px; z-index: 100;
+            background: linear-gradient(0deg, transparent 0%, rgba(0, 242, 255, 0.03) 50%, transparent 100%);
+            position: absolute; top: -100px; pointer-events: none;
+            animation: scanning 4s linear infinite;
+        }
+        @keyframes scanning { 0% { top: -100px; } 100% { top: 100%; } }
     </style>
     <script type="importmap">
 {
@@ -39,15 +53,15 @@
 }
 </script>
     <script>
-        // Capturador de erros global para diagnóstico
+        // Diagnóstico global
         window.onerror = function(msg, url, line, col, error) {
             console.error("STREET_OS_CRASH:", msg, "at", url, ":", line);
             const loader = document.getElementById('loading-overlay');
             if (loader) {
                 loader.innerHTML = `<div style="color:#ff4d00; font-family:monospace; text-align:center; padding:20px;">
-                    <h1 style="font-size:14px;">ERRO DE CARREGAMENTO</h1>
-                    <p style="font-size:10px; opacity:0.7;">${msg}</p>
-                    <button onclick="location.reload()" style="background:#ff4d00; color:white; border:none; padding:10px 20px; margin-top:20px; cursor:pointer;">REINICIAR TERMINAL</button>
+                    <h1 style="font-size:14px;">SISTEMA CORROMPIDO</h1>
+                    <p style="font-size:10px; opacity:0.7; margin-top:10px;">${msg}</p>
+                    <button onclick="location.reload()" style="background:#ff4d00; color:white; border:none; padding:10px 20px; margin-top:20px; cursor:pointer; font-weight:bold;">REINICIAR NÓ</button>
                 </div>`;
             }
             return false;
@@ -56,9 +70,14 @@
 </head>
 <body>
     <div id="loading-overlay">
-        <div style="color: var(--cyan); font-weight: bold; letter-spacing: 0.5em; font-size: 10px; text-transform: uppercase;">Iniciando Street OS</div>
-        <div class="loader-bar"><div class="loader-progress"></div></div>
+        <div style="color: var(--cyan); font-weight: bold; letter-spacing: 0.5em; font-size: 10px; text-transform: uppercase;">
+            Autenticando Operador...
+        </div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
     </div>
+    <div class="scanline"></div>
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>
