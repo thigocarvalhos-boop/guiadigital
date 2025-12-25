@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult, Track } from './types';
-import { TRACKS, MURAL_ITEMS } from './constants';
+import { TRACKS, MURAL_ITEMS, MuralItem } from './constants';
 
 // Auxiliares Áudio e Reconhecimento
 function decodeBase64(base64: string) {
@@ -55,10 +55,8 @@ const App: React.FC = () => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [user, isDarkMode]);
 
-  // Fix: Added missing toggleTheme function to handle theme switching
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
-  // Reconhecimento de Voz Básico (LBI: Autonomia)
   const toggleVoiceCommands = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return alert("Seu navegador não suporta comandos de voz.");
@@ -154,12 +152,10 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       
-      {/* Botão de Atalho de Acessibilidade (Pula para o conteúdo) */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-indigo-600 focus:text-white focus:p-4 focus:rounded-b-xl focus:shadow-2xl">
         Pular para o conteúdo principal
       </a>
 
-      {/* Header Acessível */}
       <nav className={`h-24 border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 backdrop-blur-lg ${isDarkMode ? 'border-slate-800 bg-slate-950/90' : 'border-slate-200 bg-white/95'}`} role="navigation" aria-label="Menu Principal">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-lg shadow-indigo-500/20">G</div>
@@ -174,7 +170,6 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Controle de Voz */}
           <button 
             onClick={toggleVoiceCommands}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isVoiceActive ? 'bg-red-500 text-white animate-pulse' : (isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600')}`}
@@ -196,7 +191,6 @@ const App: React.FC = () => {
 
       <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-12 outline-none" role="main" tabIndex={-1}>
         {activeLesson ? (
-          // Fix: Passed setSimplifiedText to LessonEngine to allow resetting simplified view
           <LessonEngine 
             lesson={activeLesson} 
             state={lessonState} 
@@ -244,7 +238,6 @@ const NavBtn = ({ active, onClick, icon, label }: any) => (
   </button>
 );
 
-// Fix: Destructured setSimplifiedText prop in LessonEngine
 const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onSimplify, simplifiedText, setSimplifiedText, onExit, user, setUser, isDarkMode, isOffline }: any) => {
   const [written, setWritten] = useState('');
   const [loading, setLoading] = useState(false);
@@ -282,7 +275,6 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onSimplify, s
           <i className="fa-solid fa-arrow-left mr-2"></i> Voltar
         </button>
         <div className="flex gap-2">
-          {/* Botões de Acessibilidade Específicos da Lição */}
           <button 
             onClick={() => onSimplify(lesson.theoryContent)}
             className="w-12 h-12 rounded-xl border-2 border-indigo-500/30 text-indigo-500 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all"
@@ -369,24 +361,10 @@ const ManifestoView = ({ isDarkMode }: any) => (
       </h1>
       <div className="h-2 w-32 bg-indigo-600 mx-auto rounded-full"></div>
     </header>
-
     <div className={`space-y-16 text-3xl md:text-5xl font-black italic leading-[1.2] border-l-[16px] border-indigo-600 pl-8 md:pl-20 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
       <p className="readable-text">Este não é apenas um app. É uma ponte de <span className="text-indigo-600">acessibilidade econômica</span>.</p>
-      
       <p className="text-indigo-600 readable-text">"Dignidade é ter o domínio da técnica. Inclusão é remover a barreira entre o talento e a oportunidade."</p>
-      
       <p className="readable-text">"Aqui, o capacitismo morre. Seus ativos técnicos valem mais que sua condição. O mercado precisa de soluções, e nós somos a resposta."</p>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-10">
-      <div className={`p-12 border-4 rounded-[60px] space-y-6 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xl'}`}>
-        <h3 className="text-indigo-500 font-black uppercase tracking-[0.5em] text-2xl">AUTONOMIA</h3>
-        <p className={`font-bold uppercase text-lg italic leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>Ferramentas para quem constrói o próprio caminho.</p>
-      </div>
-      <div className={`p-12 border-4 rounded-[60px] space-y-6 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-xl'}`}>
-        <h3 className="text-indigo-500 font-black uppercase tracking-[0.5em] text-2xl">EQUIDADE</h3>
-        <p className={`font-bold uppercase text-lg italic leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>A tecnologia social como niveladora do jogo.</p>
-      </div>
     </div>
   </article>
 );
@@ -395,76 +373,184 @@ const DossieView = ({ dossier, matrix, isDarkMode }: any) => (
   <div className="space-y-16 animate-in fade-in duration-700">
     <header className="space-y-4">
       <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">Dossiê<br/><span className="text-indigo-500">Patrimonial.</span></h1>
-      <p className="text-slate-500 font-black uppercase tracking-[0.5em] text-xs">Suas competências como ativos de mercado.</p>
     </header>
-    
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
       <div className="lg:col-span-2 space-y-8">
         {dossier.map((item: any, i: number) => (
-          <article key={i} className={`p-10 border-2 rounded-[50px] flex flex-col md:flex-row justify-between gap-8 transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-indigo-500/50' : 'bg-white border-slate-200 hover:border-indigo-400 shadow-xl shadow-indigo-500/5'}`}>
+          <article key={i} className={`p-10 border-2 rounded-[50px] flex flex-col md:flex-row justify-between gap-8 transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
             <div className="space-y-6">
-              <div className="flex gap-3">
-                <span className="text-[10px] font-black bg-indigo-600 text-white px-5 py-2 rounded-full uppercase tracking-widest shadow-lg shadow-indigo-500/20">{item.trackId}</span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest self-center">{item.date}</span>
-              </div>
-              <h3 className="text-3xl font-black uppercase tracking-tight leading-none">{item.lessonTitle}</h3>
-              <p className={`text-xl italic leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-700'}`}>"{item.writtenResponse.substring(0, 150)}..."</p>
+              <span className="text-[10px] font-black bg-indigo-600 text-white px-5 py-2 rounded-full uppercase tracking-widest">{item.trackId}</span>
+              <h3 className="text-3xl font-black uppercase leading-none">{item.lessonTitle}</h3>
+              <p className="text-xl italic">"{item.writtenResponse.substring(0, 150)}..."</p>
             </div>
-            <div className="text-center md:text-right flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-200 md:pl-10 pt-6 md:pt-0">
-              <span className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Impacto</span>
-              <span className={`text-7xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>{item.audit.score}</span>
-            </div>
+            <div className="text-7xl font-black">{item.audit.score}</div>
           </article>
         ))}
-        {dossier.length === 0 && (
-          <div className="p-32 border-8 border-dashed border-slate-200 dark:border-slate-800 rounded-[80px] text-center opacity-30 flex flex-col items-center">
-            <i className="fa-solid fa-folder-plus text-8xl mb-8"></i>
-            <p className="font-black uppercase tracking-[0.5em] text-sm">Vazio. Inicie o protocolo.</p>
-          </div>
-        )}
       </div>
-      
-      <div className={`p-10 border-4 rounded-[60px] space-y-12 sticky top-32 h-fit ${isDarkMode ? 'bg-slate-900 border-slate-800 shadow-2xl' : 'bg-slate-50 border-slate-200 shadow-xl shadow-indigo-500/5'}`}>
-        <h3 className="text-3xl font-black uppercase italic tracking-tighter text-indigo-500">Maestria</h3>
-        <div className="space-y-10">
-          {Object.entries(matrix).map(([skill, value]: any) => (
-            <div key={skill} className="space-y-4">
-              <div className="flex justify-between items-end">
-                <span className="text-xs font-black uppercase tracking-widest text-slate-500">{skill}</span>
-                <span className="text-lg font-black text-indigo-500">{value}%</span>
-              </div>
-              <div className={`h-4 rounded-full overflow-hidden p-[3px] ${isDarkMode ? 'bg-slate-950 shadow-inner' : 'bg-slate-200'}`}>
-                <div style={{ width: `${value}%` }} className="h-full bg-indigo-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(79,70,229,0.5)]"></div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className={`p-10 border-4 rounded-[60px] ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+        <h3 className="text-3xl font-black uppercase text-indigo-500 mb-8">Maestria</h3>
+        {Object.entries(matrix).map(([skill, value]: any) => (
+          <div key={skill} className="mb-6">
+            <div className="flex justify-between text-xs font-black uppercase mb-2"><span>{skill}</span><span>{value}%</span></div>
+            <div className="h-4 rounded-full bg-slate-200 overflow-hidden"><div style={{ width: `${value}%` }} className="h-full bg-indigo-500"></div></div>
+          </div>
+        ))}
       </div>
     </div>
   </div>
 );
 
-const MuralView = ({ isDarkMode }: any) => (
-  <div className="space-y-12 animate-in fade-in duration-500">
-    <header className="space-y-4 text-center md:text-left">
-      <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">Mural do<br/><span className="text-indigo-600">CORRE _</span></h1>
-    </header>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-      {MURAL_ITEMS.map(item => (
-        <article key={item.id} className={`p-10 border-4 rounded-[50px] transition-all ${isDarkMode ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-600/30' : 'bg-white border-slate-100 shadow-2xl shadow-indigo-500/5 hover:border-indigo-300'}`}>
-          <div className="flex justify-between items-start mb-10">
-            <div className={`w-16 h-16 flex items-center justify-center rounded-3xl text-3xl shadow-lg ${item.type === 'AVISO' ? 'bg-amber-500 text-white' : 'bg-indigo-600 text-white'}`} aria-hidden="true">
-              <i className={`fa-solid ${item.icon}`}></i>
-            </div>
-            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{item.date}</span>
-          </div>
-          <h3 className="text-3xl font-black uppercase mb-4 tracking-tighter leading-tight">{item.title}</h3>
-          <p className={`text-xl leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>{item.content}</p>
-        </article>
-      ))}
+const MuralView = ({ isDarkMode }: any) => {
+  const [expandedMEI, setExpandedMEI] = useState(false);
+
+  return (
+    <div className="space-y-12 animate-in fade-in duration-500">
+      <header className="space-y-4">
+        <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">Mural do<br/><span className="text-indigo-600">CORRE _</span></h1>
+      </header>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {MURAL_ITEMS.map(item => {
+          // Card Especial MEI
+          if (item.type === 'MEI') {
+            return (
+              <article key={item.id} className={`md:col-span-2 p-10 border-4 rounded-[60px] transition-all relative overflow-hidden ${isDarkMode ? 'bg-slate-900 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
+                <div className="flex flex-col md:flex-row justify-between gap-10">
+                  <div className="flex-1 space-y-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-emerald-600 text-white rounded-3xl flex items-center justify-center text-3xl shadow-xl shadow-emerald-500/20">
+                        <i className={`fa-solid ${item.icon}`}></i>
+                      </div>
+                      <span className="text-xs font-black text-emerald-600 uppercase tracking-[0.4em]">{item.date}</span>
+                    </div>
+                    <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.9]">{item.title}</h2>
+                    <p className={`text-xl leading-relaxed font-medium ${isDarkMode ? 'text-slate-400' : 'text-emerald-900'}`}>{item.content}</p>
+                    
+                    {!expandedMEI ? (
+                      <button 
+                        onClick={() => setExpandedMEI(true)}
+                        className="h-16 px-10 bg-emerald-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:bg-emerald-500 active:scale-95 transition-all"
+                      >
+                        Abrir Protocolo Completo
+                      </button>
+                    ) : (
+                      <div className="space-y-12 pt-8 animate-in slide-in-from-top-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {item.links?.map((link, idx) => (
+                            <a 
+                              key={idx} 
+                              href={link.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all hover:scale-[1.02] active:scale-95 ${isDarkMode ? 'bg-slate-950 border-slate-800 hover:border-emerald-500 text-slate-300' : 'bg-white border-emerald-100 hover:border-emerald-500 text-emerald-900 shadow-sm'}`}
+                            >
+                              <i className={`fa-solid ${link.icon} text-3xl mb-4 text-emerald-500`}></i>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">{link.label}</span>
+                            </a>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                          <div className={`p-8 rounded-[40px] space-y-6 ${isDarkMode ? 'bg-slate-950 border-2 border-slate-800' : 'bg-white shadow-sm border border-emerald-100'}`}>
+                            <h4 className="text-emerald-500 font-black uppercase tracking-widest">Requisitos</h4>
+                            <ul className="space-y-4">
+                              {item.requirements?.map((req, idx) => (
+                                <li key={idx} className="flex gap-3 text-sm font-bold italic leading-snug">
+                                  <i className="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
+                                  <span>{req}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className={`p-8 rounded-[40px] space-y-6 ${isDarkMode ? 'bg-slate-950 border-2 border-slate-800' : 'bg-white shadow-sm border border-emerald-100'}`}>
+                            <h4 className="text-emerald-500 font-black uppercase tracking-widest">Atenção</h4>
+                            <ul className="space-y-4">
+                              {item.details?.map((det, idx) => (
+                                <li key={idx} className="flex gap-3 text-sm font-medium leading-relaxed opacity-80">
+                                  <i className="fa-solid fa-circle-info text-amber-500 mt-1"></i>
+                                  <span>{det}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        <button onClick={() => setExpandedMEI(false)} className="text-[10px] font-black uppercase text-emerald-600 border-b-2 border-emerald-600">Recolher Protocolo</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          }
+
+          // Card Especial Institucional (Guia Social)
+          if (item.type === 'INSTITUCIONAL') {
+            return (
+              <article key={item.id} className={`p-10 border-4 rounded-[60px] transition-all relative overflow-hidden ${isDarkMode ? 'bg-slate-900 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200'}`}>
+                 <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-indigo-600 text-white rounded-3xl flex items-center justify-center text-3xl shadow-xl shadow-indigo-500/20">
+                        <i className={`fa-solid ${item.icon}`}></i>
+                      </div>
+                      <span className="text-xs font-black text-indigo-600 uppercase tracking-[0.4em]">{item.date}</span>
+                    </div>
+                    <h2 className="text-3xl font-black uppercase italic tracking-tighter leading-none">{item.title}</h2>
+                    <p className={`text-xl leading-relaxed font-medium ${isDarkMode ? 'text-slate-400' : 'text-indigo-900'}`}>{item.content}</p>
+                    <div className="grid grid-cols-2 gap-3 pt-4">
+                       {item.links?.map((link, idx) => (
+                         <a 
+                          key={idx} 
+                          href={link.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-3 p-4 rounded-2xl border transition-all hover:bg-indigo-600 hover:text-white ${isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-indigo-100 text-indigo-950'}`}
+                         >
+                            <i className={`fa-solid ${link.icon} text-lg`}></i>
+                            <span className="text-[10px] font-black uppercase tracking-widest">{link.label}</span>
+                         </a>
+                       ))}
+                    </div>
+                 </div>
+              </article>
+            );
+          }
+
+          // Card Genérico (Com suporte a links)
+          return (
+            <article key={item.id} className={`p-10 border-4 rounded-[50px] transition-all flex flex-col justify-between ${isDarkMode ? 'bg-slate-900/50 border-slate-800 hover:border-indigo-600/30' : 'bg-white border-slate-100 shadow-2xl shadow-indigo-500/5 hover:border-indigo-300'}`}>
+              <div className="space-y-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className={`w-16 h-16 flex items-center justify-center rounded-3xl text-3xl shadow-lg ${item.type === 'AVISO' ? 'bg-amber-500 text-white' : 'bg-indigo-600 text-white'}`} aria-hidden="true">
+                    <i className={`fa-solid ${item.icon}`}></i>
+                  </div>
+                  <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{item.date}</span>
+                </div>
+                <h3 className="text-3xl font-black uppercase tracking-tighter leading-tight">{item.title}</h3>
+                <p className={`text-xl leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>{item.content}</p>
+              </div>
+              
+              {item.links && item.links.length > 0 && (
+                <div className="mt-8 space-y-3">
+                  {item.links.map((link, idx) => (
+                    <a 
+                      key={idx} 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-3 w-full h-16 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all"
+                    >
+                      <i className={`fa-solid ${link.icon}`}></i>
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const TrilhasView = ({ user, onSelect, isDarkMode }: any) => (
   <div className="space-y-16 animate-in fade-in duration-1000">
@@ -493,25 +579,19 @@ const Onboarding = ({ onComplete, isDarkMode, toggleTheme }: any) => {
       <div className="w-28 h-28 bg-indigo-600 text-white rounded-[32px] flex items-center justify-center text-6xl font-black rotate-6 mb-16 shadow-2xl shadow-indigo-600/50 animate-bounce">G</div>
       <div className="space-y-6 mb-24">
         <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter mb-4 leading-none">GUI.A<br/><span className="text-indigo-600">DIGITAL</span></h1>
-        <p className="text-slate-500 font-black uppercase tracking-[0.7em] text-xs">Career Operating System v4.3</p>
       </div>
       <div className="w-full max-w-xl space-y-16">
-        <div className="space-y-6">
-          <label htmlFor="user-name" className="block text-xs font-black uppercase tracking-[0.5em] text-indigo-500">Inicializar Perfil do Jovem</label>
-          <input 
-            id="user-name"
-            autoFocus
-            value={nome}
-            onChange={e => setNome(e.target.value)}
-            className={`w-full bg-transparent border-b-8 py-6 text-center text-5xl md:text-7xl font-black uppercase outline-none transition-all placeholder:opacity-10 ${isDarkMode ? 'border-slate-800 focus:border-indigo-600' : 'border-slate-300 focus:border-indigo-500'}`}
-            placeholder="COMO TE CHAMAM?"
-            aria-required="true"
-          />
-        </div>
+        <input 
+          autoFocus
+          value={nome}
+          onChange={e => setNome(e.target.value)}
+          className={`w-full bg-transparent border-b-8 py-6 text-center text-5xl md:text-7xl font-black uppercase outline-none ${isDarkMode ? 'border-slate-800 focus:border-indigo-600' : 'border-slate-300 focus:border-indigo-500'}`}
+          placeholder="TEU NOME?"
+        />
         <button 
           disabled={!nome}
           onClick={() => onComplete({ name: nome, level: 1, exp: 0, matrix: { Estrategia: 10, Escrita: 10, Analise: 10, Tecnica: 10, Design: 10, Audiovisual: 10 }, dossier: [] })}
-          className="w-full h-24 bg-indigo-600 text-white rounded-[40px] font-black uppercase text-2xl shadow-2xl hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-5 tracking-[0.3em] outline-none focus:ring-8 focus:ring-indigo-400"
+          className="w-full h-24 bg-indigo-600 text-white rounded-[40px] font-black uppercase text-2xl shadow-2xl hover:bg-indigo-500"
         >
           Acessar Sistema
         </button>

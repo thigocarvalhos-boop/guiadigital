@@ -3,14 +3,78 @@ import { Track } from './types.ts';
 
 export interface MuralItem {
   id: string;
-  type: 'AVISO' | 'DICA' | 'EVENTO';
+  type: 'AVISO' | 'DICA' | 'EVENTO' | 'MEI' | 'INSTITUCIONAL';
   title: string;
   content: string;
   date: string;
   icon: string;
+  links?: { label: string; url: string; icon: string }[];
+  details?: string[];
+  requirements?: string[];
 }
 
 export const MURAL_ITEMS: MuralItem[] = [
+  {
+    id: 'm-guia-social',
+    type: 'INSTITUCIONAL',
+    title: 'INSTITUTO GUIA SOCIAL _',
+    content: 'Conheça a organização que impulsiona o GUI.A DIGITAL. Transformamos o futuro de jovens através da tecnologia social, ética e inclusão produtiva.',
+    date: 'Institucional',
+    icon: 'fa-heart',
+    links: [
+      { label: 'Website', url: 'https://www.institutoguiasocial.org', icon: 'fa-globe' },
+      { label: 'Instagram', url: 'https://instagram.com/institutoguiasocial', icon: 'fa-brands fa-instagram' },
+      { label: 'WhatsApp', url: 'https://wa.me/5581991828743', icon: 'fa-brands fa-whatsapp' },
+      { label: 'Email', url: 'mailto:institutoguiasocial@gmail.com', icon: 'fa-envelope' }
+    ]
+  },
+  {
+    id: 'm-mei',
+    type: 'MEI',
+    title: 'SEJA MEI _ PROTOCOLO DE FORMALIZAÇÃO',
+    content: 'O MEI é um modelo simplificado de empresa criado para tirar do mercado informal trabalhadores autônomos. Com o registro, você passa a contar com benefícios previdenciários e a possibilidade de emitir notas fiscais profissionais.',
+    date: 'Destaque',
+    icon: 'fa-id-card',
+    links: [
+      { label: 'Formalize-se Agora', url: 'https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/quero-ser-mei', icon: 'fa-user-plus' },
+      { label: 'Imprimir Boleto DAS', url: 'https://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao', icon: 'fa-barcode' },
+      { label: 'Certificado CCMEI', url: 'https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/servicos-para-mei/emissao-de-comprovante-ccmei', icon: 'fa-certificate' },
+      { label: 'Declaração Anual', url: 'https://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/dasnsimei.app/Identificacao', icon: 'fa-file-invoice' },
+      { label: 'Cartão CNPJ', url: 'https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp', icon: 'fa-address-card' },
+      { label: 'Alterar Dados', url: 'https://www.gov.br/empresas-e-negocios/pt-br/empreendedor/servicos-para-mei/atualizacao-cadastral-de-mei', icon: 'fa-pen-to-square' }
+    ],
+    requirements: [
+      'Não ter participação em outra empresa como sócio ou titular',
+      'Faturar até R$ 81.000,00 por ano',
+      'Exercer atividades permitidas (até 1 principal e 15 secundárias)'
+    ],
+    details: [
+      'Documentos: RG, Dados de Contato, Endereço Residencial e do Negócio.',
+      'Conta gov.br: Necessário nível Prata ou Ouro.'
+    ]
+  },
+  {
+    id: 'm-capacitacoes',
+    type: 'EVENTO',
+    title: '+ CAPACITAÇÕES ON LINE',
+    content: 'O GO Recife oferece diversos cursos gratuitos para você se especializar. Acesse o portal e turbine seu Dossiê Patrimonial com novos conhecimentos técnicos.',
+    date: 'GO Recife',
+    icon: 'fa-graduation-cap',
+    links: [
+      { label: 'Ver Cursos Disponíveis', url: 'https://gorecife.recife.pe.gov.br/cursos', icon: 'fa-laptop-code' }
+    ]
+  },
+  {
+    id: 'm-vagas',
+    type: 'DICA',
+    title: 'SE LIGA NAS VAGAS GO recife',
+    content: 'A oportunidade que você busca pode estar a um clique. Explore as vagas abertas no GO Recife e conecte seu talento ao mercado local.',
+    date: 'GO Recife',
+    icon: 'fa-briefcase',
+    links: [
+      { label: 'Explorar Oportunidades', url: 'https://gorecife.recife.pe.gov.br/oportunidades', icon: 'fa-search-dollar' }
+    ]
+  },
   {
     id: 'm1',
     type: 'AVISO',
@@ -18,30 +82,6 @@ export const MURAL_ITEMS: MuralItem[] = [
     content: 'Boy, não esquece de revisar teu portfólio antes de bater um papo com cliente. O mercado olha a técnica, mas o brilho nos olhos conta muito.',
     date: 'Hoje',
     icon: 'fa-sync'
-  },
-  {
-    id: 'm2',
-    type: 'DICA',
-    title: 'Como cobrar o primeiro trampo?',
-    content: 'Não desvalorize teu corre. Se é iniciante, foque em pacotes por entrega (Ex: 5 artes = X). Isso dá clareza pro cliente e segurança pra tu.',
-    date: '2 dias atrás',
-    icon: 'fa-hand-holding-dollar'
-  },
-  {
-    id: 'm3',
-    type: 'EVENTO',
-    title: 'Workshop no Porto Digital',
-    content: 'Sexta-feira teremos mentoria presencial sobre IA Generativa aplicada a Design. Cola lá no Cais do Apolo, às 14h.',
-    date: '15 Out',
-    icon: 'fa-users'
-  },
-  {
-    id: 'm4',
-    type: 'AVISO',
-    title: 'Comunidade em Expansão',
-    content: 'Batemos a marca de 500 jovens ativos no GUI.A! O ecossistema de Recife tá ficando pequeno pra tanto talento.',
-    date: '1 sem atrás',
-    icon: 'fa-rocket'
   }
 ];
 
