@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI, Modality, Type } from "@google/genai";
-import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult, Track, Competency } from './types';
+import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult, Track } from './types';
 import { TRACKS, MURAL_ITEMS } from './constants';
 
 // Auxiliares Áudio
@@ -22,31 +22,48 @@ async function decodeAudio(data: Uint8Array, ctx: AudioContext): Promise<AudioBu
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState<'trilhas' | 'dossie' | 'manifesto' | 'mural'>('trilhas');
+  const [activeTab, setActiveTab] = useState<'trilhas' | 'dossie' | 'mural' | 'manifesto'>('trilhas');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [lessonState, setLessonState] = useState<LessonState>('THEORY');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [announcement, setAnnouncement] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     const updateStatus = () => setIsOffline(!navigator.onLine);
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
-    const saved = localStorage.getItem('guia_digital_v3');
+    const saved = localStorage.getItem('guia_digital_v4');
     if (saved) setUser(JSON.parse(saved));
-    return () => { window.removeEventListener('online', updateStatus); window.removeEventListener('offline', updateStatus); };
+    
+    // Tema inicial baseado no sistema
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      setIsDarkMode(false);
+    }
+
+    return () => { 
+      window.removeEventListener('online', updateStatus); 
+      window.removeEventListener('offline', updateStatus); 
+    };
   }, []);
 
-  useEffect(() => { if (user) localStorage.setItem('guia_digital_v3', JSON.stringify(user)); }, [user]);
+  useEffect(() => { 
+    if (user) localStorage.setItem('guia_digital_v4', JSON.stringify(user)); 
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [user, isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const speak = async (text: string) => {
-    if (isOffline) return alert("Offline: áudio desabilitado.");
+    if (isOffline) return;
     try {
-      setAnnouncement("Iniciando leitura assistiva.");
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Diga de forma calma e profissional para um jovem aprendiz: ${text}` }] }],
+        contents: [{ parts: [{ text: `Diga de forma clara e pausada: ${text}` }] }],
         config: { 
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }
@@ -54,8 +71,7 @@ const App: React.FC = () => {
       });
       const base64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        const ctx = new AudioContextClass();
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const buffer = await decodeAudio(decodeBase64(base64), ctx);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
@@ -65,11 +81,12 @@ const App: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
-  const handleAudit = async (lesson: Lesson, type: 'PRACTICE' | 'SUBMISSION', content: any) => {
+  const handleAudit = async (lesson: Lesson, type: 'SUBMISSION', content: any) => {
+    if (isOffline) return { score: 0, feedback: "Offline. Reconecte-se para validar seu dossiê.", aprovado: false };
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `[SISTEMA::GUI.A_AUDIT_V3] Audite esta entrega de ${lesson.category}. 
-    PERSONA: Mentor GUI.A do Porto Digital. Exigente, focado em mercado real, mas que apoia o corre do jovem.
-    CONTEÚDO DA ENTREGA: ${JSON.stringify(content)}.`;
+    const prompt = `[GUI.A_AUDIT_CORE] Audite entrega de ${lesson.category}. 
+    PERSONA: Mentor GUI.A do Porto Digital. Foco em mercado real e esforço técnico.
+    CONTEÚDO: ${JSON.stringify(content)}.`;
     
     try {
       const res = await ai.models.generateContent({ 
@@ -80,77 +97,67 @@ const App: React.FC = () => {
           responseSchema: {
             type: Type.OBJECT,
             properties: {
-              score: { type: Type.NUMBER, description: 'Score final de 0 a 10' },
-              feedback: { type: Type.STRING, description: 'Feedback construtivo e motivador em português' },
-              aprovado: { type: Type.BOOLEAN, description: 'Se a entrega atende aos requisitos mínimos' },
+              score: { type: Type.NUMBER },
+              feedback: { type: Type.STRING },
+              aprovado: { type: Type.BOOLEAN },
               rubrica: {
                 type: Type.OBJECT,
                 properties: {
-                  execucao_pratica: { type: Type.NUMBER, description: 'Nota de 0 a 3' },
-                  qualidade_tecnica: { type: Type.NUMBER, description: 'Nota de 0 a 3' },
-                  estrategia_clareza: { type: Type.NUMBER, description: 'Nota de 0 a 2' },
-                  profissionalismo: { type: Type.NUMBER, description: 'Nota de 0 a 2' }
+                  execucao_pratica: { type: Type.NUMBER },
+                  qualidade_tecnica: { type: Type.NUMBER },
+                  estrategia_clareza: { type: Type.NUMBER },
+                  profissionalismo: { type: Type.NUMBER }
                 },
                 required: ['execucao_pratica', 'qualidade_tecnica', 'estrategia_clareza', 'profissionalismo']
               },
-              mentor: { type: Type.STRING, description: 'Assinatura do Mentor GUI.A' }
+              mentor: { type: Type.STRING }
             },
             required: ['score', 'feedback', 'aprovado', 'rubrica', 'mentor']
           }
         } 
       });
-      
-      const text = res.text;
-      return JSON.parse(text || '{}');
+      return JSON.parse(res.text || '{}');
     } catch (error) { 
-      console.error('STREET_OS_AUDIT_ERROR:', error);
-      return { score: 0, feedback: "Falha na conexão com o mentor de IA.", aprovado: false }; 
+      return { score: 0, feedback: "Instabilidade na rede de mentores.", aprovado: false }; 
     }
   };
 
-  if (!user) return <Onboarding onComplete={setUser} />;
+  if (!user) return <Onboarding onComplete={setUser} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <div className="sr-only" aria-live="polite">{announcement}</div>
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} flex flex-col font-sans selection:bg-indigo-500 selection:text-white`}>
       
-      {/* Navegação Principal */}
-      <nav className="h-24 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50 px-6 flex items-center justify-between" role="navigation">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 flex items-center justify-center font-black rounded-xl shadow-lg shadow-indigo-500/20 text-xl transform -rotate-3 hover:rotate-0 transition-transform cursor-pointer">G</div>
-          <div className="hidden md:block">
-            <span className="font-black tracking-tighter text-2xl">GUI.A <span className="text-indigo-500 italic">DIGITAL</span></span>
-            <p className="text-[8px] font-black uppercase text-slate-500 tracking-[0.3em]">Recife Social Tech</p>
-          </div>
+      {/* Header Adaptativo - Acessibilidade: Touch Target 48px+ */}
+      <nav className={`h-24 border-b ${isDarkMode ? 'border-slate-800 bg-slate-950/90' : 'border-slate-200 bg-white/90'} backdrop-blur-md sticky top-0 z-50 px-4 flex items-center justify-between`} role="navigation" aria-label="Navegação Principal">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-indigo-600 flex items-center justify-center font-black rounded-xl shadow-lg text-white text-xl">G</div>
+          <span className="font-black tracking-tighter text-xl hidden sm:block uppercase">GUI.A <span className="text-indigo-500 italic">DIGITAL</span></span>
         </div>
         
-        <div className="flex gap-1 md:gap-4 h-full items-center">
-          <NavBtn active={activeTab === 'trilhas'} onClick={() => setActiveTab('trilhas')} icon="fa-bolt" label="Trilhas" />
-          <NavBtn active={activeTab === 'dossie'} onClick={() => setActiveTab('dossie')} icon="fa-briefcase" label="Dossiê" />
-          <NavBtn active={activeTab === 'mural'} onClick={() => setActiveTab('mural')} icon="fa-bullhorn" label="Mural" />
-          <NavBtn active={activeTab === 'manifesto'} onClick={() => setActiveTab('manifesto')} icon="fa-fingerprint" label="Missão" />
+        <div className="flex gap-2 items-center h-full">
+          <NavBtn active={activeTab === 'trilhas'} onClick={() => setActiveTab('trilhas')} icon="fa-bolt" label="Trilhas" isDarkMode={isDarkMode} />
+          <NavBtn active={activeTab === 'dossie'} onClick={() => setActiveTab('dossie')} icon="fa-briefcase" label="Dossiê" isDarkMode={isDarkMode} />
+          <NavBtn active={activeTab === 'mural'} onClick={() => setActiveTab('mural')} icon="fa-bullhorn" label="Mural" isDarkMode={isDarkMode} />
+          <NavBtn active={activeTab === 'manifesto'} onClick={() => setActiveTab('manifesto')} icon="fa-fingerprint" label="Manifesto" isDarkMode={isDarkMode} />
         </div>
 
-        <div className="flex items-center gap-6 border-l border-slate-800 pl-6 ml-2 h-10">
-          <div className="flex flex-col items-center">
-             <div className="flex gap-1 mb-1 items-end h-6">
-                {Object.entries(user.matrix).map(([key, val]) => (
-                  <div key={key} title={`${key}: ${val}%`} className="w-1.5 h-full bg-slate-800 rounded-full overflow-hidden flex flex-col justify-end">
-                    <div style={{ height: `${val}%` }} className="w-full bg-indigo-500 transition-all duration-1000"></div>
-                  </div>
-                ))}
-             </div>
-             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-tighter">Maestria</span>
-          </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-black text-indigo-400 uppercase leading-none mb-1">LVL {user.level}</p>
-            <p className="text-sm font-bold truncate max-w-[100px] leading-none">{user.name}</p>
-          </div>
-        </div>
+        <button 
+          onClick={toggleTheme}
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus:ring-4 focus:ring-indigo-500 outline-none ${isDarkMode ? 'bg-slate-800 text-amber-400' : 'bg-slate-100 text-indigo-600 shadow-sm'}`}
+          aria-label={isDarkMode ? "Ativar Modo Dia" : "Ativar Modo Noite"}
+        >
+          <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-xl`}></i>
+        </button>
       </nav>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-12 relative">
-        <div className="scanline pointer-events-none fixed inset-0 opacity-10"></div>
+      {/* Alerta Offline Resiliente */}
+      {isOffline && (
+        <div className="bg-amber-600 text-white text-[11px] font-black uppercase tracking-[0.3em] py-3 text-center animate-pulse" role="alert">
+          <i className="fa-solid fa-wifi-slash mr-2"></i> Modo Offline Ativado • O corre não para, mas a validação de IA aguarda rede
+        </div>
+      )}
+
+      <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-12" role="main">
         {activeLesson ? (
           <LessonEngine 
             lesson={activeLesson} 
@@ -161,88 +168,70 @@ const App: React.FC = () => {
             onExit={() => setActiveLesson(null)}
             user={user}
             setUser={setUser}
+            isDarkMode={isDarkMode}
+            isOffline={isOffline}
           />
         ) : (
-          <div className="max-w-6xl mx-auto pb-20">
-            {activeTab === 'trilhas' && <TrilhasView user={user} onSelect={(l: Lesson) => { setActiveLesson(l); setLessonState('THEORY'); }} />}
-            {activeTab === 'dossie' && <DossieView dossier={user.dossier} matrix={user.matrix} />}
-            {activeTab === 'mural' && <MuralView />}
-            {activeTab === 'manifesto' && <ManifestoView />}
+          <div className="max-w-6xl mx-auto pb-12">
+            {activeTab === 'trilhas' && <TrilhasView user={user} onSelect={(l: Lesson) => { setActiveLesson(l); setLessonState('THEORY'); }} isDarkMode={isDarkMode} />}
+            {activeTab === 'dossie' && <DossieView dossier={user.dossier} matrix={user.matrix} isDarkMode={isDarkMode} />}
+            {activeTab === 'mural' && <MuralView isDarkMode={isDarkMode} />}
+            {activeTab === 'manifesto' && <ManifestoView isDarkMode={isDarkMode} />}
           </div>
         )}
       </main>
 
-      <footer className="p-4 bg-slate-950 border-t border-slate-900 text-center text-[9px] text-slate-600 font-bold tracking-[0.4em] uppercase">
-        GUI.A DIGITAL V3.5 | Porto Digital Community OS
+      <footer className={`p-6 border-t ${isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-500'} text-center text-[10px] font-black tracking-[0.4em] uppercase`}>
+        GUI.A DIGITAL v4.1 | Tecnologia Social Porto Digital
       </footer>
     </div>
   );
 };
 
-const NavBtn = ({ active, onClick, icon, label }: any) => (
+const NavBtn = ({ active, onClick, icon, label, isDarkMode }: any) => (
   <button 
     onClick={onClick}
-    className={`relative flex flex-col items-center justify-center gap-1 px-3 md:px-5 py-2 transition-all font-black text-[10px] md:text-xs uppercase tracking-widest focus:ring-2 ring-indigo-500 outline-none h-full group ${active ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+    aria-current={active ? 'page' : undefined}
+    className={`flex flex-col items-center justify-center gap-1 min-w-[54px] min-h-[54px] md:min-w-[80px] rounded-xl transition-all font-black text-[9px] md:text-[10px] uppercase tracking-widest focus:ring-4 focus:ring-indigo-500 outline-none ${
+      active 
+        ? 'bg-indigo-600 text-white shadow-lg' 
+        : (isDarkMode ? 'text-slate-500 hover:text-slate-200 hover:bg-slate-900' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-100')
+    }`}
   >
-    <i className={`fa-solid ${icon} text-lg md:text-xl transition-transform group-hover:scale-110`}></i>
-    <span className="hidden lg:inline">{label}</span>
-    {active && (
-      <div className="absolute bottom-[-1px] left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1] animate-in slide-in-from-left-2 duration-300"></div>
-    )}
+    <i className={`fa-solid ${icon} text-lg md:text-xl`} aria-hidden="true"></i>
+    <span className="hidden sm:inline">{label}</span>
   </button>
 );
 
-const MuralView = () => (
-  <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+const MuralView = ({ isDarkMode }: any) => (
+  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <header className="space-y-2">
-      <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none font-archivo">
-        MURAL DO<br/><span className="text-indigo-500">CORRE.</span>
-      </h1>
-      <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px]">Visão estratégica e oportunidades da rede.</p>
+      <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">Mural do<br/><span className="text-indigo-500">Corre.</span></h1>
     </header>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {MURAL_ITEMS.map((item, idx) => (
-        <div 
-          key={item.id} 
-          className="p-10 bg-slate-900/30 border-2 border-slate-900/50 rounded-4xl hover:border-indigo-500/40 transition-all flex flex-col gap-6 group relative overflow-hidden animate-in fade-in duration-500"
-          style={{ animationDelay: `${idx * 100}ms` }}
-        >
-          <div className="absolute -right-4 -top-4 opacity-[0.03] text-9xl font-black italic -rotate-12 transition-transform group-hover:rotate-0">{idx + 1}</div>
-          <div className="flex justify-between items-center relative z-10">
-            <div className={`w-14 h-14 flex items-center justify-center rounded-2xl text-2xl transition-all ${
-              item.type === 'AVISO' ? 'bg-amber-500/10 text-amber-500 shadow-lg shadow-amber-500/5' : 
-              item.type === 'DICA' ? 'bg-emerald-500/10 text-emerald-500 shadow-lg shadow-emerald-500/5' : 
-              'bg-indigo-500/10 text-indigo-500 shadow-lg shadow-indigo-500/5'
-            }`}>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {MURAL_ITEMS.map(item => (
+        <div key={item.id} className={`p-8 border-2 rounded-3xl transition-all ${isDarkMode ? 'bg-slate-900/30 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+          <div className="flex justify-between items-start mb-6">
+            <div className={`w-12 h-12 flex items-center justify-center rounded-2xl text-xl ${item.type === 'AVISO' ? 'bg-amber-500/10 text-amber-500' : 'bg-indigo-500/10 text-indigo-500'}`} aria-hidden="true">
               <i className={`fa-solid ${item.icon}`}></i>
             </div>
-            <div className="text-right">
-              <span className={`text-[9px] font-black uppercase tracking-widest block mb-1 ${
-                item.type === 'AVISO' ? 'text-amber-500' : 
-                item.type === 'DICA' ? 'text-emerald-500' : 
-                'text-indigo-500'
-              }`}>{item.type}</span>
-              <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{item.date}</span>
-            </div>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.date}</span>
           </div>
-          <div className="relative z-10">
-            <h3 className="text-2xl font-black uppercase mb-3 group-hover:text-white transition-colors leading-none tracking-tight">{item.title}</h3>
-            <p className="text-slate-400 text-sm leading-relaxed font-medium">{item.content}</p>
-          </div>
+          <h3 className="text-xl font-black uppercase mb-2 leading-tight">{item.title}</h3>
+          <p className={`text-base leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.content}</p>
         </div>
       ))}
     </div>
   </div>
 );
 
-const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onExit, user, setUser }: any) => {
+const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onExit, user, setUser, isDarkMode, isOffline }: any) => {
   const [loading, setLoading] = useState(false);
   const [written, setWritten] = useState('');
   const [audit, setAudit] = useState<AuditResult | null>(null);
 
   const finish = async () => {
-    if (written.length < 50) return;
+    if (written.length < 50 || isOffline) return;
     setLoading(true);
     const result = await onAudit(lesson, 'SUBMISSION', { written });
     setAudit(result);
@@ -259,284 +248,225 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onSpeak, onExit, user,
         date: new Date().toLocaleDateString(),
         versao: 1
       };
-
       const comp = lesson.competency as keyof typeof user.matrix;
       const newMatrix = { ...user.matrix };
       newMatrix[comp] = Math.min(newMatrix[comp] + 15, 100);
-
-      setUser({
-        ...user,
-        level: user.level + (result.score > 8 ? 1 : 0),
-        exp: user.exp + (result.score * 100),
-        matrix: newMatrix,
-        dossier: [newItem, ...user.dossier]
-      });
+      setUser({ ...user, level: user.level + (result.score > 8 ? 1 : 0), exp: user.exp + (result.score * 100), matrix: newMatrix, dossier: [newItem, ...user.dossier] });
       setState('REVIEW');
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 animate-in slide-in-from-bottom-8 duration-500 pb-20">
-      <header className="flex items-center justify-between">
-        <button onClick={onExit} className="flex items-center gap-3 text-slate-500 hover:text-white font-black uppercase text-[10px] tracking-[0.3em] group transition-all bg-slate-900/50 px-4 py-2 rounded-lg">
-          <i className="fa-solid fa-chevron-left group-hover:-translate-x-1 transition-transform"></i> Abortar Protocolo
-        </button>
-        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.4em] bg-indigo-500/10 px-4 py-2 rounded-lg border border-indigo-500/20">{lesson.category}</span>
-      </header>
+    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
+      <button onClick={onExit} className="flex items-center gap-3 min-h-[48px] px-4 rounded-xl text-slate-500 hover:text-indigo-500 font-black uppercase text-xs tracking-widest transition-all outline-none focus:ring-4 focus:ring-indigo-500/50">
+        <i className="fa-solid fa-arrow-left"></i> Sair da Lição
+      </button>
 
       {state === 'THEORY' && (
-        <section className="space-y-10">
-          <div className="flex items-center justify-between gap-8">
-            <h1 className="text-5xl md:text-7xl font-black uppercase italic leading-none tracking-tighter">{lesson.title}</h1>
-            <button onClick={() => onSpeak(lesson.theoryContent)} className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/30 hover:scale-110 active:scale-95 transition-all flex-shrink-0">
-              <i className="fa-solid fa-volume-high text-2xl"></i>
+        <section className="space-y-8">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-4xl md:text-6xl font-black uppercase italic leading-none tracking-tighter">{lesson.title}</h1>
+            <button 
+              onClick={() => onSpeak(lesson.theoryContent)} 
+              className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex-shrink-0 shadow-lg active:scale-90 transition-transform focus:ring-4 focus:ring-indigo-300 outline-none" 
+              aria-label="Ouvir conteúdo da lição"
+            >
+              <i className="fa-solid fa-volume-high text-xl"></i>
             </button>
           </div>
-          <div className="p-10 md:p-14 bg-slate-900/40 border-l-[12px] border-indigo-600 rounded-r-[40px] text-xl leading-relaxed text-slate-300 font-medium shadow-2xl backdrop-blur-sm">
+          <div className={`p-8 md:p-12 border-l-[10px] border-indigo-600 rounded-r-3xl text-xl leading-relaxed font-medium shadow-sm ${isDarkMode ? 'bg-slate-900/50 text-slate-300' : 'bg-white text-slate-700 border-slate-100'}`}>
             {lesson.theoryContent}
           </div>
-          <button onClick={() => setState('PRACTICE')} className="w-full py-10 bg-indigo-600 rounded-[32px] text-2xl font-black uppercase shadow-2xl hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-indigo-600/20 tracking-widest">Acessar Prática Técnica</button>
+          <button onClick={() => setState('PRACTICE')} className="w-full min-h-[80px] bg-indigo-600 text-white rounded-2xl text-xl font-black uppercase shadow-xl hover:bg-indigo-500 transition-all active:scale-95 focus:ring-4 focus:ring-indigo-400 outline-none">Ir para Prática Técnica</button>
         </section>
       )}
 
       {state === 'PRACTICE' && (
-        <section className="space-y-8">
-          <div className="p-10 bg-indigo-950/20 border-2 border-indigo-500/20 rounded-[32px] italic text-xl text-indigo-100 flex gap-6 shadow-inner">
-             <i className="fa-solid fa-terminal text-3xl text-indigo-500 mt-1"></i>
-             <p className="leading-relaxed">{lesson.practicePrompt}</p>
+        <section className="space-y-6">
+          <div className={`p-8 border-2 rounded-3xl italic text-xl shadow-inner ${isDarkMode ? 'bg-indigo-950/20 border-indigo-500/20 text-indigo-200' : 'bg-indigo-50 border-indigo-200 text-indigo-900'}`}>
+            <p className="leading-relaxed">{lesson.practicePrompt}</p>
           </div>
-          <div className="relative">
+          <div className="space-y-2">
+            <label htmlFor="submission-area" className={`block text-xs font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Sua Resolução Técnica</label>
             <textarea 
+              id="submission-area"
               value={written}
               onChange={e => setWritten(e.target.value)}
-              className="w-full h-96 bg-slate-950 border-4 border-slate-900 rounded-[32px] p-10 text-xl font-mono text-emerald-400 outline-none focus:border-indigo-600 focus:ring-8 ring-indigo-500/10 transition-all resize-none shadow-2xl placeholder:opacity-20"
-              placeholder="// Sua solução estratégica aqui..."
+              disabled={isOffline}
+              className={`w-full h-80 border-4 rounded-[32px] p-8 text-xl font-mono outline-none transition-all resize-none shadow-inner focus:ring-8 focus:ring-indigo-500/10 ${isDarkMode ? 'bg-slate-950 border-slate-900 text-emerald-400 focus:border-indigo-600' : 'bg-white border-slate-100 text-slate-900 focus:border-indigo-500'}`}
+              placeholder={isOffline ? "Aguardando conexão para habilitar escrita..." : "// Escreva aqui seu planejamento..."}
             />
-            <div className="absolute bottom-6 right-10 text-[10px] font-black uppercase tracking-widest text-slate-700">
-               Caracteres: {written.length} / Mín: 50
-            </div>
           </div>
           <button 
-            disabled={loading || written.length < 50}
+            disabled={loading || written.length < 50 || isOffline}
             onClick={finish}
-            className="w-full py-10 bg-emerald-600 rounded-[32px] text-2xl font-black uppercase flex items-center justify-center gap-4 disabled:opacity-20 shadow-2xl shadow-emerald-900/20 transition-all hover:bg-emerald-500 active:scale-[0.98]"
+            className="w-full min-h-[80px] bg-emerald-600 text-white rounded-2xl text-xl font-black uppercase flex items-center justify-center gap-4 disabled:opacity-20 shadow-xl transition-all active:scale-95 focus:ring-4 focus:ring-emerald-400 outline-none"
           >
-            {loading ? <i className="fa-solid fa-circle-notch animate-spin"></i> : <i className="fa-solid fa-shield-virus"></i>}
-            {loading ? 'Processando Validação...' : 'Sincronizar com Mentor GUI.A'}
+            {loading ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-cloud-arrow-up"></i>}
+            {loading ? 'Validando...' : 'Enviar para Dossiê'}
           </button>
-          {audit && !audit.aprovado && (
-            <div className="p-10 bg-red-950/10 border-2 border-red-500/20 rounded-[32px] space-y-4 animate-in shake duration-500">
-              <h4 className="text-red-500 font-black uppercase tracking-[0.3em] text-[10px] flex items-center gap-2">
-                <i className="fa-solid fa-circle-exclamation"></i> Protocolo de Revisão
-              </h4>
-              <p className="text-red-100 font-bold italic leading-relaxed text-lg">"{audit.feedback}"</p>
-            </div>
-          )}
         </section>
       )}
 
       {state === 'REVIEW' && (
-        <section className="text-center space-y-12 py-10 animate-in zoom-in-95 duration-700">
-          <div className="w-40 h-40 bg-emerald-600 rounded-[40px] mx-auto flex items-center justify-center text-6xl text-white shadow-[0_0_80px_rgba(16,185,129,0.4)] animate-pulse rotate-3 hover:rotate-0 transition-transform">
+        <section className="text-center space-y-12 py-10 animate-in zoom-in-95">
+          <div className="w-32 h-32 bg-emerald-500 rounded-3xl mx-auto flex items-center justify-center text-5xl text-white shadow-2xl animate-bounce" aria-hidden="true">
             <i className="fa-solid fa-stamp"></i>
           </div>
-          <div className="space-y-3">
-            <h1 className="text-7xl font-black uppercase italic leading-none tracking-tighter">VALIDADO!</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-[0.4em] text-[10px]">O ativo técnico foi adicionado ao seu dossiê permanente.</p>
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black uppercase italic leading-none">Vero! Validado.</h1>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">O ativo foi incorporado ao seu dossiê permanente.</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left max-w-5xl mx-auto">
-             <div className="p-10 bg-slate-900/60 rounded-[40px] border-2 border-slate-800 space-y-6 shadow-2xl">
-                <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em]">Análise do Mentor</h4>
-                <p className="text-2xl font-bold font-mono italic text-slate-200 leading-relaxed">"{audit?.feedback}"</p>
-                <div className="pt-6 border-t border-slate-800 flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-black">G</div>
-                   <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest italic">{audit?.mentor}</p>
-                </div>
-             </div>
-             
-             <div className="p-10 bg-slate-900/60 rounded-[40px] border-2 border-slate-800 space-y-8 shadow-2xl">
-                <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em]">Indicadores de Maestria</h4>
-                <div className="space-y-4">
-                   <RubricBar label="Execução Prática" value={audit?.rubrica?.execucao_pratica || 0} max={3} />
-                   <RubricBar label="Qualidade Técnica" value={audit?.rubrica?.qualidade_tecnica || 0} max={3} />
-                   <RubricBar label="Estratégia/Clareza" value={audit?.rubrica?.estrategia_clareza || 0} max={2} />
-                   <RubricBar label="Profissionalismo" value={audit?.rubrica?.profissionalismo || 0} max={2} />
-                </div>
-                <div className="pt-6 border-t border-slate-800 flex justify-between items-end">
-                   <span className="text-[10px] font-black uppercase text-slate-600 tracking-widest">Score de Impacto</span>
-                   <span className="text-5xl font-black text-emerald-500 tabular-nums">{audit?.score}/10</span>
-                </div>
-             </div>
+          <div className={`p-10 border-l-[12px] border-emerald-500 rounded-r-3xl text-left max-w-2xl mx-auto shadow-xl ${isDarkMode ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800 border border-slate-100'}`}>
+            <p className="text-xl font-bold font-mono italic leading-relaxed">"{audit?.feedback}"</p>
           </div>
-
-          <button onClick={onExit} className="w-full max-w-md bg-indigo-600 py-8 rounded-[32px] font-black uppercase text-2xl shadow-2xl hover:bg-indigo-500 transition-all shadow-indigo-500/30 active:scale-95 tracking-widest">Retornar ao Hub</button>
+          <button onClick={onExit} className="w-full max-w-md min-h-[70px] bg-indigo-600 text-white py-6 rounded-2xl font-black uppercase text-xl shadow-xl hover:bg-indigo-500 outline-none focus:ring-4 focus:ring-indigo-400 transition-all">Retornar ao Hub</button>
         </section>
       )}
     </div>
   );
 };
 
-const RubricBar = ({ label, value, max }: { label: string, value: number, max: number }) => (
-  <div className="space-y-2">
-    <div className="flex justify-between text-[9px] font-black uppercase text-slate-500 tracking-widest">
-      <span>{label}</span>
-      <span className="text-white">{value}/{max}</span>
-    </div>
-    <div className="h-2 bg-slate-800 rounded-full overflow-hidden flex gap-1">
-      {Array.from({ length: max }).map((_, i) => (
-        <div key={i} className={`flex-1 rounded-full transition-all duration-700 ${i < value ? 'bg-indigo-500 shadow-[0_0_8px_#6366f1]' : 'bg-slate-900 opacity-30'}`}></div>
-      ))}
-    </div>
-  </div>
-);
-
-const TrilhasView = ({ user, onSelect }: any) => (
-  <div className="space-y-16 animate-in fade-in duration-1000">
-    <header className="space-y-2">
-      <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none font-archivo">
-        ROTAS DE<br/><span className="text-indigo-500">ALTO IMPACTO.</span>
-      </h1>
-      <p className="text-slate-500 font-bold uppercase tracking-[0.5em] text-[10px]">Inicie um protocolo de especialização técnica.</p>
-    </header>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-      {TRACKS.map((track, idx) => (
-        <div 
-          key={track.id} 
-          className="group p-10 bg-slate-900/30 border-2 border-slate-900 rounded-[48px] hover:border-indigo-500/50 transition-all flex flex-col justify-between min-h-[380px] relative overflow-hidden animate-in slide-in-from-bottom-4"
-          style={{ animationDelay: `${idx * 150}ms` }}
-        >
-          <div className="absolute top-0 right-0 p-12 text-[180px] text-indigo-500/5 font-black italic -z-10 select-none group-hover:scale-110 group-hover:-rotate-6 transition-all duration-1000 leading-none">{track.icon}</div>
-          <div className="relative z-10">
-            <span className="text-7xl block mb-8 transition-transform group-hover:scale-110 duration-500 origin-left">{track.icon}</span>
-            <h2 className="text-4xl font-black uppercase mb-4 tracking-tighter group-hover:text-white transition-colors">{track.title}</h2>
-            <p className="text-slate-500 font-medium leading-relaxed max-w-sm text-lg">{track.description}</p>
-          </div>
-          <button 
-            onClick={() => onSelect(track.lessons[0])}
-            className="mt-12 w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.3em] text-xs rounded-3xl shadow-2xl transition-all active:scale-95 shadow-indigo-600/10 group-hover:shadow-indigo-500/30"
-          >
-            Acessar Protocolo
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const DossieView = ({ dossier, matrix }: any) => (
-  <div className="space-y-16 animate-in fade-in duration-700">
+const DossieView = ({ dossier, matrix, isDarkMode }: any) => (
+  <div className="space-y-12 animate-in fade-in duration-700 pb-20">
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-       <div className="lg:col-span-2 space-y-16">
-          <header className="space-y-2">
-            <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none font-archivo">
-              DOSSIÊ<br/><span className="text-indigo-500">TÉCNICO.</span>
-            </h1>
-            <p className="text-slate-500 font-bold uppercase tracking-[0.5em] text-[10px]">Histórico permanente de ativos validados.</p>
-          </header>
-          <div className="grid gap-8">
-            {dossier.map((item: any, i: number) => (
-              <div key={i} className="p-10 bg-slate-900/40 border-2 border-slate-900 rounded-[40px] flex flex-col md:flex-row justify-between gap-8 hover:border-indigo-500/30 transition-all group animate-in slide-in-from-left-4" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <span className="text-[9px] font-black bg-indigo-600 text-white px-4 py-1.5 rounded-full uppercase tracking-widest">{item.trackId}</span>
-                    <span className="text-[9px] font-bold text-slate-700 uppercase tracking-widest bg-slate-800/50 px-3 py-1.5 rounded-full">{item.date}</span>
-                  </div>
-                  <h3 className="text-3xl font-black uppercase group-hover:text-white transition-colors tracking-tight leading-none">{item.lessonTitle}</h3>
-                  <p className="text-slate-500 font-medium italic text-lg leading-relaxed max-w-xl">"{item.writtenResponse.substring(0, 150)}..."</p>
+      <div className="lg:col-span-2 space-y-12">
+        <header className="space-y-2">
+          <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">Dossiê<br/><span className="text-indigo-500">Técnico.</span></h1>
+          <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px]">Histórico de competências verificadas.</p>
+        </header>
+        <div className="grid gap-6">
+          {dossier.map((item: any, i: number) => (
+            <article key={i} className={`p-8 border-2 rounded-[32px] flex flex-col md:flex-row justify-between gap-6 transition-all ${isDarkMode ? 'bg-slate-900/40 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-slate-200 hover:border-indigo-300 shadow-sm'}`}>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-black bg-indigo-600 text-white px-4 py-1.5 rounded-full uppercase tracking-widest">{item.trackId}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.date}</span>
                 </div>
-                <div className="text-center md:text-right border-t md:border-t-0 md:border-l-2 border-slate-900 pt-8 md:pt-0 md:pl-10 flex flex-col justify-center min-w-[140px]">
-                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Impact Score</span>
-                  <span className="text-6xl font-black text-white tabular-nums tracking-tighter">{item.audit.score}</span>
+                <h3 className="text-2xl font-black uppercase tracking-tight leading-none">{item.lessonTitle}</h3>
+                <p className={`text-base italic leading-relaxed ${isDarkMode ? 'text-slate-500' : 'text-slate-500 font-medium'}`}>"{item.writtenResponse.substring(0, 120)}..."</p>
+              </div>
+              <div className="text-center md:text-right border-t md:border-t-0 md:border-l border-slate-200 md:pl-10 flex flex-col justify-center pt-6 md:pt-0">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Impact Score</span>
+                <span className={`text-5xl font-black tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.audit.score}</span>
+              </div>
+            </article>
+          ))}
+          {dossier.length === 0 && (
+            <div className="p-24 border-4 border-dashed border-slate-200 dark:border-slate-800 rounded-[48px] text-center opacity-30 flex flex-col items-center">
+              <i className="fa-solid fa-folder-open text-6xl mb-6"></i>
+              <p className="font-black uppercase tracking-widest text-xs">Vazio. Inicie o corre técnico.</p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="space-y-8">
+        <div className={`p-10 border-2 rounded-[40px] space-y-8 sticky top-28 ${isDarkMode ? 'bg-indigo-600/5 border-indigo-500/20' : 'bg-slate-50 border-slate-200 shadow-sm'}`}>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter">Maestria Técnica</h3>
+          <div className="space-y-6">
+            {Object.entries(matrix).map(([skill, value]: any) => (
+              <div key={skill} className="space-y-2">
+                <div className="flex justify-between items-end">
+                  <span className="text-[11px] font-black uppercase text-slate-500">{skill}</span>
+                  <span className="text-xs font-black text-indigo-500">{value}%</span>
+                </div>
+                <div className={`h-3 rounded-full overflow-hidden p-[2px] ${isDarkMode ? 'bg-slate-950' : 'bg-slate-200'}`}>
+                  <div style={{ width: `${value}%` }} className="h-full bg-indigo-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(79,70,229,0.3)]"></div>
                 </div>
               </div>
             ))}
-            {dossier.length === 0 && (
-              <div className="p-32 border-4 border-dashed border-slate-900 rounded-[64px] text-center opacity-30 flex flex-col items-center">
-                <i className="fa-solid fa-folder-open text-8xl mb-8 text-slate-800"></i>
-                <p className="font-black uppercase tracking-[0.4em] text-xs">Aguardando seu primeiro ativo validado.</p>
-              </div>
-            )}
           </div>
-       </div>
-
-       <div className="space-y-10 lg:pt-32">
-          <div className="p-10 bg-indigo-600/5 border-2 border-indigo-500/20 rounded-[48px] space-y-8 backdrop-blur-sm sticky top-36">
-             <h3 className="text-2xl font-black uppercase italic tracking-tighter">Matriz de Maestria</h3>
-             <div className="space-y-8">
-                {Object.entries(matrix).map(([skill, value]: any) => (
-                  <div key={skill} className="space-y-3">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{skill}</span>
-                      <span className="text-xs font-black text-indigo-400 tabular-nums">{value}%</span>
-                    </div>
-                    <div className="h-3 bg-slate-950 rounded-full overflow-hidden p-[2px]">
-                       <div style={{ width: `${value}%` }} className="h-full bg-gradient-to-r from-indigo-700 to-indigo-400 rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all duration-1000"></div>
-                    </div>
-                  </div>
-                ))}
-             </div>
-             <div className="pt-8 border-t border-indigo-500/20 text-center">
-                <p className="text-[9px] font-bold text-indigo-500/60 uppercase tracking-widest leading-relaxed">Sincronizado com a rede de mentores GUI.A DIGITAL</p>
-             </div>
-          </div>
-       </div>
+        </div>
+      </div>
     </div>
   </div>
 );
 
-const ManifestoView = () => (
-  <article className="max-w-5xl mx-auto space-y-24 py-16 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-    <div className="text-center space-y-6">
-      <h1 className="text-8xl md:text-[140px] font-black italic tracking-tighter uppercase leading-[0.8] text-white">CORRE<br/>VERO.</h1>
-      <p className="text-indigo-500 font-black uppercase tracking-[0.8em] text-[10px]">O Código de Conduta do Jovem Social Tech.</p>
+const ManifestoView = ({ isDarkMode }: any) => (
+  <article className="max-w-4xl mx-auto space-y-16 py-12 animate-in fade-in duration-1000">
+    <header className="text-center space-y-4">
+      <h1 className={`text-6xl md:text-8xl font-black italic tracking-tighter uppercase leading-[0.9] ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
+        MANIFESTO<br/><span className="text-indigo-600 tracking-widest">GUI.A DIGITAL _</span>
+      </h1>
+    </header>
+    
+    <div className={`space-y-12 text-2xl md:text-4xl font-black italic leading-[1.3] border-l-[10px] border-indigo-600 pl-8 md:pl-16 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
+      <p className="readable-text">Aqui não apenas um site/APP de cursos; é um sistema operacional de mobilidade social.</p>
+      
+      <p className="text-indigo-500 readable-text">"O Marketing Digital profissional não é sobre posts bonitos. É sobre construir ativos reais, dominar dados e entender a psicologia da conversão."</p>
+      
+      <p className="readable-text">"Aqui não existe atalho. O progresso é fruto de esforço cognitivo, escrita técnica e entrega prática. Se você não está disposto a pensar, não está pronto para o mercado de trabalho."</p>
+      
+      <p className="text-indigo-500 readable-text">"Nós somos o código-fonte da nova economia. Do Recife para o mundo, visse?"</p>
     </div>
-    <div className="space-y-16 text-3xl md:text-5xl font-black italic leading-[1.1] text-slate-400 border-l-[16px] border-indigo-600 pl-10 md:pl-20">
-      <p className="hover:text-white transition-all cursor-default">"Onde houver escassez, seremos a vanguarda da abundância técnica."</p>
-      <p className="hover:text-white transition-all cursor-default">"Nosso portfólio não é papel, é prova de existência econômica."</p>
-      <p className="hover:text-white transition-all cursor-default">"A tecnologia serve ao território, ou não serve para nada."</p>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-10">
-      {[
-        { t: 'AUTONOMIA', d: 'Domínio total das ferramentas de produção.' },
-        { t: 'REDE', d: 'Crescimento coletivo e troca de ativos.' },
-        { t: 'IMPACTO', d: 'Toda técnica deve gerar valor real no bairro.' }
-      ].map(p => (
-        <div key={p.t} className="p-12 bg-slate-900/50 border-2 border-slate-900 rounded-[48px] text-center group hover:border-indigo-500/50 transition-all space-y-4">
-          <span className="font-black uppercase tracking-[0.3em] text-sm text-indigo-500 block">{p.t}</span>
-          <p className="text-xs text-slate-500 font-bold uppercase leading-relaxed">{p.d}</p>
-        </div>
-      ))}
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10">
+      <div className={`p-10 border-2 rounded-[40px] text-center space-y-4 shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <h3 className="font-black uppercase tracking-[0.4em] text-2xl text-indigo-500">ESFORÇO</h3>
+        <p className={`font-bold uppercase text-xs italic ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>Sem atalhos cognitivos. Pensar dói, mas constrói.</p>
+      </div>
+      <div className={`p-10 border-2 rounded-[40px] text-center space-y-4 shadow-sm ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <h3 className="font-black uppercase tracking-[0.4em] text-2xl text-indigo-500">DOMÍNIO</h3>
+        <p className={`font-bold uppercase text-xs italic ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>A técnica é o seu escudo na economia digital.</p>
+      </div>
     </div>
   </article>
 );
 
-const Onboarding = ({ onComplete }: any) => {
+const TrilhasView = ({ user, onSelect, isDarkMode }: any) => (
+  <div className="space-y-16 animate-in fade-in duration-1000">
+    <header className="space-y-2">
+      <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">ROTAS DE<br/><span className="text-indigo-500">ALTO IMPACTO.</span></h1>
+      <p className="text-slate-500 font-bold uppercase tracking-[0.4em] text-[10px]">Especialize-se para dominar o mercado.</p>
+    </header>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {TRACKS.map(track => (
+        <article key={track.id} className={`group p-10 border-2 rounded-[48px] transition-all flex flex-col justify-between min-h-[380px] relative overflow-hidden ${isDarkMode ? 'bg-slate-900/40 border-slate-800 hover:border-indigo-500/50' : 'bg-white border-slate-200 shadow-md hover:border-indigo-400'}`}>
+          <div className="absolute top-0 right-0 p-12 text-[140px] opacity-[0.03] font-black italic -z-10 group-hover:scale-110 transition-transform duration-1000" aria-hidden="true">{track.icon}</div>
+          <div className="relative z-10">
+            <span className="text-7xl block mb-6" role="img" aria-label={track.title}>{track.icon}</span>
+            <h2 className="text-4xl font-black uppercase mb-4 tracking-tighter leading-none">{track.title}</h2>
+            <p className={`font-medium leading-relaxed max-w-sm text-lg ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>{track.description}</p>
+          </div>
+          <button 
+            onClick={() => onSelect(track.lessons[0])} 
+            className="mt-10 w-full min-h-[60px] bg-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:bg-indigo-500 transition-all active:scale-95 outline-none focus:ring-4 focus:ring-indigo-300"
+          >
+            Acessar Protocolo
+          </button>
+        </article>
+      ))}
+    </div>
+  </div>
+);
+
+const Onboarding = ({ onComplete, isDarkMode, toggleTheme }: any) => {
   const [nome, setNome] = useState('');
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-1000 relative overflow-hidden">
-      <div className="scanline fixed inset-0 opacity-10"></div>
-      <div className="w-24 h-24 bg-indigo-600 rounded-[24px] flex items-center justify-center text-5xl font-black rotate-6 mb-16 shadow-[0_0_50px_rgba(79,70,229,0.5)] animate-bounce transition-transform hover:rotate-0 cursor-default">G</div>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-8 text-center transition-colors duration-500 ${isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-950'}`}>
+      <div className="scanline opacity-10" aria-hidden="true"></div>
+      <div className="w-24 h-24 bg-indigo-600 text-white rounded-[24px] flex items-center justify-center text-5xl font-black rotate-6 mb-12 shadow-2xl animate-bounce" aria-hidden="true">G</div>
       <div className="space-y-4 mb-20">
-        <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none text-white">GUI.A<br/><span className="text-indigo-600">DIGITAL</span></h1>
-        <p className="text-slate-600 font-black uppercase tracking-[0.6em] text-[10px]">Social Career Operating System v3.5</p>
+        <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter mb-4 leading-none">GUI.A<br/><span className="text-indigo-600">DIGITAL</span></h1>
+        <p className="text-slate-500 font-black uppercase tracking-[0.5em] text-[11px]">Social Career Operating System v4.1</p>
       </div>
-      <div className="w-full max-w-lg space-y-12 relative z-10">
-        <div className="space-y-2">
-          <label className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.4em]">Identificação de Usuário</label>
+      <div className="w-full max-w-md space-y-12">
+        <div className="space-y-4">
+          <label htmlFor="user-name-input" className="block text-[11px] font-black uppercase tracking-[0.4em] text-indigo-500">Identificação de Usuário</label>
           <input 
+            id="user-name-input"
             autoFocus
             value={nome}
             onChange={e => setNome(e.target.value)}
-            className="w-full bg-transparent border-b-[6px] border-slate-900 py-6 text-center text-4xl md:text-5xl font-black uppercase outline-none focus:border-indigo-600 transition-all placeholder:text-slate-900"
+            className={`w-full bg-transparent border-b-4 py-4 text-center text-4xl font-black uppercase outline-none transition-all placeholder:opacity-10 ${isDarkMode ? 'border-slate-800 focus:border-indigo-600' : 'border-slate-300 focus:border-indigo-500'}`}
             placeholder="NOME OU VULGO"
+            aria-required="true"
           />
         </div>
         <button 
           disabled={!nome}
           onClick={() => onComplete({ name: nome, level: 1, exp: 0, matrix: { Estrategia: 10, Escrita: 10, Analise: 10, Tecnica: 10, Design: 10, Audiovisual: 10 }, dossier: [] })}
-          className="w-full py-8 bg-indigo-600 rounded-[32px] font-black uppercase text-2xl shadow-2xl hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-5 shadow-indigo-600/20 tracking-widest"
+          className="w-full min-h-[80px] bg-indigo-600 text-white rounded-[32px] font-black uppercase text-2xl shadow-2xl hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-5 tracking-widest outline-none focus:ring-4 focus:ring-indigo-400"
         >
           Iniciar Protocolo
         </button>
