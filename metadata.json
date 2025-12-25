@@ -1,11 +1,11 @@
 {
   "name": "GUI.A DIGITAL",
   "short_name": "GUI.A",
-  "description": "Career OS para jovens do Porto Digital. Transforme aprendizado em ativos reais.",
+  "description": "Career OS para jovens do Porto Digital. Transforme aprendizado em ativos reais com acessibilidade e tecnologia social.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020617",
-  "theme_color": "#00f2ff",
+  "theme_color": "#4f46e5",
   "requestFramePermissions": [
     "camera",
     "microphone"
