@@ -15,55 +15,50 @@
             --slate-950: #020617;
             --hot-pink: #ff007a;
             --cyan: #00f2ff;
-            --brasa: #ff4d00;
         }
         
         body { 
             background-color: var(--slate-950);
             color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
+            margin: 0;
             overflow: hidden;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            background-repeat: repeat;
-            background-size: 150px;
-            background-blend-mode: overlay;
         }
 
-        .archivo-bold { font-family: 'Archivo Black', sans-serif; font-style: italic; text-transform: uppercase; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-
-        .card-street {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(12px);
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--slate-950);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease-out;
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        .card-street:hover {
-            border-color: var(--cyan);
-            transform: translate(-2px, -2px);
-            box-shadow: 8px 8px 0px var(--hot-pink);
+        .loader-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+            margin-top: 20px;
+            overflow: hidden;
         }
 
-        .btn-brasa {
-            background: var(--brasa);
-            color: white;
-            font-family: 'Archivo Black', sans-serif;
-            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
-            transition: all 0.2s ease;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
-        }
-
-        .btn-brasa:hover {
+        .loader-progress {
+            position: absolute;
+            height: 100%;
+            width: 50%;
             background: var(--hot-pink);
-            transform: scale(1.05);
-            filter: drop-shadow(0 0 15px var(--hot-pink));
+            box-shadow: 0 0 10px var(--hot-pink);
+            animation: move 1.5s infinite ease-in-out;
         }
 
-        .neon-text-cyan { text-shadow: 0 0 10px var(--cyan); }
-        .neon-text-pink { text-shadow: 0 0 10px var(--hot-pink); }
+        @keyframes move {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
 
         .scanline {
             width: 100%;
@@ -80,16 +75,6 @@
             0% { top: -100px; }
             100% { top: 100%; }
         }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: var(--hot-pink); border-radius: 0; }
-        
-        /* Gráfico de Matriz / Radar Simulado */
-        .radar-bg {
-            background-image: radial-gradient(circle, var(--cyan) 1px, transparent 1px);
-            background-size: 20px 20px;
-            opacity: 0.1;
-        }
     </style>
     <script type="importmap">
 {
@@ -105,6 +90,14 @@
 </script>
 </head>
 <body>
+    <div id="loading-overlay">
+        <div style="color: var(--cyan); font-weight: bold; letter-spacing: 0.5em; font-size: 10px; text-transform: uppercase;">
+            Iniciando Street OS
+        </div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+    </div>
     <div class="scanline"></div>
     <div id="root"></div>
 </body>
