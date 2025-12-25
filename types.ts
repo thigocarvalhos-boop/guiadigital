@@ -13,10 +13,10 @@ export interface MasteryMatrix {
 }
 
 export interface Rubric {
-  execucao_pratica: number; // 0-3
-  qualidade_tecnica: number; // 0-3
-  estrategia_clareza: number; // 0-2
-  profissionalismo: number; // 0-2
+  execucao_pratica: number;
+  qualidade_tecnica: number;
+  estrategia_clareza: number;
+  profissionalismo: number;
 }
 
 export interface AuditResult {
@@ -27,9 +27,21 @@ export interface AuditResult {
   aprovado: boolean;
 }
 
+/**
+ * Interface representing a professional opportunity for matching
+ */
+export interface Opportunity {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  matchingScore?: number;
+}
+
 export interface PortfolioItem {
   lessonId: string;
   lessonTitle: string;
+  trackId: string;
   writtenResponse: string;
   deliveryEvidence: {
     objetivo: string;
@@ -62,6 +74,7 @@ export interface Lesson {
 export interface Track {
   id: string;
   title: string;
+  description: string;
   icon: string;
   lessons: Lesson[];
 }
@@ -72,12 +85,5 @@ export interface UserProfile {
   exp: number;
   matrix: MasteryMatrix;
   dossier: PortfolioItem[];
-}
-
-export interface Opportunity {
-  id: string;
-  title: string;
-  company: string;
-  description: string;
-  matchingScore?: number;
+  currentTrackId?: string;
 }
