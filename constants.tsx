@@ -4,21 +4,21 @@ import { Track } from './types.ts';
 export const TRACKS: Track[] = [
   {
     id: 'social-media',
-    title: 'Gestão de Redes Sociais',
+    title: 'Estrategista de Ativos',
     icon: '📊',
     imageUrl: '',
     lessons: [
       {
         id: 'sm-1',
-        title: 'Domínio de Algoritmo',
+        title: 'Engenharia de Retenção',
         category: 'ESTRATÉGIA',
-        theory: 'Deixe de ser "postador" e vire estrategista. Aprenda a dominar o algoritmo e criar comunidades lucrativas.',
+        theory: 'Esqueça likes. No mercado real, mandamos na retenção. Aprenda a estruturar ganchos que prendem o usuário nos primeiros 1.5s.',
         quiz: {
           question: "Qual o foco da nova economia de atenção?",
-          options: ["Likes", "Retenção e Comunidade", "Quantidade de posts"],
+          options: ["Engajamento vazio", "Retenção e LTV", "Crescimento orgânico aleatório"],
           answer: 1
         },
-        labPrompt: "Desenhe uma estratégia de 3 posts focada em retenção para um negócio local.",
+        labPrompt: "Desenhe uma linha editorial de 3 ativos focada em retenção agressiva para uma marca de tecnologia do Porto Digital.",
         deliveryType: 'link',
         competency: 'Estrategia'
       }
@@ -26,21 +26,21 @@ export const TRACKS: Track[] = [
   },
   {
     id: 'ads-manager',
-    title: 'Gestor de Tráfego Pago',
+    title: 'Arquitetura de Tráfego',
     icon: '📈',
     imageUrl: '',
     lessons: [
       {
         id: 'tp-1',
-        title: 'Lucro com Anúncios',
-        category: 'TRÁFEGO',
-        theory: 'Aprenda a investir dinheiro e trazer lucro real para negócios locais usando Meta e Google Ads.',
+        title: 'Arbitragem de ROI',
+        category: 'ANALISE',
+        theory: 'Tráfego pago não é post impulsionado. É engenharia financeira aplicada a anúncios. Domine métricas de conversão direta.',
         quiz: {
-          question: "O que é ROAS?",
-          options: ["Retorno sobre investimento em anúncios", "Custo por clique", "Número de seguidores"],
-          answer: 0
+          question: "O que define o sucesso de uma campanha de performance?",
+          options: ["Custo por Mil (CPM)", "Retorno Sobre Investimento (ROAS/ROI)", "Alcance total"],
+          answer: 1
         },
-        labPrompt: "Crie a estrutura de uma campanha de 'Mensagens' para uma pizzaria no seu bairro.",
+        labPrompt: "Estruture um plano de investimento para um lançamento de R$ 5k, dividindo topo, meio e fundo de funil.",
         deliveryType: 'link',
         competency: 'Analise'
       }
@@ -48,21 +48,21 @@ export const TRACKS: Track[] = [
   },
   {
     id: 'video-mobile',
-    title: 'Editor de Vídeo Mobile',
+    title: 'Editor Mobile High-End',
     icon: '🎬',
     imageUrl: '',
     lessons: [
       {
         id: 'vm-1',
-        title: 'Vídeos que Vendem',
-        category: 'VÍDEO',
-        theory: 'Domine storytelling, ganchos de atenção e edição profissional no celular.',
+        title: 'Ritmo e Storytelling',
+        category: 'TECNICA',
+        theory: 'O celular é sua estação de guerra. Aprenda cortes invisíveis, sound design de impacto e correção de cor profissional.',
         quiz: {
-          question: "Quanto tempo dura o 'gancho' ideal?",
-          options: ["10 segundos", "3 segundos", "30 segundos"],
+          question: "O que é um 'Jump Cut' funcional?",
+          options: ["Um erro de edição", "Corte rítmico para remover pausas e acelerar a narrativa", "Efeito de transição de vídeo"],
           answer: 1
         },
-        labPrompt: "Edite um vídeo de 15s com 3 cortes dinâmicos e uma legenda de destaque.",
+        labPrompt: "Descreva seu workflow de edição para um vídeo de 30s que precisa converter venda em 10s.",
         deliveryType: 'link',
         competency: 'Tecnica'
       }
@@ -70,21 +70,21 @@ export const TRACKS: Track[] = [
   },
   {
     id: 'ai-creative',
-    title: 'Design & AI Artist',
+    title: 'Design & AI Architect',
     icon: '🎨',
     imageUrl: '',
     lessons: [
       {
         id: 'ai-1',
-        title: 'Prompt Engineering',
+        title: 'Direção de Arte com IA',
         category: 'DESIGN',
-        theory: 'Crie identidades visuais e artes de alta performance usando IA Generativa.',
+        theory: 'Não é apenas "pedir imagem". É dominar Prompt Engineering e ControlNet para criar identidades visuais imbatíveis.',
         quiz: {
-          question: "O que define a qualidade de uma imagem em IA?",
-          options: ["A sorte", "A clareza do prompt e referências", "O preço da ferramenta"],
+          question: "O que define um prompt profissional?",
+          options: ["Ser longo e poético", "Estrutura lógica, referências de estilo e parâmetros técnicos", "Uso de palavras mágicas"],
           answer: 1
         },
-        labPrompt: "Gere o conceito visual de uma marca de streetwear usando técnicas de Prompting.",
+        labPrompt: "Crie o conceito visual e os prompts para a identidade visual de uma Fintech periférica.",
         deliveryType: 'link',
         competency: 'Tecnica'
       }

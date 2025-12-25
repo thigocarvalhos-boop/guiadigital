@@ -24,7 +24,7 @@
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             overflow: hidden;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3仿真%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
             background-repeat: repeat;
             background-size: 150px;
             background-blend-mode: overlay;
@@ -33,7 +33,6 @@
         .archivo-bold { font-family: 'Archivo Black', sans-serif; font-style: italic; text-transform: uppercase; }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Street UI Components */
         .card-street {
             background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(12px);
@@ -54,6 +53,7 @@
             font-family: 'Archivo Black', sans-serif;
             clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
             transition: all 0.2s ease;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
         }
 
         .btn-brasa:hover {
@@ -69,7 +69,7 @@
             width: 100%;
             height: 100px;
             z-index: 100;
-            background: linear-gradient(0deg, transparent 0%, rgba(0, 242, 255, 0.05) 50%, transparent 100%);
+            background: linear-gradient(0deg, transparent 0%, rgba(0, 242, 255, 0.03) 50%, transparent 100%);
             position: absolute;
             top: -100px;
             pointer-events: none;
@@ -83,7 +83,24 @@
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--hot-pink); border-radius: 0; }
+        
+        /* Gráfico de Matriz / Radar Simulado */
+        .radar-bg {
+            background-image: radial-gradient(circle, var(--cyan) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.1;
+        }
     </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+      }
+    }
+    </script>
 </head>
 <body>
     <div class="scanline"></div>
