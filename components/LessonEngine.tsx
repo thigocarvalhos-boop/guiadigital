@@ -253,7 +253,7 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
             </div>
           </div>
           {validationError && (
-            <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-400 font-bold text-sm md:text-base text-center">
+            <div role="alert" aria-live="assertive" className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-400 font-bold text-sm md:text-base text-center">
               <i className="fa-solid fa-circle-exclamation mr-2"></i>
               {validationError}
             </div>

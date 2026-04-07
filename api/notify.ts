@@ -190,9 +190,14 @@ function getNotificationEndpoint(): string | null {
   // Em produção, configurar VITE_NOTIFICATION_ENDPOINT no .env
   // Exemplo: https://seu-dominio.com/api/notify
   try {
-    const env = (import.meta as unknown as Record<string, Record<string, string>>).env;
-    return env?.VITE_NOTIFICATION_ENDPOINT || null;
+    // Vite injeta variáveis VITE_* em import.meta.env
+    const meta = import.meta;
+    if (meta && 'env' in meta) {
+      const env = (meta as { env: Record<string, string> }).env;
+      return env?.VITE_NOTIFICATION_ENDPOINT || null;
+    }
   } catch {
-    return null;
+    // Ambiente sem import.meta.env (ex: testes, SSR)
   }
+  return null;
 }

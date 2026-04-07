@@ -1,13 +1,14 @@
 /**
  * API Proxy para auditoria com Gemini.
  * 
- * Em produção, este módulo deve rodar server-side (Vercel serverless function,
- * Cloudflare Worker, etc.) para que a API key nunca chegue ao browser.
+ * IMPORTANTE: Este arquivo é um TEMPLATE para deploy server-side.
+ * NÃO é importado pelo código do client (App.tsx, componentes, etc.).
  * 
- * Durante desenvolvimento local, o Vite proxy redireciona /api/audit para
- * este handler (simulado via plugin).
+ * Em produção, deploy como serverless function (Vercel, Cloudflare, etc.)
+ * para que a API key (process.env.GEMINI_API_KEY) fique apenas no servidor.
  * 
- * Em produção, deploy como serverless function em /api/audit.
+ * Durante desenvolvimento local, o Vite proxy pode ser configurado em
+ * vite.config.ts para redirecionar /api/audit para um handler local.
  */
 
 export interface AuditRequest {

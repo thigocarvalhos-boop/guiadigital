@@ -21,7 +21,8 @@ export const getProfile = (): UserProfile | null => {
     }
   } catch (e) {
     console.error("Erro ao carregar perfil:", e);
-    localStorage.removeItem(STORAGE_KEY);
+    // Não remove dados automaticamente — preserva o que existe
+    // O perfil pode ser parcialmente inválido mas recuperável
   }
   return null;
 };
