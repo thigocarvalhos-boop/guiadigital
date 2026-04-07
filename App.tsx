@@ -10,6 +10,7 @@ const App: React.FC = () => {
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [lessonState, setLessonState] = useState<LessonState>('THEORY');
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
 
   useEffect(() => {
     try {
@@ -68,6 +69,22 @@ const App: React.FC = () => {
     }
   };
 
+  const handleEditItem = (item: PortfolioItem) => {
+    const allLessons = TRACKS.flatMap(t => t.lessons);
+    const lesson = allLessons.find(l => l.id === item.lessonId);
+    if (lesson) {
+      setEditingItem(item);
+      setActiveLesson(lesson);
+      setLessonState('PRACTICE');
+      setActiveTab('trilhas');
+    }
+  };
+
+  const handleExitLesson = () => {
+    setActiveLesson(null);
+    setEditingItem(null);
+  };
+
   if (!user) return <Onboarding onComplete={setUser} isDarkMode={isDarkMode} />;
 
   return (
@@ -97,11 +114,11 @@ const App: React.FC = () => {
 
       <main className="flex-1 p-4 md:p-12 max-w-7xl mx-auto w-full">
         {activeLesson ? (
-          <LessonEngine lesson={activeLesson} state={lessonState} setState={setLessonState} onAudit={handleAudit} onExit={() => setActiveLesson(null)} user={user} setUser={setUser} isDarkMode={isDarkMode} />
+          <LessonEngine lesson={activeLesson} state={lessonState} setState={setLessonState} onAudit={handleAudit} onExit={handleExitLesson} user={user} setUser={setUser} isDarkMode={isDarkMode} editingItem={editingItem} setEditingItem={setEditingItem} />
         ) : (
           <div className="animate-in fade-in duration-500">
             {activeTab === 'trilhas' && <TrilhasView tracks={TRACKS} onSelect={l => {setActiveLesson(l); setLessonState('THEORY');}} isDarkMode={isDarkMode} />}
-            {activeTab === 'dossie' && <DossieView user={user} isDarkMode={isDarkMode} />}
+            {activeTab === 'dossie' && <DossieView user={user} isDarkMode={isDarkMode} onEditItem={handleEditItem} />}
             {activeTab === 'mural' && <MuralView items={MURAL_ITEMS} isDarkMode={isDarkMode} />}
             {activeTab === 'manifesto' && <ManifestoView text={MANIFESTO_TEXT} isDarkMode={isDarkMode} />}
           </div>
@@ -233,7 +250,7 @@ const TrilhasView = ({ tracks, onSelect, isDarkMode }: any) => (
   </div>
 );
 
-const DossieView = ({ user, isDarkMode }: any) => (
+const DossieView = ({ user, isDarkMode, onEditItem }: any) => (
   <div className="space-y-8 md:space-y-12">
     <h2 className="text-4xl md:text-6xl font-brand italic uppercase tracking-tighter leading-none">SEU <span className="text-indigo-600">DOSSIÊ _</span></h2>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
@@ -261,6 +278,15 @@ const DossieView = ({ user, isDarkMode }: any) => (
                  <span className="text-[9px] md:text-[10px] font-black uppercase opacity-50 block mb-3 md:mb-4 tracking-widest flex items-center gap-2"><i className="fa-solid fa-shield-halved"></i> AUDITORIA DO DIRETOR:</span>
                  <p className="text-lg md:text-xl font-bold opacity-90 leading-relaxed italic">{item.audit.feedback}</p>
               </div>
+              <div className="flex items-center justify-between mt-6 md:mt-8">
+                <span className="text-[9px] md:text-[10px] font-black uppercase opacity-30 tracking-widest">v{item.versao} • {item.date}</span>
+                <button
+                  onClick={() => onEditItem(item)}
+                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-xs tracking-widest shadow-xl hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all"
+                >
+                  <i className="fa-solid fa-pen-to-square"></i> Editar
+                </button>
+              </div>
             </article>
           ))
         )}
@@ -278,12 +304,19 @@ const DossieView = ({ user, isDarkMode }: any) => (
   </div>
 );
 
-const LessonEngine = ({ lesson, state, setState, onAudit, onExit, user, setUser, isDarkMode }: any) => {
-  const [written, setWritten] = useState('');
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+const LessonEngine = ({ lesson, state, setState, onAudit, onExit, user, setUser, isDarkMode, editingItem, setEditingItem }: any) => {
+  const [written, setWritten] = useState(editingItem ? editingItem.writtenResponse : '');
+  const [imageBase64, setImageBase64] = useState<string | null>(editingItem ? editingItem.evidenceImage || null : null);
   const [loading, setLoading] = useState(false);
   const [audit, setAudit] = useState<AuditResult | null>(null);
   const [quizSelected, setQuizSelected] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (editingItem) {
+      setWritten(editingItem.writtenResponse);
+      setImageBase64(editingItem.evidenceImage || null);
+    }
+  }, [editingItem]);
 
   const handleImage = (e: any) => {
     const file = e.target.files[0];
@@ -301,14 +334,53 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onExit, user, setUser,
     setAudit(result);
     setLoading(false);
     if (result.aprovado) {
-      const newItem: PortfolioItem = {
-        id: Math.random().toString(36).substr(2, 9), lessonId: lesson.id, lessonTitle: lesson.title, trackId: lesson.category,
-        writtenResponse: written, evidenceImage: imageBase64 || undefined, audit: result, date: new Date().toLocaleDateString(), versao: 1
-      };
       const comp = lesson.competency as keyof typeof user.matrix;
       const newMatrix = { ...user.matrix };
-      newMatrix[comp] = Math.min(newMatrix[comp] + 15, 100);
-      setUser({ ...user, dossier: [newItem, ...user.dossier], matrix: newMatrix });
+
+      if (editingItem) {
+        // UPDATE existing portfolio item
+        const updatedDossier = user.dossier.map((item: PortfolioItem) =>
+          item.id === editingItem.id
+            ? {
+                ...item,
+                writtenResponse: written,
+                evidenceImage: imageBase64 || undefined,
+                audit: result,
+                date: new Date().toLocaleDateString(),
+                versao: item.versao + 1,
+              }
+            : item
+        );
+        setUser({ ...user, dossier: updatedDossier, matrix: newMatrix });
+        setEditingItem(null);
+      } else {
+        // CREATE new portfolio item (check for duplicate lesson)
+        const existingIndex = user.dossier.findIndex((item: PortfolioItem) => item.lessonId === lesson.id);
+        if (existingIndex !== -1) {
+          // Update existing entry for this lesson instead of duplicating
+          const existing = user.dossier[existingIndex];
+          const updatedDossier = user.dossier.map((item: PortfolioItem) =>
+            item.id === existing.id
+              ? {
+                  ...item,
+                  writtenResponse: written,
+                  evidenceImage: imageBase64 || undefined,
+                  audit: result,
+                  date: new Date().toLocaleDateString(),
+                  versao: item.versao + 1,
+                }
+              : item
+          );
+          setUser({ ...user, dossier: updatedDossier, matrix: newMatrix });
+        } else {
+          newMatrix[comp] = Math.min(newMatrix[comp] + 15, 100);
+          const newItem: PortfolioItem = {
+            id: Math.random().toString(36).substr(2, 9), lessonId: lesson.id, lessonTitle: lesson.title, trackId: lesson.category,
+            writtenResponse: written, evidenceImage: imageBase64 || undefined, audit: result, date: new Date().toLocaleDateString(), versao: 1
+          };
+          setUser({ ...user, dossier: [newItem, ...user.dossier], matrix: newMatrix });
+        }
+      }
       setState('REVIEW');
     }
   };
@@ -344,6 +416,17 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onExit, user, setUser,
 
       {state === 'PRACTICE' && (
         <div className="space-y-8 md:space-y-10 max-w-6xl mx-auto">
+          {editingItem && (
+            <div className="p-4 md:p-6 bg-amber-500/10 border-4 border-amber-500/30 rounded-3xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <i className="fa-solid fa-pen-to-square text-amber-500 text-xl"></i>
+                <span className="font-black uppercase text-sm md:text-base tracking-widest text-amber-500">MODO EDIÇÃO — v{editingItem.versao}</span>
+              </div>
+              <button onClick={onExit} className="text-[10px] md:text-xs font-black uppercase opacity-50 hover:opacity-100 transition-opacity tracking-widest">
+                <i className="fa-solid fa-xmark mr-1"></i> Cancelar
+              </button>
+            </div>
+          )}
           <div className="p-6 md:p-10 bg-amber-500/10 border-4 border-amber-500/30 rounded-4xl italic font-bold text-lg md:text-2xl leading-relaxed shadow-xl">
             <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60 block mb-3 md:mb-4 tracking-widest"><i className="fa-solid fa-briefcase mr-2"></i> BRIEFING DO CLIENTE:</span>
             "{lesson.clientBriefing}"
@@ -356,7 +439,7 @@ const LessonEngine = ({ lesson, state, setState, onAudit, onExit, user, setUser,
             </div>
           </div>
           <button disabled={loading || written.length < 30} onClick={submit} className="w-full h-24 md:h-32 bg-emerald-600 text-white rounded-4xl md:rounded-5xl font-black uppercase text-2xl md:text-4xl shadow-2xl hover:bg-emerald-500 transition-all disabled:opacity-30">
-            {loading ? 'AUDITANDO RESULTADO...' : 'ENVIAR PARA O DIRETOR'}
+            {loading ? 'AUDITANDO RESULTADO...' : editingItem ? 'SALVAR ALTERAÇÕES' : 'ENVIAR PARA O DIRETOR'}
           </button>
         </div>
       )}
