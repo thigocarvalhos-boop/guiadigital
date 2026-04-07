@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { generateId, sanitizeText } from '../utils';
-import { notifyStudentRegistration } from '../api/notify';
+import { notifyStudentRegistration } from '../services/notify';
 
 interface OnboardingProps {
   onComplete: (user: UserProfile) => void;

@@ -1,38 +1,32 @@
 /**
- * API Proxy para auditoria com Gemini.
- * 
- * IMPORTANTE: Este arquivo é um TEMPLATE para deploy server-side.
- * NÃO é importado pelo código do client (App.tsx, componentes, etc.).
- * 
- * Em produção, deploy como serverless function (Vercel, Cloudflare, etc.)
- * para que a API key (process.env.GEMINI_API_KEY) fique apenas no servidor.
- * 
- * Durante desenvolvimento local, o Vite proxy pode ser configurado em
- * vite.config.ts para redirecionar /api/audit para um handler local.
+ * Vercel Serverless Function — Gemini audit proxy.
+ *
+ * Mantém a API key no servidor. O client chama POST /api/audit
+ * com o body { lessonTitle, clientBriefing, content, imageBase64? }.
  */
 
-export interface AuditRequest {
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+interface AuditRequest {
   lessonTitle: string;
   clientBriefing: string;
   content: string;
   imageBase64?: string;
 }
 
-export interface AuditResponse {
-  score: number;
-  feedback: string;
-  aprovado: boolean;
-  mentor: string;
-}
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-/**
- * Chama a Gemini API server-side.
- * A chave vem de variável de ambiente, nunca exposta no client.
- */
-export async function handleAudit(body: AuditRequest): Promise<AuditResponse> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY não configurada no servidor.');
+    return res.status(500).json({ error: 'GEMINI_API_KEY não configurada no servidor.' });
+  }
+
+  const body = req.body as AuditRequest;
+  if (!body.lessonTitle || !body.content) {
+    return res.status(400).json({ error: 'lessonTitle e content são obrigatórios.' });
   }
 
   const systemInstruction = `Você é um DIRETOR DE ARTE SÊNIOR. 
@@ -41,7 +35,7 @@ Dê um score de 0 a 100 e feedback focado em viabilidade comercial.
 Retorne apenas JSON: { score, feedback, aprovado, mentor }.`;
 
   const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
-    { text: `Lição: ${body.lessonTitle}\nBriefing: ${body.clientBriefing}\nEntrega: ${body.content}` }
+    { text: `Lição: ${body.lessonTitle}\nBriefing: ${body.clientBriefing}\nEntrega: ${body.content}` },
   ];
 
   if (body.imageBase64) {
@@ -51,41 +45,46 @@ Retorne apenas JSON: { score, feedback, aprovado, mentor }.`;
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } });
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ parts }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              score: { type: 'NUMBER' },
-              feedback: { type: 'STRING' },
-              aprovado: { type: 'BOOLEAN' },
-              mentor: { type: 'STRING' },
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ parts }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                score: { type: 'NUMBER' },
+                feedback: { type: 'STRING' },
+                aprovado: { type: 'BOOLEAN' },
+                mentor: { type: 'STRING' },
+              },
+              required: ['score', 'feedback', 'aprovado', 'mentor'],
             },
-            required: ['score', 'feedback', 'aprovado', 'mentor'],
           },
-        },
-      }),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(502).json({ error: `Gemini API error ${response.status}: ${errorText}` });
     }
-  );
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error ${response.status}: ${errorText}`);
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      return res.status(502).json({ error: 'Resposta vazia da Gemini API' });
+    }
+
+    return res.status(200).json(JSON.parse(text));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Erro desconhecido';
+    return res.status(500).json({ error: message });
   }
-
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error('Resposta vazia da Gemini API');
-  }
-
-  return JSON.parse(text);
 }

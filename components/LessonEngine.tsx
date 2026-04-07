@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult, ActivitySubmission } from '../types';
 import { generateId, sanitizeText } from '../utils';
-import { notifyActivitySubmission } from '../api/notify';
+import { notifyActivitySubmission } from '../services/notify';
 import { TRACKS } from '../constants';
 
 interface LessonEngineProps {
