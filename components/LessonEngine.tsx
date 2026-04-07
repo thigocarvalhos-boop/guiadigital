@@ -146,9 +146,10 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
         submittedAt: new Date().toISOString(),
       };
       notifyActivitySubmission(submission).catch(() => {});
-
-      setState('REVIEW');
     }
+
+    // Always show review screen so user sees feedback (approved or not)
+    setState('REVIEW');
   };
 
   return (
@@ -278,6 +279,9 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
              </div>
           </div>
           <button onClick={onExit} className="px-12 md:px-24 h-20 md:h-28 bg-indigo-600 text-white rounded-3xl md:rounded-4xl font-black uppercase text-xl md:text-2xl shadow-2xl hover:bg-indigo-500 transition-all">BUSCAR NOVO CORRE</button>
+          {!audit?.aprovado && (
+            <button onClick={() => { setAudit(null); setState('PRACTICE'); }} className="block mx-auto px-12 md:px-24 h-16 md:h-20 bg-amber-600 text-white rounded-3xl md:rounded-4xl font-black uppercase text-lg md:text-xl shadow-xl hover:bg-amber-500 transition-all">TENTAR NOVAMENTE</button>
+          )}
         </div>
       )}
     </div>

@@ -45,6 +45,8 @@ const App: React.FC = () => {
 
   const handleAudit = async (lesson: Lesson, content: string, imageBase64?: string): Promise<AuditResult> => {
     const sanitizedContent = sanitizeText(content);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
 
     try {
       const res = await fetch('/api/audit', {
@@ -56,6 +58,7 @@ const App: React.FC = () => {
           content: sanitizedContent,
           imageBase64,
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -65,7 +68,12 @@ const App: React.FC = () => {
 
       return await res.json();
     } catch (e) {
-      return { score: 0, feedback: "Erro na auditoria. Verifique sua conexão com a internet.", aprovado: false, mentor: "Sistema" };
+      const message = e instanceof Error && e.name === 'AbortError'
+        ? 'A auditoria demorou demais e foi cancelada. Tente novamente.'
+        : 'Erro na auditoria. Verifique sua conexão com a internet.';
+      return { score: 0, feedback: message, aprovado: false, mentor: "Sistema" };
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
