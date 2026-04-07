@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Track, Lesson, PortfolioItem } from '../types';
+import { Track, Lesson } from '../types';
 
 interface TrilhasViewProps {
   tracks: Track[];

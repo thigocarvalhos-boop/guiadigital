@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UserProfile, PortfolioItem, MasteryMatrix } from '../types';
+import { UserProfile, PortfolioItem } from '../types';
 import { exportDossier } from '../utils';
 
 interface DossieViewProps {
@@ -13,6 +13,7 @@ interface DossieViewProps {
 const DossieView: React.FC<DossieViewProps> = ({ user, setUser, isDarkMode, onEditItem }) => {
   const [showEditName, setShowEditName] = useState(false);
   const [newName, setNewName] = useState(user.name);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
 
   const handleSaveName = () => {
     if (newName.trim().length >= 2) {
@@ -21,10 +22,11 @@ const DossieView: React.FC<DossieViewProps> = ({ user, setUser, isDarkMode, onEd
     }
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este item do dossiê?')) {
-      const updatedDossier = user.dossier.filter((item) => item.id !== itemId);
+  const handleConfirmDelete = () => {
+    if (deletingItemId) {
+      const updatedDossier = user.dossier.filter((item) => item.id !== deletingItemId);
       setUser({ ...user, dossier: updatedDossier });
+      setDeletingItemId(null);
     }
   };
 
@@ -70,7 +72,7 @@ const DossieView: React.FC<DossieViewProps> = ({ user, setUser, isDarkMode, onEd
                   <span className="text-[9px] md:text-[10px] font-black uppercase opacity-30 tracking-widest">v{item.versao} • {item.date}</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleDeleteItem(item.id)}
+                      onClick={() => setDeletingItemId(item.id)}
                       className="flex items-center gap-2 px-4 py-3 bg-red-600/10 text-red-400 rounded-2xl font-black uppercase text-[10px] md:text-xs tracking-widest hover:bg-red-600 hover:text-white transition-all"
                     >
                       <i className="fa-solid fa-trash-can"></i>
@@ -119,6 +121,35 @@ const DossieView: React.FC<DossieViewProps> = ({ user, setUser, isDarkMode, onEd
            ))}
         </aside>
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      {deletingItemId && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className={`w-full max-w-md p-8 rounded-4xl shadow-2xl border-4 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className="text-center space-y-6">
+              <div className="w-16 h-16 bg-red-500/10 rounded-2xl mx-auto flex items-center justify-center">
+                <i className="fa-solid fa-trash-can text-red-500 text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-widest">Excluir item?</h3>
+              <p className="text-base opacity-60 italic">Esta ação não pode ser desfeita.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeletingItemId(null)}
+                  className={`flex-1 h-14 rounded-2xl font-black uppercase text-sm tracking-widest transition-all ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'}`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="flex-1 h-14 bg-red-600 text-white rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-red-500 transition-all"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

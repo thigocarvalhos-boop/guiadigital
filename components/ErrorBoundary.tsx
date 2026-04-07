@@ -11,7 +11,9 @@ interface ErrorBoundaryState {
 }
 
 // React Error Boundaries require class components.
-// React 19 typing quirks require the explicit cast below.
+// React 19 does not bundle .d.ts type definitions, so `React.Component` is not
+// recognized as a class by TypeScript. The cast below provides the correct
+// generic type parameters while preserving runtime behavior.
 const BaseComponent = React.Component as unknown as new (props: ErrorBoundaryProps) => React.Component<ErrorBoundaryProps, ErrorBoundaryState>;
 
 class ErrorBoundary extends BaseComponent {

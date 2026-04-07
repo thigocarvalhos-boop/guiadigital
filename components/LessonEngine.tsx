@@ -23,6 +23,7 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
   const [audit, setAudit] = useState<AuditResult | null>(null);
   const [quizSelected, setQuizSelected] = useState<number | null>(null);
   const [quizAnswered, setQuizAnswered] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (editingItem) {
@@ -62,7 +63,11 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
   };
 
   const submit = async () => {
-    if (written.length < 30) return alert("Seja mais detalhado no seu corre.");
+    if (written.length < 30) {
+      setValidationError("Seja mais detalhado no seu corre. Mínimo de 30 caracteres.");
+      return;
+    }
+    setValidationError(null);
     setLoading(true);
     const result = await onAudit(lesson, written, imageBase64 || undefined);
     setAudit(result);
@@ -224,6 +229,12 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
                <input id="fileIn" type="file" accept="image/*" className="hidden" onChange={handleImage} />
             </div>
           </div>
+          {validationError && (
+            <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-400 font-bold text-sm md:text-base text-center">
+              <i className="fa-solid fa-circle-exclamation mr-2"></i>
+              {validationError}
+            </div>
+          )}
           <button disabled={loading || written.length < 30} onClick={submit} className="w-full h-24 md:h-32 bg-emerald-600 text-white rounded-4xl md:rounded-5xl font-black uppercase text-2xl md:text-4xl shadow-2xl hover:bg-emerald-500 transition-all disabled:opacity-30">
             {loading ? 'AUDITANDO RESULTADO...' : editingItem ? 'SALVAR ALTERAÇÕES' : 'ENVIAR PARA O DIRETOR'}
           </button>
