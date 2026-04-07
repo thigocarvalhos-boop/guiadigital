@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
 import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult } from './types';
 import { TRACKS, MURAL_ITEMS, MANIFESTO_TEXT } from './constants';
 import { saveProfile, getProfile } from './db';
@@ -45,39 +44,27 @@ const App: React.FC = () => {
   }, [user]);
 
   const handleAudit = async (lesson: Lesson, content: string, imageBase64?: string): Promise<AuditResult> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const systemInstruction = `Você é um DIRETOR DE ARTE SÊNIOR. 
-    Avalie se o trabalho do talento está pronto para o mercado real.
-    Dê um score de 0 a 100 e feedback focado em viabilidade comercial.
-    Retorne apenas JSON: { score, feedback, aprovado, mentor }.`;
-
     const sanitizedContent = sanitizeText(content);
-    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
-      { text: `Lição: ${lesson.title}\nBriefing: ${lesson.clientBriefing}\nEntrega: ${sanitizedContent}` }
-    ];
-    if (imageBase64) {
-      parts.push({ inlineData: { mimeType: "image/jpeg", data: imageBase64.split(',')[1] } });
-    }
 
     try {
-      const res = await ai.models.generateContent({ 
-        model: 'gemini-3-pro-preview', 
-        contents: { parts }, 
-        config: { systemInstruction, responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              score: { type: Type.NUMBER },
-              feedback: { type: Type.STRING },
-              aprovado: { type: Type.BOOLEAN },
-              mentor: { type: Type.STRING }
-            },
-            required: ['score', 'feedback', 'aprovado', 'mentor']
-          }
-        } 
+      const res = await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonTitle: lesson.title,
+          clientBriefing: lesson.clientBriefing || '',
+          content: sanitizedContent,
+          imageBase64,
+        }),
       });
-      return JSON.parse(res.text || '{}');
-    } catch (e) { 
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+        throw new Error(error.error || `HTTP ${res.status}`);
+      }
+
+      return await res.json();
+    } catch (e) {
       return { score: 0, feedback: "Erro na auditoria. Verifique sua conexão com a internet.", aprovado: false, mentor: "Sistema" };
     }
   };
