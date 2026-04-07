@@ -68,14 +68,14 @@ export const TRACKS: Track[] = [
   {
     id: 'social-media',
     title: 'Social Media',
-    description: 'Transforme redes sociais em canais de venda para negócios locais.',
+    description: 'Pratique o que viu em sala: transforme redes sociais em canais de venda para negócios do bairro.',
     icon: '📱',
     lessons: [
       {
         id: 'sm-1',
         title: '🔰 Iniciante: O Perfil que Vende',
         category: 'SOCIAL MEDIA',
-        theoryContent: `Vamos por partes. O Instagram de um negócio é a vitrine dele.\n\nO QUE VOCÊ VAI APRENDER:\n1. Bio Profissional: Nome claro, o que faz, onde fica e link de Zap.\n2. Foto de Perfil: Logo legível ou foto do dono sorrindo.\n3. Destaques: Organize os preços, horários e depoimentos.\n\nPOR QUE ISSO IMPORTA:\nSe o cliente entra e não entende como compra ou onde fica, ele vai embora em 3 segundos.`,
+        theoryContent: `Vamos por partes. O Instagram de um negócio é a vitrine dele.\n\nIsso aqui é pra você treinar o que já viu na aula. Pegue o caderno, abra o celular e bora aplicar.\n\nO QUE VOCÊ VAI PRATICAR:\n1. Bio Profissional: Nome claro, o que faz, onde fica e link de Zap.\n2. Foto de Perfil: Logo legível ou foto do dono sorrindo.\n3. Destaques: Organize os preços, horários e depoimentos.\n\nPOR QUE ISSO IMPORTA:\nSe o cliente entra e não entende como compra ou onde fica, ele vai embora em 3 segundos.\n\nDICA DO GUI.A:\nVocê não precisa saber tudo agora. Comece pela bio. Uma coisa por vez.`,
         clientBriefing: "Um brechó de bairro quer profissionalizar o Instagram. Organize a Bio deles e sugira 3 destaques fundamentais.",
         quiz: {
           question: "Qual o elemento MAIS importante na bio de um negócio local?",
@@ -95,7 +95,7 @@ export const TRACKS: Track[] = [
         id: 'sm-2',
         title: '⚙️ Intermediário: Planejamento de 7 Dias',
         category: 'SOCIAL MEDIA',
-        theoryContent: `Um passo por vez. Planejar evita que você fique sem ideia no meio da semana.\n\nCONTEÚDO PARA NEGÓCIO REAL:\n- Segunda: Bastidores (O corre começando).\n- Quarta: Dica útil (Ex: Como cuidar da peça do brechó).\n- Sexta: Oferta direta (Foto bonita do produto + Preço).\n\nÉTICA DIGITAL:\nNunca use robôs para ganhar seguidores. Isso estraga a conta e o cliente perde dinheiro com seguidores falsos que não compram nada.`,
+        theoryContent: `Um passo por vez. Isso aqui é continuação do que o educador explicou sobre planejamento de conteúdo.\n\nPLANEJAR evita que você fique sem ideia no meio da semana.\n\nCONTEÚDO PARA NEGÓCIO REAL:\n- Segunda: Bastidores (O corre começando).\n- Quarta: Dica útil (Ex: Como cuidar da peça do brechó).\n- Sexta: Oferta direta (Foto bonita do produto + Preço).\n\nÉTICA DIGITAL:\nNunca use robôs para ganhar seguidores. Isso estraga a conta e o cliente perde dinheiro com seguidores falsos que não compram nada.\n\nDICA DO GUI.A:\nEu caminho com você. Faça o exercício abaixo pensando num negócio real que você conhece.`,
         clientBriefing: "Monte um calendário de 7 dias para uma marmitaria que entrega apenas no almoço.",
         quiz: {
           question: "O que postar na sexta-feira para um negócio de comida?",
@@ -115,7 +115,7 @@ export const TRACKS: Track[] = [
         id: 'sm-3',
         title: '🚀 Avançado: Ganhe com Ética',
         category: 'SOCIAL MEDIA',
-        theoryContent: `Você não precisa saber tudo agora, mas precisa saber quanto cobrar.\n\nCONVERTER EM RENDA:\n1. Comece oferecendo gestão para 1 cliente (Ex: 3 posts por semana).\n2. Preço sugerido: R$ 150 a R$ 250 por mês para começar.\n3. Mostre os resultados (mais gente chamando no Zap).\n\nMENSAGEM PARA O CLIENTE:\n'Oi! Vi que seu perfil tá parado. Posso te ajudar a organizar 3 posts por semana por R$ 200/mês? Isso vai trazer mais clientes pro seu Zap.'`,
+        theoryContent: `Agora é hora de aplicar tudo que você praticou.\n\nCONVERTER EM RENDA:\n1. Comece oferecendo gestão para 1 cliente (Ex: 3 posts por semana).\n2. Preço sugerido: R$ 150 a R$ 250 por mês para começar.\n3. Mostre os resultados (mais gente chamando no Zap).\n\nMENSAGEM PARA O CLIENTE:\n'Oi! Vi que seu perfil tá parado. Posso te ajudar a organizar 3 posts por semana por R$ 200/mês? Isso vai trazer mais clientes pro seu Zap.'\n\nDICA DO GUI.A:\nVocê não precisa saber tudo agora, mas precisa saber quanto cobrar. Esse exercício te prepara para o mercado real.`,
         clientBriefing: "Monte sua própria proposta de serviço de Social Media para oferecer a um comércio do seu bairro.",
         quiz: {
           question: "Como medir se o seu trabalho de Social Media está funcionando?",
@@ -136,14 +136,14 @@ export const TRACKS: Track[] = [
   {
     id: 'designer-digital',
     title: 'Designer Digital',
-    description: 'Crie artes profissionais usando apenas o celular.',
+    description: 'Treine na prática: crie artes profissionais usando o celular, com o que aprendeu em sala.',
     icon: '🎨',
     lessons: [
       {
         id: 'dd-1',
         title: '🔰 Iniciante: Alinhamento e Cores',
         category: 'DESIGN',
-        theoryContent: `Design não é enfeite, é organização.\n\nPASSO A PASSO:\n1. Alinhamento: Tudo deve seguir uma linha (ex: tudo à esquerda).\n2. Contraste: Texto escuro em fundo claro ou vice-versa. Nunca coloque texto difícil de ler.\n3. Cores: Escolha 2 cores principais e use sempre as mesmas.\n\nFERRAMENTA:\nUse o Canva ou Photopea no navegador do celular.`,
+        theoryContent: `Design não é enfeite, é organização. Isso aqui reforça o que o educador já mostrou na aula.\n\nPASSO A PASSO:\n1. Alinhamento: Tudo deve seguir uma linha (ex: tudo à esquerda).\n2. Contraste: Texto escuro em fundo claro ou vice-versa. Nunca coloque texto difícil de ler.\n3. Cores: Escolha 2 cores principais e use sempre as mesmas.\n\nFERRAMENTA:\nUse o Canva ou Photopea no navegador do celular.\n\nDICA DO GUI.A:\nVamos por partes. Comece pelas cores. Depois o alinhamento. Não precisa fazer tudo de uma vez.`,
         clientBriefing: "Crie uma arte de 'Promoção Relâmpago' para uma barbearia usando preto e dourado.",
         quiz: {
           question: "Qual o erro fatal de um iniciante no design?",
@@ -163,7 +163,7 @@ export const TRACKS: Track[] = [
         id: 'dd-2',
         title: '⚙️ Intermediário: Kit Visual do Bairro',
         category: 'DESIGN',
-        theoryContent: `Um passo por vez. Agora vamos criar um Kit completo.\n\nO QUE COMPÕE UM KIT:\n1. Foto de perfil (Logo).\n2. Template para posts de aviso.\n3. Template para fotos de produtos.\n\nÉTICA E SEGURANÇA:\nNunca pegue fotos do Google sem saber se pode usar. Use sites como Pexels ou Unsplash para fotos gratuitas e bonitas.`,
+        theoryContent: `Um passo por vez. Agora vamos criar um Kit completo, aplicando o que já treinou.\n\nO QUE COMPÕE UM KIT:\n1. Foto de perfil (Logo).\n2. Template para posts de aviso.\n3. Template para fotos de produtos.\n\nÉTICA E SEGURANÇA:\nNunca pegue fotos do Google sem saber se pode usar. Use sites como Pexels ou Unsplash para fotos gratuitas e bonitas.\n\nDICA DO GUI.A:\nEu caminho com você. Pense num negócio real do seu bairro e monte o kit pensando nele.`,
         clientBriefing: "Monte um kit visual (cores e estilo) para uma loja de açaí que quer parecer moderna e refrescante.",
         quiz: {
           question: "Para que serve um template?",
@@ -204,14 +204,14 @@ export const TRACKS: Track[] = [
   {
     id: 'editor-video',
     title: 'Editor de Vídeo',
-    description: 'Crie vídeos curtos que prendem a atenção e geram cliques.',
+    description: 'Coloque em prática o que viu na aula: crie vídeos curtos que prendem atenção e geram cliques.',
     icon: '🎬',
     lessons: [
       {
         id: 'ev-1',
         title: '🔰 Iniciante: Corte e Legenda',
         category: 'VÍDEO',
-        theoryContent: `Vídeo bom é vídeo que não enrola.\n\nPASSO A PASSO NO CELULAR:\n1. Cortes: Retire todos os 'eeeerrrr' e silêncios chatos.\n2. Legendas: No CapCut, use as legendas automáticas. Muita gente vê vídeo sem som.\n3. Formato: Sempre na vertical (9:16) para Reels e TikTok.`,
+        theoryContent: `Vídeo bom é vídeo que não enrola. Aqui você vai praticar os fundamentos que viu em sala.\n\nPASSO A PASSO NO CELULAR:\n1. Cortes: Retire todos os 'eeeerrrr' e silêncios chatos.\n2. Legendas: No CapCut, use as legendas automáticas. Muita gente vê vídeo sem som.\n3. Formato: Sempre na vertical (9:16) para Reels e TikTok.\n\nDICA DO GUI.A:\nVamos por partes. Comece tirando os silêncios. Depois coloque legenda. Não precisa ser perfeito, precisa ser feito.`,
         clientBriefing: "Edite um vídeo de 15 segundos de um barbeiro fazendo um degradê. Onde você faria os cortes?",
         quiz: {
           question: "Por que legendar vídeos é fundamental?",
@@ -231,7 +231,7 @@ export const TRACKS: Track[] = [
         id: 'ev-2',
         title: '⚙️ Intermediário: O Gancho (Hook)',
         category: 'VÍDEO',
-        theoryContent: `Atenção é moeda. Se não prender nos primeiros 3 segundos, o vídeo morreu.\n\nTÉCNICAS DE RETENÇÃO:\n- Comece com uma pergunta: 'Você sabia que...' ou 'O erro que você comete...'.\n- Use transições rápidas.\n- Coloque uma música que combine com o ritmo da edição.`,
+        theoryContent: `Atenção é moeda. Se não prender nos primeiros 3 segundos, o vídeo morreu.\n\nTÉCNICAS DE RETENÇÃO (pratique aqui o que o educador explicou):\n- Comece com uma pergunta: 'Você sabia que...' ou 'O erro que você comete...'.\n- Use transições rápidas.\n- Coloque uma música que combine com o ritmo da edição.\n\nDICA DO GUI.A:\nEu caminho com você. Teste 3 frases de gancho diferentes e veja qual soa melhor lendo em voz alta.`,
         clientBriefing: "Crie um roteiro de 10 segundos para um vídeo de 'Unboxing' (abrindo o pacote) de uma loja de doces.",
         quiz: {
           question: "O que é o 'Gancho' de um vídeo?",
@@ -251,7 +251,7 @@ export const TRACKS: Track[] = [
         id: 'ev-3',
         title: '🚀 Avançado: Pacote de Vídeos',
         category: 'VÍDEO',
-        theoryContent: `Vamos transformar edição em renda honesta.\n\nCOMO VENDER:\n1. Ofereça '4 Reels editados por mês' por R$ 200 - R$ 400.\n2. Grave o vídeo pro cliente (opcional) ou edite o que ele já tem.\n3. Foco em Storytelling: Conte a história de como o produto é feito.\n\nÉTICA:\nRespeite a privacidade do cliente e nunca use músicas com direitos autorais em anúncios pagos.`,
+        theoryContent: `Vamos transformar edição em renda honesta.\n\nCOMO VENDER:\n1. Ofereça '4 Reels editados por mês' por R$ 200 - R$ 400.\n2. Grave o vídeo pro cliente (opcional) ou edite o que ele já tem.\n3. Foco em Storytelling: Conte a história de como o produto é feito.\n\nÉTICA:\nRespeite a privacidade do cliente e nunca use músicas com direitos autorais em anúncios pagos.\n\nDICA DO GUI.A:\nVocê não precisa saber tudo agora. Monte sua proposta com o que já sabe e vá ajustando conforme os clientes pedem.`,
         clientBriefing: "Monte uma proposta de 'Pacote de Vídeos Mensais' para uma academia de artes marciais.",
         quiz: {
           question: "Qual o valor médio inicial para editar um Reels simples de 30 segundos?",
@@ -272,14 +272,14 @@ export const TRACKS: Track[] = [
   {
     id: 'trafego-pago',
     title: 'Gestor de Tráfego',
-    description: 'Aprenda a fazer anúncios básicos que levam clientes até a porta.',
+    description: 'Exercite na prática: aprenda a fazer anúncios básicos que levam clientes até a porta.',
     icon: '🚀',
     lessons: [
       {
         id: 'tp-1',
         title: '🔰 Iniciante: O Botão Turbinar',
         category: 'TRÁFEGO',
-        theoryContent: `Anúncio é como um panfleto digital, mas só entrega para quem quer comprar.\n\nPASSO A PASSO:\n1. Botão Turbinar: O jeito mais simples de começar no Instagram.\n2. Localização: Escolha apenas o seu bairro ou um raio de 3km.\n3. Orçamento: Comece com pouco, R$ 6 a R$ 10 por dia.`,
+        theoryContent: `Anúncio é como um panfleto digital, mas só entrega para quem quer comprar.\n\nIsso aqui é pra treinar o que o educador mostrou na aula prática.\n\nPASSO A PASSO:\n1. Botão Turbinar: O jeito mais simples de começar no Instagram.\n2. Localização: Escolha apenas o seu bairro ou um raio de 3km.\n3. Orçamento: Comece com pouco, R$ 6 a R$ 10 por dia.\n\nDICA DO GUI.A:\nVamos por partes. Primeiro entenda o botão. Depois o público. Não pule etapas.`,
         clientBriefing: "Uma pizzaria quer anunciar apenas para o bairro de Casa Amarela. Como você configuraria o público?",
         quiz: {
           question: "Qual a vantagem de anunciar apenas no bairro?",
@@ -299,7 +299,7 @@ export const TRACKS: Track[] = [
         id: 'tp-2',
         title: '⚙️ Intermediário: Interesses e Públicos',
         category: 'TRÁFEGO',
-        theoryContent: `Um passo por vez. Agora vamos escolher para QUEM mostrar.\n\nSEGMENTAÇÃO:\n- Se vende hambúrguer, escolha interesses como 'Fast Food', 'Hambúrguer', 'iFood'.\n- Se vende roupa feminina, escolha 'Moda Feminina', 'Compras'.\n\nÉTICA NO TRÁFEGO:\nNunca prometa resultados garantidos ou ganhos rápidos. Anúncio é teste. Seja honesto com o cliente.`,
+        theoryContent: `Um passo por vez. Agora vamos escolher para QUEM mostrar, aplicando o conceito de segmentação.\n\nSEGMENTAÇÃO:\n- Se vende hambúrguer, escolha interesses como 'Fast Food', 'Hambúrguer', 'iFood'.\n- Se vende roupa feminina, escolha 'Moda Feminina', 'Compras'.\n\nÉTICA NO TRÁFEGO:\nNunca prometa resultados garantidos ou ganhos rápidos. Anúncio é teste. Seja honesto com o cliente.\n\nDICA DO GUI.A:\nEu caminho com você. Faça o exercício pensando no negócio que o educador usou como exemplo na aula.`,
         clientBriefing: "Configure o público de interesses para um anúncio de um curso de trancista presencial.",
         quiz: {
           question: "O que acontece se o público for muito genérico (ex: Brasil inteiro)?",
@@ -319,7 +319,7 @@ export const TRACKS: Track[] = [
         id: 'tp-3',
         title: '🚀 Avançado: Gestão de Clientes',
         category: 'TRÁFEGO',
-        theoryContent: `Hora de profissionalizar o corre do tráfego.\n\nCOMO TRABALHAR:\n1. O cliente paga o anúncio direto para o Instagram.\n2. Você cobra uma 'Taxa de Gestão' para configurar e acompanhar.\n3. Taxa sugerida inicial: R$ 200 a R$ 400 por mês por cliente.\n\nREGRA DO GUI.A:\n'Invista pouco, teste, ajuste e aprenda. O dinheiro do cliente é sagrado.'`,
+        theoryContent: `Hora de profissionalizar o corre do tráfego.\n\nCOMO TRABALHAR:\n1. O cliente paga o anúncio direto para o Instagram.\n2. Você cobra uma 'Taxa de Gestão' para configurar e acompanhar.\n3. Taxa sugerida inicial: R$ 200 a R$ 400 por mês por cliente.\n\nREGRA DO GUI.A:\n'Invista pouco, teste, ajuste e aprenda. O dinheiro do cliente é sagrado.'\n\nDICA DO GUI.A:\nVocê não precisa saber tudo agora. Monte a proposta com honestidade e aprenda junto com o cliente.`,
         clientBriefing: "O cliente tem R$ 300 para gastar no mês em anúncios. Como você dividiria esse valor?",
         quiz: {
           question: "Qual a função principal do Gestor de Tráfego?",

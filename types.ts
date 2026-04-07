@@ -62,10 +62,30 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  turma: string;
   role: UserRole;
   level: number;
   exp: number;
   matrix: MasteryMatrix;
   dossier: PortfolioItem[];
   status: 'ACTIVE' | 'BLOCKED';
+  registeredAt: string;
+}
+
+/** Dados de submissão de atividade para acompanhamento institucional */
+export interface ActivitySubmission {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentTurma: string;
+  trackId: string;
+  trackTitle: string;
+  lessonId: string;
+  lessonTitle: string;
+  writtenResponse: string;
+  auditScore: number;
+  auditFeedback: string;
+  auditApproved: boolean;
+  submittedAt: string;
 }
