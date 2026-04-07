@@ -70,7 +70,7 @@ const App: React.FC = () => {
     } catch (e) {
       const message = e instanceof Error && e.name === 'AbortError'
         ? 'A auditoria demorou demais e foi cancelada. Tente novamente.'
-        : 'Erro na auditoria. Verifique sua conexão com a internet.';
+        : 'Erro ao processar auditoria. Tente novamente em alguns segundos.';
       return { score: 0, feedback: message, aprovado: false, mentor: "Sistema" };
     } finally {
       clearTimeout(timeout);
