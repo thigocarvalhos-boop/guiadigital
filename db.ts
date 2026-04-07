@@ -13,6 +13,9 @@ export const getProfile = (): UserProfile | null => {
     if (data) {
       const parsed = JSON.parse(data);
       if (parsed && parsed.name) {
+        // Migra perfis antigos que não tinham turma/registeredAt
+        if (!parsed.turma) parsed.turma = '';
+        if (!parsed.registeredAt) parsed.registeredAt = new Date().toISOString();
         return parsed as UserProfile;
       }
     }

@@ -11,7 +11,10 @@ interface TrilhasViewProps {
 
 const TrilhasView: React.FC<TrilhasViewProps> = ({ tracks, onSelect, isDarkMode, completedLessonIds }) => (
   <div className="space-y-8 md:space-y-12">
-    <h2 className="text-4xl md:text-6xl font-brand italic uppercase tracking-tighter leading-none">ESTAÇÕES DE <span className="text-indigo-600">PRODUÇÃO _</span></h2>
+    <div>
+      <h2 className="text-4xl md:text-6xl font-brand italic uppercase tracking-tighter leading-none">ESTAÇÕES DE <span className="text-indigo-600">PRODUÇÃO _</span></h2>
+      <p className="text-base md:text-lg opacity-50 italic mt-3 md:mt-4 leading-snug max-w-2xl">Pratique aqui o que você aprendeu em sala. Cada trilha reforça o conteúdo da aula com exercícios curtos e aplicáveis.</p>
+    </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
       {tracks.map((t) => {
         const completedCount = t.lessons.filter(l => completedLessonIds.has(l.id)).length;

@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult } from '../types';
+import { UserProfile, Lesson, LessonState, PortfolioItem, AuditResult, ActivitySubmission } from '../types';
 import { generateId, sanitizeText } from '../utils';
+import { notifyActivitySubmission } from '../api/notify';
+import { TRACKS } from '../constants';
 
 interface LessonEngineProps {
   lesson: Lesson;
@@ -124,6 +126,27 @@ const LessonEngine: React.FC<LessonEngineProps> = ({ lesson, state, setState, on
           setUser({ ...user, dossier: [newItem, ...user.dossier], matrix: newMatrix });
         }
       }
+
+      // Notifica a instituição sobre a atividade (não bloqueia a UX)
+      const track = TRACKS.find(t => t.lessons.some(l => l.id === lesson.id));
+      const submission: ActivitySubmission = {
+        id: generateId(),
+        studentId: user.id,
+        studentName: user.name,
+        studentEmail: user.email,
+        studentTurma: user.turma,
+        trackId: track?.id || lesson.category,
+        trackTitle: track?.title || lesson.category,
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        writtenResponse: written,
+        auditScore: result.score,
+        auditFeedback: result.feedback,
+        auditApproved: result.aprovado,
+        submittedAt: new Date().toISOString(),
+      };
+      notifyActivitySubmission(submission).catch(() => {});
+
       setState('REVIEW');
     }
   };
