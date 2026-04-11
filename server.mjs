@@ -70,6 +70,17 @@ const ensureDb = () => {
   }
 };
 
+let dbLock = false;
+const lockDb = async () => {
+  while (dbLock) {
+    await new Promise(resolve => setTimeout(resolve, 1));
+  }
+  dbLock = true;
+};
+const unlockDb = () => {
+  dbLock = false;
+};
+
 const readDb = () => JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 const writeDb = (db) => fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 
@@ -131,22 +142,27 @@ const start = () => {
 
       if (!email || !password) return json(res, 400, { error: 'email and password are required' });
 
-      const db = readDb();
-      const user = (db.users || []).find((u) => u.email.toLowerCase() === email);
-      if (!user || !verifyPassword(password, user.passwordHash)) {
-        return json(res, 401, { error: 'invalid credentials' });
+      await lockDb();
+      try {
+        const db = readDb();
+        const user = (db.users || []).find((u) => u.email.toLowerCase() === email);
+        if (!user || !verifyPassword(password, user.passwordHash)) {
+          return json(res, 401, { error: 'invalid credentials' });
+        }
+
+        user.lastLoginAt = new Date().toISOString();
+        writeDb(db);
+
+        const token = signJwt({ sub: user.id, email: user.email, role: user.role, status: user.status }, JWT_SECRET);
+        return json(res, 200, {
+          token,
+          tokenType: 'Bearer',
+          expiresIn: 8 * 60 * 60,
+          user: { id: user.id, email: user.email, role: user.role, status: user.status }
+        });
+      } finally {
+        unlockDb();
       }
-
-      user.lastLoginAt = new Date().toISOString();
-      writeDb(db);
-
-      const token = signJwt({ sub: user.id, email: user.email, role: user.role, status: user.status }, JWT_SECRET);
-      return json(res, 200, {
-        token,
-        tokenType: 'Bearer',
-        expiresIn: 8 * 60 * 60,
-        user: { id: user.id, email: user.email, role: user.role, status: user.status }
-      });
     }
 
     return json(res, 404, { error: 'not found' });
