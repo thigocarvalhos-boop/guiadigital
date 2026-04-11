@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate": "node server.mjs --migrate-only",
+    "start:api": "node server.mjs",
+    "start:prod": "npm run build && npm run migrate && npm run start:api"
   },
   "dependencies": {
     "react": "^19.2.3",
