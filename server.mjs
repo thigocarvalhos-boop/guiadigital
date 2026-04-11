@@ -152,6 +152,17 @@ const start = () => {
     return json(res, 404, { error: 'not found' });
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[guiadigital] error: port ${PORT} is already in use`);
+    } else if (err.code === 'EACCES') {
+      console.error(`[guiadigital] error: permission denied to bind to port ${PORT}`);
+    } else {
+      console.error(`[guiadigital] error: ${err.message}`);
+    }
+    process.exit(1);
+  });
+
   server.listen(PORT, () => {
     console.log(`[guiadigital] api running on :${PORT} (schema v${schemaVersion})`);
   });
